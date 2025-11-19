@@ -145,4 +145,4 @@ MIT License
 
 ## 🧩 Maintained by
 
-**Avishakti Energy Solutions**
+**Avishakti Rooftop Solar Pvt. Ltd**
