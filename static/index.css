@@ -293,7 +293,7 @@ input:hover, select:hover {
   margin-top: 2rem;
 }
 
-/* 📋 --- Bill Card Styles --- 📋 */
+/* 📋 --- Bill Card Styles (UPDATED FOR COLLAPSE) --- 📋 */
 .bill-card {
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid var(--card-border);
@@ -302,6 +302,7 @@ input:hover, select:hover {
   margin-bottom: 1.5rem;
   position: relative;
   transition: all 0.3s ease;
+  overflow: hidden; /* Needed for collapse animation */
 }
 
 .bill-card:hover {
@@ -313,9 +314,10 @@ input:hover, select:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--card-border);
+  /* Header is now clickable in JS, so give it a cursor */
+  cursor: pointer;
 }
 
 .bill-title {
@@ -346,6 +348,26 @@ input:hover, select:hover {
   background: rgba(239, 68, 68, 0.1);
   transform: scale(1.1) rotate(10deg);
 }
+
+/* Toggle Icon Animation */
+.toggle-icon {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  transition: transform 0.3s ease;
+}
+
+/* Rotate icon when collapsed (if using rotation logic instead of class swapping) */
+.bill-card.collapsed .toggle-icon {
+    transform: rotate(-180deg);
+}
+
+/* The body of the bill card */
+.bill-card-body {
+    margin-top: 1.5rem;
+    /* Animation setup for smooth open/close */
+    transition: all 0.3s ease-in-out;
+}
+
 
 /* 📊 --- Monthly Consumption Table --- 📊 */
 .monthly-table {
