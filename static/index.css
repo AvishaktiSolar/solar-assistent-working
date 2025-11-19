@@ -1,0 +1,685 @@
+/* =========================================
+  "Solar Flare" Theme for Avishakti
+=========================================
+*/
+
+/* 🎨 --- CSS Variables --- 🎨 */
+:root {
+  --primary-color: #f59e0b; /* Bright Solar Yellow */
+  --primary-dark: #ffc82c;   /* Brighter Glow */
+  --secondary-color: #0ea5e9; /* Tech Blue */
+  --secondary-dark: #0284c7;
+  
+  --bg-dark-gradient: linear-gradient(145deg, #0f172a 0%, #302b63 100%);
+  --bg-hero-gradient: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  
+  --card-bg: rgba(30, 41, 59, 0.6);   /* Frosted Glass */
+  --card-border: rgba(255, 255, 255, 0.1);
+  
+  --text-primary: #f8fafc;   /* Bright White */
+  --text-secondary: #94a3b8; /* Muted Grey */
+  --text-accent: var(--primary-color);
+  
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  --shadow-glow: 0 0 15px rgba(245, 158, 11, 0.3), 0 0 5px rgba(245, 158, 11, 0.2);
+}
+
+/* 🌐 --- General Reset & Base Styles --- 🌐 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-dark-gradient);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 🎨 --- Custom Scrollbar --- 🎨 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+/* 🎭 --- Hero Section --- 🎭 */
+.hero-section {
+  background: var(--bg-hero-gradient);
+  padding: 4rem 1rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid var(--primary-color);
+  box-shadow: 0 5px 30px rgba(245, 158, 11, 0.2);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+  transform: translate(-50%, -50%);
+  animation: solarPulse 10s ease-in-out infinite;
+}
+
+@keyframes solarPulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-section h1 {
+  color: white;
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+.hero-section h1 i {
+  animation: spin 8s linear infinite;
+}
+
+.hero-section p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.25rem;
+  font-weight: 300;
+}
+
+/* 📦 --- Container --- 📦 */
+.container {
+  max-width: 1200px;
+  margin: -3rem auto 2rem;
+  padding: 0 1rem 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* 🎴 --- Card Styles (Glassmorphism) --- 🎴 */
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.card-header {
+  background: rgba(15, 23, 42, 0.5); /* Darker transparent header */
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.card-header i {
+  font-size: 1.5rem;
+  color: var(--text-accent);
+}
+
+.card-header h2 {
+  color: var(--text-accent);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+/* 📝 --- Form Styles --- 📝 */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.required {
+  color: var(--error-color);
+  margin-left: 4px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--card-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text-primary);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+input:hover, select:hover {
+  border-color: var(--primary-color);
+}
+
+.helper-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 🔘 --- Button Styles --- 🔘 */
+.btn {
+  padding: 0.875rem 1.75rem;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: var(--bg-hero-gradient);
+  color: white;
+}
+.btn-primary:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+.btn-secondary:hover {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-excel {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+.btn-excel:hover {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+.btn-danger:hover {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* 📋 --- Bill Card Styles --- 📋 */
+.bill-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.bill-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+}
+
+.bill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.bill-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remove-bill {
+  background: none;
+  border: none;
+  color: var(--error-color);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-bill:hover {
+  background: rgba(239, 68, 68, 0.1);
+  transform: scale(1.1) rotate(10deg);
+}
+
+/* 📊 --- Monthly Consumption Table --- 📊 */
+.monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--card-border);
+}
+
+.monthly-table thead {
+  background: var(--bg-hero-gradient);
+}
+
+.monthly-table th {
+  padding: 1rem;
+  text-align: left;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.monthly-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.monthly-table tr:hover {
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.monthly-table input {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--card-border);
+}
+
+.monthly-table .table-footer {
+  background: rgba(15, 23, 42, 0.7);
+  font-weight: 700;
+  color: var(--primary-color);
+  border-top: 2px solid var(--primary-color);
+}
+
+/* 📈 --- Summary Card --- 📈 */
+.summary-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(2, 132, 199, 0.3) 100%);
+  border-color: var(--secondary-color);
+}
+
+.summary-card .card-header {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+}
+.summary-card .card-header i,
+.summary-card .card-header h2 {
+  color: white;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.summary-item {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s ease;
+  border: 1px solid var(--card-border);
+}
+
+.summary-item:hover {
+  transform: translateY(-4px);
+  border-color: var(--secondary-color);
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.summary-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 📄 --- Page Sections --- 📄 */
+.page-section {
+  display: none;
+}
+
+.page-section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ✨ --- Loading Animation --- ✨ */
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 🗺️ --- Map Styles --- 🗺️ */
+#map {
+  width: 100%;
+  height: 400px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-sm);
+  cursor: crosshair;
+  margin-top: 1rem;
+  background: #0f172a;
+}
+/* Make map tiles slightly transparent for a "dark mode" feel */
+.ol-layer canvas {
+  opacity: 0.8;
+}
+
+
+/* ☀️ --- Solar Data Preview Styles --- ☀️ */
+#solar-data-preview {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+  display: none;
+  animation: fadeIn 0.5s ease;
+}
+
+#solar-data-preview:not(:empty) {
+  display: block;
+}
+
+#solar-data-preview h4 {
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+#solar-data-preview h4 i {
+  color: var(--success-color);
+}
+
+.preview-error {
+  color: var(--error-color);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--error-color);
+}
+
+/* 📊 --- Final Report Tables --- 📊 */
+.output-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+}
+
+.output-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.output-table tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.output-table td:first-child {
+  font-weight: 600;
+  color: var(--text-secondary);
+  width: 40%;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.output-table td:last-child {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.output-table tr:last-child td {
+  border-bottom: none;
+}
+
+.financial-highlight td {
+  font-size: 1.2rem;
+  color: var(--primary-dark) !important;
+}
+
+.financial-highlight td:first-child {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.financial-highlight td:last-child {
+  background: rgba(245, 158, 11, 0.1);
+  font-weight: 700;
+}
+
+/* 🌙 --- Monthly Report Table (Pivoted) --- 🌙 */
+.monthly-report-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--card-border);
+}
+
+.monthly-report-table thead {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Header for blue table on report page */
+.page-section#solar-panel-page .monthly-report-table thead {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+}
+
+
+.monthly-report-table th {
+  padding: 1rem;
+  text-align: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.monthly-report-table th:first-child {
+  text-align: left;
+}
+
+.monthly-report-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--card-border);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.monthly-report-table tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* First column (Parameter) left-aligned */
+.monthly-report-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Style for the footer row in the table */
+.monthly-report-table .table-footer {
+  background: rgba(15, 23, 42, 0.7);
+  border-top: 2px solid var(--card-border);
+}
+.monthly-report-table .table-footer td {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.monthly-report-table .table-footer td:first-child {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+
+/* 📱 --- Responsive Design --- 📱 */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 2.25rem;
+  }
+  .hero-section p {
+    font-size: 1.1rem;
+  }
+  .container {
+    margin-top: -2rem;
+    padding: 0 0.5rem 1rem;
+  }
+  .card-body {
+    padding: 1.5rem;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .action-buttons {
+    flex-direction: column;
+  }
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .summary-value {
+    font-size: 2rem;
+  }
+}

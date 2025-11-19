@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avishakti Solar Design</title>
+
+    <!-- 🌞 External Styles and Scripts -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='index.css') }}"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <!-- jsPDF Libraries for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- xlsx.js (SheetJS) Library for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  </head>
+
+  <body>
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1>
+          <i class="fas fa-solar-panel"></i> Avishakti Solar Design Assistant
+        </h1>
+        <p>Transform your electricity bills into clean solar energy</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- 📋 Initial Input Page -->
+      <section id="initial-input-page" class="page-section active">
+        <!-- Site Details Section -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-map-marker-alt"></i>
+            <h2>Site Details</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="site_name"
+                >Site Name / Project Name <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="site_name"
+                placeholder="Enter site or project name"
+                required
+              />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="latitude"
+                  >Site Latitude <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="latitude"
+                  placeholder="e.g., 19.0760"
+                  step="any"
+                  required
+                  onchange="syncMapToInputs()"
+                />
+              </div>
+              <div class="form-group">
+                <label for="longitude"
+                  >Site Longitude <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="longitude"
+                  placeholder="e.g., 72.8777"
+                  step="any"
+                  required
+                  onchange="syncMapToInputs()"
+                />
+              </div>
+            </div>
+
+            <p class="helper-text">
+              <i class="fas fa-mouse-pointer"></i> Or, click on the map below to
+              set coordinates automatically.
+            </p>
+            <div id="map"></div>
+
+            <div class="form-group" style="margin-top: 2rem">
+              <button
+                class="btn btn-secondary"
+                id="fetch-solar-btn"
+                onclick="fetchAndPreviewSolarData()"
+              >
+                <i class="fas fa-satellite-dish"></i> Fetch Solar Data
+              </button>
+            </div>
+
+            <div id="solar-data-preview">
+              <!-- Fetched data will be injected here by main.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced System Parameters Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-cogs"></i>
+            <h2>Advanced System Parameters</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="savings_target"
+                  >Savings Target (%) <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="savings_target"
+                  placeholder="e.g., 107"
+                  value="100"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="panel_wattage"
+                  >Panel Wattage (Wp) <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="panel_wattage"
+                  placeholder="e.g., 580"
+                  value="580"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="panel_noct"
+                  >Panel NOCT (°C) <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="panel_noct"
+                  placeholder="e.g., 45"
+                  value="45"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="temp_coefficient"
+                  >Temp. Coefficient (%/°C)
+                  <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="temp_coefficient"
+                  placeholder="e.g., -0.33"
+                  step="0.01"
+                  value="-0.33"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="shadow_loss"
+                  >Shadow Loss (%) <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="shadow_loss"
+                  placeholder="e.g., 24"
+                  value="24"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="other_losses"
+                  >Other Losses Combined (%)
+                  <span class="required">*</span></label
+                >
+                <input
+                  type="number"
+                  id="other_losses"
+                  placeholder="e.g., 14"
+                  value="14"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="tilt_angle">Panel Tilt Angle (°)</label>
+                <input
+                  type="number"
+                  id="tilt_angle"
+                  placeholder="Default: 20"
+                  step="any"
+                />
+              </div>
+              <div class="form-group">
+                <label for="capex_per_kw">Cost per kWp (₹)</label>
+                <input
+                  type="number"
+                  id="capex_per_kw"
+                  placeholder="e.g., 50000"
+                  value="50000"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END NEW CARD -->
+
+        <!-- Electricity Bills Section -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <h2>Electricity Bill Inputs</h2>
+          </div>
+          <div class="card-body">
+            <p class="helper-text">
+              Add all electricity bills for this site to calculate total
+              consumption
+            </p>
+
+            <div id="bills-container"></div>
+
+            <button class="btn btn-secondary" onclick="addNewBill()">
+              <i class="fas fa-plus"></i> Add Another Bill
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="card summary-card">
+          <div class="card-header">
+            <i class="fas fa-calculator"></i>
+            <h2>Summary</h2>
+          </div>
+          <div class="card-body">
+            <div class="summary-grid">
+              <div class="summary-item">
+                <div class="summary-label">Total Annual Units</div>
+                <div class="summary-value" id="total_annual_units">0 kWh</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Total Annual Cost</div>
+                <div class="summary-value" id="total_annual_cost">₹0</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Number of Bills</div>
+                <div class="summary-value" id="bill_count">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button
+            class="btn btn-primary"
+            id="calculate-btn"
+            onclick="processFinalCalculation()"
+          >
+            <i class="fas fa-arrow-right"></i> Calculate Solar Requirements
+          </button>
+        </div>
+      </section>
+
+      <!-- 📊 Solar Panel Requirement Page (Hidden Initially) -->
+      <section id="solar-panel-page" class="page-section">
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-solar-panel"></i>
+            <h2>Solar System Design</h2>
+          </div>
+          <div class="card-body">
+            <div id="solar-output"></div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-secondary" onclick="goBackToInput()">
+            <i class="fas fa-arrow-left"></i> Back to Input
+          </button>
+
+          <button class="btn btn-excel" onclick="exportExcelReport()">
+            <i class="fas fa-file-excel"></i> Export to Excel
+          </button>
+
+          <button class="btn btn-primary" onclick="exportReport()">
+            <i class="fas fa-download"></i> Export Report (PDF)
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ⚙️ JavaScript Files -->
+    <script src="https://cdn.jsdelivr.net/npm/ol/dist/ol.js"></script>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script src="{{ url_for('static', filename='map.js') }}"></script>
+    <script src="{{ url_for('static', filename='bill.js') }}"></script>
+    <script src="{{ url_for('static', filename='calc.js') }}"></script>
+    <script src="{{ url_for('static', filename='export.js') }}"></script>
+  </body>
+</html>
