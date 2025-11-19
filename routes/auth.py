@@ -4,7 +4,8 @@ import os
 # Create a Blueprint named 'auth'
 auth_bp = Blueprint('auth', __name__)
 
-# --- Master Admin Credentials (from environment variables) ---
+# --- Master Admin Credentials ---
+# Defaults to 'avishaktiSolar' and 'avishaktiSolar2025' if not set in environment
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'avishaktiSolar')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'avishaktiSolar2025')
 
@@ -16,11 +17,10 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Master Admin Check
+        # Strict Master Admin Check
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['logged_in'] = True
             session['username'] = "Master Admin"
-            flash('Login successful!', 'success')
             return redirect(url_for('index'))
         else:
             return render_template('login.html', error="Invalid username or password")
@@ -31,9 +31,7 @@ def login():
 def logout():
     session.pop('logged_in', None)
     session.pop('username', None)
-    flash('Logged out successfully.', 'success')
     return redirect(url_for('auth.login'))
-
 
 
 # from flask import Blueprint, render_template, request, redirect, url_for, flash, session
