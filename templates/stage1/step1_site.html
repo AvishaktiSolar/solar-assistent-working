@@ -1,0 +1,142 @@
+<div id="s1-page-1" class="wizard-step active-step center-content">
+  <div class="full-page-card">
+    <div class="card-header compact-header">
+      <h3><i class="fas fa-map-marker-alt"></i> Step 1.1: Site & Structure</h3>
+    </div>
+
+    <div class="card-body two-column-container">
+      <div class="two-column-layout">
+        <div
+          class="left-column"
+          style="
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+            overflow-x: hidden;
+          "
+        >
+          <div class="column-header">
+            <h4><i class="fas fa-edit"></i> Project Details</h4>
+          </div>
+
+          <div class="form-group">
+            <label>Project Name <span class="required">*</span></label>
+            <input
+              type="text"
+              id="site_name"
+              placeholder="Enter Project Name"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Design Prepared By</label>
+            <input type="text" id="designer_name" value="Aniket Apraj" />
+          </div>
+
+          <div class="mini-row">
+            <div class="form-group half-width">
+              <label>Project Type</label>
+              <select id="project_type" onchange="toggleSubsidyField()">
+                <option value="Residential Subsidy" selected>
+                  Subsidy (Residential)
+                </option>
+                <option value="Commercial">Commercial</option>
+                <option value="Industrial">Industrial</option>
+              </select>
+            </div>
+            <div class="form-group half-width">
+              <label>Subsidy Amount (₹)</label>
+              <input type="number" id="subsidy_amount" value="78000" />
+            </div>
+          </div>
+
+          <div class="mini-row">
+            <div class="form-group half-width">
+              <label>No. of Floors</label>
+              <input type="number" id="num_floors" value="20" />
+            </div>
+            <div class="form-group half-width">
+              <label>Structure Type</label>
+              <select id="structure_type">
+                <option value="Tin Shed" selected>Tin Shed</option>
+                <option value="RCC Roof">RCC Roof</option>
+                <option value="Ground Mount">Ground Mount</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mini-row">
+            <div class="form-group half-width">
+              <label>Terrace Type</label>
+              <select id="terrace_type">
+                <option value="Flat">Flat</option>
+                <option value="Inclined" selected>Inclined</option>
+              </select>
+            </div>
+            <div class="form-group half-width">
+              <label>Tilt Angle °</label>
+              <input type="number" id="tilt_angle" value="19" />
+            </div>
+          </div>
+
+          <div class="mini-row">
+            <div class="form-group half-width">
+              <label>Latitude <span class="required">*</span></label>
+              <input
+                type="number"
+                id="latitude"
+                placeholder="Click map or enter"
+                step="any"
+                onchange="syncMapToInputs()"
+              />
+            </div>
+            <div class="form-group half-width">
+              <label>Longitude <span class="required">*</span></label>
+              <input
+                type="number"
+                id="longitude"
+                placeholder="Click map or enter"
+                step="any"
+                onchange="syncMapToInputs()"
+              />
+            </div>
+          </div>
+
+          <button
+            class="btn btn-primary btn-block btn-sm"
+            id="fetch-solar-btn"
+            onclick="fetchAndPreviewSolarData()"
+          >
+            <i class="fas fa-satellite-dish"></i> Fetch Solar Data
+          </button>
+
+          <div id="solar-data-preview"></div>
+        </div>
+        <div class="right-column">
+          <div class="column-header">
+            <h4><i class="fas fa-map"></i> Location Map</h4>
+          </div>
+
+          <div class="map-container">
+            <div id="map" class="compact-map"></div>
+            <p class="tiny-text" style="margin-top: 10px">
+              <i class="fas fa-info-circle"></i> Click on the map to set project
+              coordinates
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-footer">
+      <div></div>
+      <button
+        type="button"
+        class="btn btn-primary btn-lg"
+        onclick="showS1Page(2)"
+      >
+        Next: Bills <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,318 @@
+/* ============================================
+   WIZARD STEPS & PAGE CARDS
+   ============================================ */
+.wizard-step {
+  display: none !important;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease-in-out;
+  background: var(--bg-white);
+}
+
+.wizard-step.active-step {
+  display: flex !important;
+}
+
+.center-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.full-page-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  width: 100%;
+  max-width: none !important;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+
+/* ============================================
+   TWO COLUMN LAYOUT
+   ============================================ */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  height: 100%;
+}
+
+.left-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.left-column {
+  padding-right: 20px;
+  border-right: 2px solid var(--border);
+}
+
+.right-column {
+  padding-left: 20px;
+}
+
+.column-header {
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.column-header h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.column-header h4 i {
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+/* ============================================
+   CARD SECTIONS
+   ============================================ */
+.card-header {
+  padding: 25px 35px;
+  border-bottom: 2px solid var(--border);
+  background: linear-gradient(to right, #f8fafc, #ffffff);
+  flex-shrink: 0;
+}
+
+.card-header.compact-header {
+  padding: 20px 35px;
+}
+
+.card-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.card-header h3 i {
+  color: var(--primary);
+  font-size: 1.6rem;
+}
+
+.card-body {
+  flex: 1;
+  padding: 35px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg-white);
+}
+
+.card-body.scrollable-y {
+  overflow-y: auto;
+}
+
+.card-body.two-column-container {
+  padding: 35px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card-footer {
+  padding: 25px 35px;
+  border-top: 2px solid var(--border);
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.03);
+}
+
+/* ============================================
+   WIZARD FOOTER
+   ============================================ */
+.wizard-footer {
+  padding: 25px 35px;
+  border-top: 2px solid var(--border);
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-shrink: 0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.03);
+}
+
+/* ============================================
+   INFO CARDS
+   ============================================ */
+.info-card {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.info-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+.info-card-header i {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.info-card-header h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.info-card-body {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ============================================
+   STAT CARDS
+   ============================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.stat-card {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  border-color: var(--primary);
+}
+
+.stat-card-icon {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 12px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.stat-card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 5px;
+}
+
+.stat-card-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ============================================
+   BILL CARDS
+   ============================================ */
+.bill-card {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  transition: var(--transition);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.bill-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.bill-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bill-card-title {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bill-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bill-card-body {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.bill-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.bill-detail-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.bill-detail-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}

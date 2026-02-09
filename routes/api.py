@@ -17,7 +17,7 @@ def get_data():
     data = request.get_json()
     lat = data.get('latitude')
     lon = data.get('longitude')
-    tilt = data.get('tilt', 20)
+    tilt = data.get('tilt', 19)
 
     # Validation
     if not lat or not lon:

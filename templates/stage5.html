@@ -1,0 +1,119 @@
+<section id="stage-5" class="stage-view">
+    <div class="dashboard-grid">
+        <div class="card full-height-card" style="grid-column: span 3;">
+            <div class="card-header compact-header">
+                <i class="fas fa-file-invoice-dollar"></i> Commercial Proposal & Detailed BoQ
+            </div>
+            <div class="card-body scrollable-y" style="background: #f8fafc; padding: 25px;">
+                
+                <div class="cost-sheet-container">
+                    
+                    <div class="cost-section">
+                        <div class="cost-section-header">A. Supply of Major Components</div>
+                        <table class="cost-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-desc">Item Description</th>
+                                    <th class="col-spec">Specification / Make</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th class="col-rate">Unit Rate (₹)</th>
+                                    <th class="col-total">Amount (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boq_major_body">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="cost-section">
+                        <div class="cost-section-header" style="background: #fffbeb; color: #b45309; border-left-color: #f59e0b;">
+                            B. Balance of System (BoS) - Electrical & Safety
+                        </div>
+                        <table class="cost-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-desc">Item Description</th>
+                                    <th class="col-spec">Specification</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th class="col-rate">Unit Rate (₹)</th>
+                                    <th class="col-total">Amount (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boq_bos_body">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="cost-section">
+                        <div class="cost-section-header" style="background: #f0fdf4; color: #166534; border-left-color: #22c55e;">
+                            C. Installation & Services
+                        </div>
+                        <table class="cost-table">
+                            <tbody id="boq_services_body">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="cost-section" style="border-bottom:none; background:#fff;">
+                        <div class="summary-grid">
+                            
+                            <div style="padding-right:20px;">
+                                <div style="margin-bottom:20px;">
+                                    <label class="summary-label" style="display:block; margin-bottom:8px;">GST CONFIGURATION</label>
+                                    <select class="cost-input" id="gst_mode" onchange="calcStage5()" style="text-align:left; font-weight:600;">
+                                        <option value="13.8">Standard Composite (13.8%)</option>
+                                        <option value="18">Commercial Flat (18%)</option>
+                                        <option value="0">Zero / Exempt (0%)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="summary-label" style="display:block; margin-bottom:8px;">SUBSIDY ADJUSTMENT</label>
+                                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
+                                        <span style="font-size:0.85rem; color:#64748b; font-weight:500;">Deduct Subsidy?</span>
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <span id="s5_subsidy_amt" style="font-family:'Consolas', monospace; font-weight:700; color:#16a34a; font-size:1rem;">0</span>
+                                            <input type="checkbox" id="apply_subsidy" onchange="calcStage5()" style="width:18px; height:18px; cursor:pointer;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="summary-row">
+                                    <span class="summary-label">Subtotal (Materials + Services)</span>
+                                    <span class="summary-val" id="val_subtotal">0</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="summary-label">GST Amount</span>
+                                    <span class="summary-val" id="val_gst" style="color:#dc2626;">0</span>
+                                </div>
+                                
+                                <div class="grand-total-row">
+                                    <span class="grand-total-label">Net Payable Amount</span>
+                                    <span class="grand-total-val">₹ <span id="val_grand_total">0</span></span>
+                                </div>
+                                
+                                <div class="cost-per-watt">
+                                    Project Rate: ₹ <span id="val_cpw">0</span> / Wp
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="calc-footer" style="margin-top:30px; display:flex; justify-content:space-between; align-items:center;">
+                    <button class="btn btn-secondary" onclick="switchStage(4)">
+                        <i class="fas fa-arrow-left"></i> Back to Engineering
+                    </button>
+                    <button class="btn btn-primary" onclick="generateMasterReport()" style="padding:12px 30px; font-weight:700; font-size:1rem; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
+                        <i class="fas fa-file-contract"></i> Generate Final Proposal
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

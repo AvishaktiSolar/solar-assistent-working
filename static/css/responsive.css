@@ -1,0 +1,339 @@
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Large Desktops (min-width: 1400px) - Extra Spacious */
+@media (min-width: 1400px) {
+  .card-body {
+    padding: 40px;
+  }
+  
+  .two-column-layout {
+    gap: 35px;
+  }
+}
+
+/* Standard Desktop (1024px - 1399px) */
+@media (max-width: 1399px) {
+  .card-body {
+    padding: 30px;
+  }
+  
+  .two-column-layout {
+    gap: 25px;
+  }
+}
+
+/* Tablets and Small Desktops (768px - 1023px) */
+@media (max-width: 1023px) {
+  :root {
+    --sidebar-width: 240px;
+    --header-height: 65px;
+  }
+
+  .hero-content h1 {
+    font-size: 1.4rem;
+  }
+
+  /* Stack columns on tablets */
+  .two-column-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .left-column {
+    border-right: none;
+    border-bottom: 2px solid var(--border);
+    padding-right: 0;
+    padding-bottom: 20px;
+  }
+
+  .right-column {
+    padding-left: 0;
+    padding-top: 20px;
+  }
+
+  #map {
+    min-height: 350px;
+  }
+
+  .card-body {
+    padding: 25px;
+  }
+
+  .dense-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+}
+
+/* Mobile Devices (max-width: 767px) */
+@media (max-width: 767px) {
+  :root {
+    --sidebar-width: 70px;
+    --header-height: 60px;
+  }
+
+  .hero-content h1 {
+    font-size: 1.2rem;
+  }
+
+  .hero-content h1 i {
+    font-size: 1.4rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+
+  /* Collapse sidebar to icons only */
+  .sidebar-nav {
+    width: 70px;
+  }
+
+  .nav-item span {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 14px 10px;
+  }
+
+  .nav-item.sub-nav {
+    padding: 14px 10px;
+  }
+
+  .nav-item.special {
+    margin: 10px 5px;
+  }
+
+  .stage-container {
+    margin-left: 70px;
+  }
+
+  /* Single column on mobile */
+  .two-column-layout {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .left-column,
+  .right-column {
+    padding: 0;
+    border: none;
+  }
+
+  .card-header {
+    padding: 20px 20px;
+  }
+
+  .card-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .card-body.two-column-container {
+    padding: 20px;
+  }
+
+  .card-footer,
+  .wizard-footer {
+    padding: 15px 20px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .wizard-footer button {
+    width: 100%;
+  }
+
+  .dense-grid,
+  .mini-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  #map {
+    min-height: 300px;
+    height: 300px;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 10px 12px;
+  }
+
+  .btn {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+
+  #bills-wrapper {
+    min-height: 300px;
+  }
+
+  /* Stack table on mobile */
+  .solar-data-table thead {
+    display: none;
+  }
+  
+  .solar-data-table tbody tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+  }
+  
+  .solar-data-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .solar-data-table tbody td:last-child {
+    border-bottom: none;
+  }
+  
+  .solar-data-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #1e40af;
+  }
+
+  .table thead {
+    display: none;
+  }
+  
+  .table tbody tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+  }
+  
+  .table tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .table tbody td:last-child {
+    border-bottom: none;
+  }
+  
+  .table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #1e40af;
+  }
+  
+  .table tfoot td {
+    display: block;
+    text-align: center;
+  }
+}
+
+/* Small Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  :root {
+    --sidebar-width: 60px;
+    --header-height: 55px;
+  }
+
+  .hero-section {
+    padding: 0 12px;
+  }
+
+  .hero-content h1 {
+    font-size: 1rem;
+  }
+
+  .sidebar-nav {
+    width: 60px;
+  }
+
+  .stage-container {
+    margin-left: 60px;
+  }
+
+  .card-header {
+    padding: 15px;
+  }
+
+  .card-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .card-body {
+    padding: 15px;
+  }
+
+  .card-body.two-column-container {
+    padding: 15px;
+  }
+
+  #map {
+    min-height: 250px;
+    height: 250px;
+  }
+}
+
+/* Landscape Mobile Adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+  #map {
+    height: 200px;
+    min-height: 200px;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  #bills-wrapper {
+    min-height: 250px;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+  .sidebar-nav,
+  .hero-section,
+  .wizard-footer,
+  .card-footer,
+  .btn,
+  .nav-item {
+    display: none !important;
+  }
+
+  .stage-container {
+    margin-left: 0 !important;
+  }
+
+  .full-page-card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .card-body {
+    padding: 0 !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+}

@@ -1,0 +1,333 @@
+{# jinja-language-server: disable=all #}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Procurement Dashboard - Avishakti</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='index.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='procurement.css') }}"
+    />
+  </head>
+  <body>
+    <script>
+      window.materialsDB = {{ materials | tojson | safe }};
+    </script>
+
+    <header class="hero-section procurement-header">
+      <div class="hero-content">
+        <h1><i class="fas fa-boxes"></i> Avishakti Procurement</h1>
+        <div class="header-right">
+          <span class="badge procurement-badge">Inventory Manager</span>
+          <a href="/logout" class="btn-logout"
+            ><i class="fas fa-sign-out-alt"></i
+          ></a>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-wrapper">
+      <nav class="sidebar-nav">
+        <button class="nav-item active" onclick="filterCategory(event, 'all')">
+          <i class="fas fa-warehouse"></i> <span>All Stock</span>
+        </button>
+        <button class="nav-item" onclick="filterCategory(event, 'Solar Panel')">
+          <i class="fas fa-solar-panel"></i> <span>Solar Panels</span>
+        </button>
+        <button class="nav-item" onclick="filterCategory(event, 'Inverter')">
+          <i class="fas fa-bolt"></i> <span>Inverters</span>
+        </button>
+        <button class="nav-item" onclick="filterCategory(event, 'Optimizer')">
+          <i class="fas fa-microchip"></i> <span>Optimizers</span>
+        </button>
+        <button class="nav-item" onclick="filterCategory(event, 'Cable')">
+          <i class="fas fa-plug"></i> <span>Cables</span>
+        </button>
+        <button class="nav-item" onclick="filterCategory(event, 'Protection')">
+          <i class="fas fa-shield-alt"></i> <span>Protection</span>
+        </button>
+        <button
+          class="nav-item"
+          onclick="filterCategory(event, 'Distribution Box')"
+        >
+          <i class="fas fa-box"></i> <span>Dist. Boxes</span>
+        </button>
+        <button
+          class="nav-item"
+          onclick="filterCategory(event, 'Civil Material')"
+        >
+          <i class="fas fa-cubes"></i> <span>Civil</span>
+        </button>
+      </nav>
+
+      <div class="stage-container">
+        <div class="card full-height-card">
+          <div class="card-header compact-header">
+            <div class="header-title">
+              <i class="fas fa-list"></i> Master Inventory List
+            </div>
+            <div style="display: flex; gap: 10px">
+              <input
+                type="text"
+                id="searchBox"
+                placeholder="Search..."
+                onkeyup="searchTable()"
+                style="
+                  padding: 5px 10px;
+                  font-size: 0.9rem;
+                  border: 1px solid #ccc;
+                  width: 200px;
+                  border-radius: 4px;
+                "
+              />
+              <button class="btn btn-sm btn-success" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Add New
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body scrollable-y">
+            <div class="table-responsive-wrapper">
+              <table class="full-data-table" id="inventoryTable">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Sub-Type</th>
+                    <th>Component Name</th>
+                    <th>Tech Specs</th>
+                    <th>Stock</th>
+                    <th>Unit</th>
+                    <th>Cost (₹)</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- UPDATE YOUR TABLE ROWS TO INCLUDE data-label ATTRIBUTES FOR MOBILE -->
+                  <!-- Replace your existing <tr> loop with this: -->
+
+                  {% for item in materials %}
+                  <tr
+                    data-category="{{ item.category }}"
+                    id="row-{{ item.id }}"
+                  >
+                    <td class="category-cell" data-label="Category">
+                      {{ item.category }}
+                    </td>
+
+                    <td data-label="Sub-Type">
+                      <span class="badge-sub">{{ item.subcategory }}</span>
+                    </td>
+
+                    <td class="name-cell" data-label="Component Name">
+                      {{ item.name }}
+                    </td>
+
+                    <td class="specs-cell" data-label="Tech Specs">
+                      {% if item.specifications %} {% for key, value in
+                      item.specifications.items() %}
+                      <span class="spec-badge">
+                        <strong>{{ key|replace('_', ' ')|title }}:</strong> {{
+                        value }}
+                      </span>
+                      {% endfor %} {% else %}
+                      <span style="color: #ccc">-</span>
+                      {% endif %}
+                    </td>
+
+                    <td
+                      class="stock-cell {% if item.stock < 20 %}low-stock{% endif %}"
+                      data-label="Stock"
+                    >
+                      {{ item.stock }}
+                    </td>
+
+                    <td data-label="Unit">{{ item.unit }}</td>
+
+                    <td data-label="Cost">₹{{ item.rate }}</td>
+
+                    <td data-label="Actions" style="display: flex; gap: 5px">
+                      <button
+                        class="btn-icon-edit"
+                        type="button"
+                        onclick="openEditModal({{ item.id }})"
+                        title="Edit Item"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+
+                      <a
+                        href="/procurement/delete/{{ item.id }}"
+                        class="btn-icon-delete"
+                        onclick="return confirm('Delete {{ item.name }}?')"
+                        title="Delete"
+                      >
+                        <i class="fas fa-trash"></i>
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="materialModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">Add Component</h3>
+          <span class="close-btn" onclick="closeModal()">&times;</span>
+        </div>
+
+        <form
+          action="/procurement/save"
+          method="POST"
+          id="materialForm"
+          onsubmit="prepareSpecsForSubmit()"
+        >
+          <input type="hidden" name="id" id="materialId" />
+          <input type="hidden" name="specs" id="finalSpecsJSON" />
+
+          <div class="mini-row">
+            <div class="form-group half-width">
+              <label>Category <span class="required">*</span></label>
+              <select
+                name="category"
+                id="catInput"
+                required
+                onchange="handleCategoryChange()"
+              >
+                <option value="" disabled selected>Select...</option>
+                <option value="Solar Panel">Solar Panel</option>
+                <option value="Inverter">Inverter</option>
+                <option value="Optimizer">Optimizer</option>
+                <option value="Cable (AC)">Cable (AC)</option>
+                <option value="Cable (DC)">Cable (DC)</option>
+                <option value="Protection">Protection</option>
+                <option value="Distribution Box">Distribution Box</option>
+                <option value="Civil Material">Civil Material</option>
+              </select>
+            </div>
+            <div class="form-group half-width">
+              <label>Sub-Type</label>
+              <input
+                type="text"
+                name="subcategory"
+                id="subInput"
+                placeholder="e.g. DCR / Alum"
+              />
+            </div>
+          </div>
+
+          <div
+            class="form-group"
+            id="wattageGroup"
+            style="
+              display: none;
+              background: #f0f9ff;
+              padding: 10px;
+              border-radius: 4px;
+              margin-bottom: 15px;
+            "
+          >
+            <label style="color: #0369a1"
+              >Panel Wattage (Wp) <span class="required">*</span></label
+            >
+            <input
+              type="number"
+              id="panelWattageInput"
+              placeholder="e.g. 550"
+              oninput="calculateTotalCost()"
+            />
+            <small style="color: #64748b"
+              >Used to calculate final per-panel cost.</small
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Component Name <span class="required">*</span></label>
+            <input type="text" name="name" id="nameInput" required />
+          </div>
+
+          <div id="dynamicSpecsContainer" class="specs-grid"></div>
+
+          <div class="mini-row" style="margin-top: 15px">
+            <div class="form-group half-width">
+              <label>Stock Qty <span class="required">*</span></label>
+              <input type="number" name="stock" id="stockInput" required />
+            </div>
+            <div class="form-group half-width">
+              <label>Unit <span class="required">*</span></label>
+              <input
+                type="text"
+                name="unit"
+                id="unitInput"
+                placeholder="Nos / Mtr"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="mini-row">
+            <div
+              class="form-group half-width"
+              id="ratePerWattGroup"
+              style="display: none"
+            >
+              <label>Rate (₹/Wp)</label>
+              <input
+                type="number"
+                id="ratePerWattInput"
+                step="0.01"
+                placeholder="e.g. 22"
+                oninput="calculateTotalCost()"
+              />
+            </div>
+
+            <div class="form-group" id="finalCostGroup" style="flex: 1">
+              <label id="costLabel"
+                >Cost / Unit (₹)
+                <span class="required" style="color: red">*</span></label
+              >
+              <input
+                type="number"
+                name="rate"
+                id="rateInput"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" id="saveBtn">
+              Save to Database
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='procurement.js') }}"></script>
+  </body>
+</html>

@@ -1,0 +1,231 @@
+/* =========================================
+   STAGE 5: COMMERCIAL PROPOSAL (ADVANCED)
+   ========================================= */
+
+:root {
+  --navy: #0f172a;
+  --blue: #0ea5e9;
+  --green: #10b981;
+  --red: #ef4444;
+  --amber: #f59e0b;
+  --bg: #f8fafc;
+  --bd: #e2e8f0;
+  --txt: #1e293b;
+}
+
+/* --- MAIN CONTAINER OVERRIDE (CRITICAL FIX) --- */
+/* We use !important to override the Stage 2 grid settings */
+#stage-5 .dashboard-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important; /* Force Single Column Full Width */
+  padding: 20px;
+  height: 100%;
+  width: 100%;
+  max-width: 1600px; /* Max width for readability on ultra-wide screens */
+  margin: 0 auto;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* --- CARD SYSTEM --- */
+#stage-5 .full-height-card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--bd);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* --- SCROLLABLE BODY --- */
+.card-body {
+  flex: 1;
+  padding: 30px;
+  padding-bottom: 100px; /* Space for footer */
+  overflow-y: auto;
+  background: #f8fafc;
+  scroll-behavior: smooth;
+}
+
+/* --- COST SHEET CONTAINER (The "Paper" Look) --- */
+.cost-sheet-container {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-bottom: 20px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- SECTION HEADERS --- */
+.cost-section-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* --- TABLES --- */
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.cost-table th {
+  background: #e2e8f0;
+  color: #475569;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.cost-table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: var(--txt);
+}
+
+.cost-table tr:nth-child(even) { background-color: #f8fafc; }
+.cost-table tr:hover { background-color: #f0f9ff; }
+
+/* Column Specifics */
+.col-desc { width: 30%; font-weight: 600; color: var(--navy); }
+.col-spec { width: 25%; font-style: italic; color: #64748b; font-size: 0.85rem; }
+.col-qty { width: 10%; text-align: center; background: #f1f5f9; font-weight: 700; }
+.col-rate { width: 15%; text-align: right; }
+.col-total { width: 20%; text-align: right; font-weight: 800; font-family: 'Consolas', monospace; color: var(--navy); }
+
+/* --- INPUTS --- */
+.cost-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-align: right;
+  font-family: 'Consolas', monospace;
+  font-weight: 600;
+  color: var(--txt);
+  background: transparent;
+  transition: all 0.2s;
+}
+
+.cost-input:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.cost-input:focus {
+  background: #fff;
+  border-color: var(--blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.cost-input[readonly] { pointer-events: none; color: #64748b; }
+
+/* --- SUMMARY SECTION --- */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  padding: 30px;
+  background: #fff;
+  border-top: 2px solid #e2e8f0;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.summary-val {
+  font-family: 'Consolas', monospace;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* Grand Total Box */
+.grand-total-row {
+  margin-top: 20px;
+  background: var(--navy);
+  color: #fff;
+  padding: 15px 20px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.grand-total-label { font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; }
+.grand-total-val { font-size: 1.8rem; font-weight: 800; color: #4ade80; font-family: 'Consolas', monospace; }
+
+/* --- FIXED FOOTER --- */
+.calc-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--bd);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+  z-index: 50;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-primary { background: var(--blue); color: white; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+.btn-primary:hover { background: #0284c7; transform: translateY(-2px); }
+
+.btn-secondary { background: #fff; border: 1px solid var(--bd); color: #64748b; }
+.btn-secondary:hover { background: #f1f5f9; border-color: #cbd5e1; }
+
+/* Responsive */
+@media(max-width: 1024px) {
+  .summary-grid { grid-template-columns: 1fr; gap: 20px; }
+  .cost-table th, .cost-table td { padding: 8px 5px; font-size: 0.8rem; }
+}

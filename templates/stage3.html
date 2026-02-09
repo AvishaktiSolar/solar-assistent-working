@@ -1,0 +1,111 @@
+{% macro render_row(id, label, placeholder) %}
+<div class="component-row">
+    <div class="comp-label">{{ label }}</div>
+    <div class="comp-cell">
+        <select class="comp-select" id="sel_{{ id }}" onchange="updateRow('{{ id }}', '{{ def_size }}')">
+            <option value="">{{ placeholder }}</option>
+        </select>
+    </div>
+    <div class="comp-cell">
+        <input class="comp-input" id="size_{{ id }}" placeholder="-">
+    </div>
+    <div class="comp-cell">
+        <input class="comp-input" id="qty_{{ id }}" type="number" value="1" min="0" onchange="calcRowTotal('{{ id }}')">
+    </div>
+    <div class="comp-cell">
+        <input class="comp-input elec-cost" id="cost_{{ id }}" value="0" type="number" onchange="calculateGrandTotal()">
+        <input type="hidden" id="rate_{{ id }}" value="0">
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_fixed_row(id, label, brand_val, size_val, rate_val) %}
+<div class="component-row fixed-row">
+    <div class="comp-label">{{ label }} <span style="color:#d97706; font-size:0.7em;">(Fixed)</span></div>
+    <div class="comp-cell">
+        <input class="comp-input" id="sel_{{ id }}" value="{{ brand_val }}" readonly style="font-weight:bold; color:#444;">
+    </div>
+    <div class="comp-cell">
+        <input class="comp-input" id="size_{{ id }}" value="{{ size_val }}">
+    </div>
+    <div class="comp-cell">
+        <input class="comp-input" id="qty_{{ id }}" type="number" value="1" min="0" onchange="calcRowTotal('{{ id }}')">
+    </div>
+    <div class="comp-cell">
+        <input class="comp-input elec-cost" id="cost_{{ id }}" value="{{ rate_val }}" type="number" onchange="calculateGrandTotal()">
+        <input type="hidden" id="rate_{{ id }}" value="{{ rate_val }}">
+    </div>
+</div>
+{% endmacro %}
+
+<section id="stage-3" class="stage-view">
+    <div class="dashboard-grid">
+        
+        <div class="card full-height-card" style="grid-column: span 3;">
+            <div class="card-header compact-header">
+                <i class="fas fa-random"></i> Electrical BoQ Selection
+            </div>
+            <div class="card-body scrollable-y">
+                
+                <div class="context-banner">
+                    <div class="context-item">System DC: <span id="s3_dc_cap">-</span></div>
+                    <div class="context-item">System AC: <span id="s3_ac_cap">-</span></div>
+                    <div class="context-item">String Current: <span id="s3_isc">-</span></div>
+                </div>
+
+                <div class="electrical-split-container">
+                    
+                    <div class="side-column dc">
+                        <div class="side-header">DC Side</div>
+                        <div class="table-head-row">
+                            <div class="table-head-cell">Component</div>
+                            <div class="table-head-cell">Make / Brand</div>
+                            <div class="table-head-cell">Spec</div>
+                            <div class="table-head-cell">Qty</div>
+                            <div class="table-head-cell">Cost</div>
+                        </div>
+
+                        {{ render_row('dcdb', 'DCDB', 'Select Box...') }}
+                        
+                        {{ render_fixed_row('dc_mcb', 'DC MCB', 'Chint', '4p 25A', '450') }}
+                        {{ render_fixed_row('dc_fuse', 'DC Fuse', 'Mersen', '25A', '150') }}
+                        {{ render_fixed_row('dc_spd', 'DC SPD', 'Citel', 'DS50PV-1000/51', '1200') }}
+                        {{ render_fixed_row('dc_cable', 'DC Cable', 'Lapp', 'OLFLEX SOLAR 1X4', '45') }}
+                    </div>
+
+                    <div class="side-column ac">
+                        <div class="side-header ac">AC Side</div>
+                        <div class="table-head-row">
+                            <div class="table-head-cell">Component</div>
+                            <div class="table-head-cell">Make / Brand</div>
+                            <div class="table-head-cell">Spec</div>
+                            <div class="table-head-cell">Qty</div>
+                            <div class="table-head-cell">Cost</div>
+                        </div>
+
+                        {{ render_row('acdb', 'ACDB', 'Select Box...') }}
+                        {{ render_row('ac_mcb', 'AC MCB', 'Select Brand...') }}
+                        {{ render_row('ac_elcb', 'AC ELCB', 'Select Brand...') }}
+                        
+                        {{ render_fixed_row('ac_spd', 'AC SPD', 'Citel', 'DS440-320', '1800') }}
+                        
+                        {{ render_row('ac_cable', 'AC Cable', 'Select Cable...') }}
+                    </div>
+
+                </div>
+
+                <div class="grand-total-bar">
+                    Total Electrical Cost: ₹ <span id="stage3_grand_total">0</span>
+                </div>
+
+                <div class="calc-footer" style="margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="switchStage(2)">Back</button>
+                    <button class="btn btn-success" onclick="saveStage3()">
+                        Save & Next Stage <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

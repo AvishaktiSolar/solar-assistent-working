@@ -22,10 +22,9 @@
       <div class="login-card">
         <div class="login-header">
           <h1><i class="fas fa-solar-panel"></i> Avishakti</h1>
-          <p>Solar Design Assistant</p>
+          <p id="loginSubtext">Solar Design Assistant</p>
         </div>
 
-        <!-- Flash messages (Success/Info) -->
         {% with messages = get_flashed_messages(with_categories=true) %} {% if
         messages %} {% for category, message in messages %}
         <div
@@ -40,7 +39,6 @@
         </div>
         {% endfor %} {% endif %} {% endwith %}
 
-        <!-- Error messages -->
         {% if error %}
         <div class="error-message">
           <i class="fas fa-exclamation-circle"></i> {{ error }}
@@ -80,7 +78,32 @@
             Login <i class="fas fa-sign-in-alt"></i>
           </button>
         </form>
+
+        <div style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem; text-align: center;">
+            <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 10px;">Access Material Inventory?</p>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleProcurementMode()" style="width: 100%; border: 1px dashed #3b82f6; color: #3b82f6;">
+                <i class="fas fa-boxes"></i> Procurement Portal Login
+            </button>
+        </div>
+
       </div>
     </div>
+
+    <script>
+        function toggleProcurementMode() {
+            // 1. Pre-fill the username
+            const userField = document.getElementById('username');
+            userField.value = "procure";
+            
+            // 2. Focus on password field
+            document.getElementById('password').focus();
+            
+            // 3. Visual Feedback
+            const subtext = document.getElementById('loginSubtext');
+            subtext.innerHTML = "<i class='fas fa-warehouse'></i> Procurement Access Mode";
+            subtext.style.color = "#f59e0b"; // Orange/Yellow color
+            subtext.style.fontWeight = "bold";
+        }
+    </script>
   </body>
 </html>

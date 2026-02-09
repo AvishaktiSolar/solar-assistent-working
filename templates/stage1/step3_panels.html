@@ -1,0 +1,169 @@
+<div id="s1-page-3" class="wizard-step center-content">
+  <div class="full-page-card">
+    <div class="card-header compact-header">
+      <h3><i class="fas fa-solar-panel"></i> Step 1.3: Panel Selection</h3>
+    </div>
+
+    <div class="card-body scrollable-y">
+      <div
+        class="form-group"
+        style="
+          margin-bottom: 25px;
+          padding: 15px;
+          background: #f8fafc;
+          border-radius: 6px;
+        "
+      >
+        <label
+          style="
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 8px;
+          "
+        >
+          Select Panel Model (Inventory)
+        </label>
+        <select
+          id="panel_selector"
+          onchange="selectPanelModel()"
+          style="
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--primary);
+            border-radius: 4px;
+            font-size: 1rem;
+          "
+        >
+          <option value="">-- Loading Panels... --</option>
+        </select>
+      </div>
+
+      <div
+        class="dense-grid"
+        style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px"
+      >
+        <div class="form-group">
+          <label>Target %</label>
+          <input type="number" id="savings_target" value="100" />
+        </div>
+        <div class="form-group">
+          <label>Panel Wp</label>
+          <input
+            type="number"
+            id="panel_wattage"
+            placeholder="Auto"
+            readonly
+            style="background: #f1f5f9"
+          />
+        </div>
+        <div class="form-group">
+          <label>NOCT °C</label>
+          <input
+            type="number"
+            id="panel_noct"
+            placeholder="Auto"
+            readonly
+            style="background: #f1f5f9"
+          />
+        </div>
+        <div class="form-group">
+          <label>Coeff %</label>
+          <input
+            type="number"
+            id="temp_coefficient"
+            step="0.01"
+            placeholder="Auto"
+            readonly
+            style="background: #f1f5f9"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Losses %</label>
+          <input type="number" id="other_losses" value="14" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 15px">
+        <label>Estimated Cost/kW</label>
+        <input
+          type="number"
+          id="capex_per_kw"
+          placeholder="Auto"
+          readonly
+          style="background: #dcfce7; color: #15803d; font-weight: bold"
+        />
+      </div>
+
+      <div
+        style="
+          margin-top: 25px;
+          padding: 20px;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          border-radius: 8px;
+        "
+      >
+        <h4
+          style="
+            margin-bottom: 15px;
+            color: #1e40af;
+            border-bottom: 1px solid #bfdbfe;
+            padding-bottom: 5px;
+          "
+        >
+          Project Summary
+        </h4>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+          "
+        >
+          <div>
+            <small>Annual Units</small><br />
+            <strong
+              id="total_annual_units"
+              style="font-size: 1.2em; color: #0f172a"
+              >0 kWh</strong
+            >
+          </div>
+          <div>
+            <small>Total Cost</small><br />
+            <strong
+              id="total_annual_cost"
+              style="font-size: 1.2em; color: #0f172a"
+              >₹0</strong
+            >
+          </div>
+          <div>
+            <small>Avg Rate/Unit</small><br />
+            <strong
+              id="avg_cost_per_unit"
+              style="font-size: 1.2em; color: #0f172a"
+              >₹0</strong
+            >
+          </div>
+        </div>
+        <span id="bill_count" style="display: none">0</span>
+      </div>
+    </div>
+
+    <div class="wizard-footer">
+      <button type="button" class="btn btn-secondary" onclick="showS1Page(2)">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary btn-lg"
+        onclick="showS1Page(4)"
+      >
+        Next: Shadow Analysis <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

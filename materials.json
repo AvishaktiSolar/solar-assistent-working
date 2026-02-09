@@ -1,0 +1,2966 @@
+[
+    {
+        "id": 101,
+        "category": "Solar Panel",
+        "subcategory": "DCR",
+        "name": "Renew DCR 550Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 13750.0,
+        "specifications": {
+            "voc": 50.32,
+            "isc": 13.79,
+            "vmp": 42.64,
+            "imp": 12.91,
+            "voc_coeff": -0.26,
+            "pmax_coeff": -0.33,
+            "noct": 45,
+            "bifacial": "false",
+            "warranty": 12,
+            "wattage": 550,
+            "pmax": 550
+        }
+    },
+    {
+        "id": 102,
+        "category": "Solar Panel",
+        "subcategory": "DCR",
+        "name": "Waaree DCR 580Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 8700.0,
+        "specifications": {
+            "voc": 51.48,
+            "isc": 14.3,
+            "vmp": 42.99,
+            "imp": 13.49,
+            "voc_coeff": -0.25,
+            "pmax_coeff": -0.29,
+            "noct": 43,
+            "bifacial": "true",
+            "warranty": 12,
+            "wattage": 580,
+            "pmax": 580
+        }
+    },
+    {
+        "id": 103,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Waaree NDCR 590Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 9440.0,
+        "specifications": {
+            "voc": 51.68,
+            "isc": 14.36,
+            "vmp": 43.15,
+            "imp": 13.68,
+            "voc_coeff": -0.25,
+            "pmax_coeff": -0.29,
+            "noct": 43,
+            "bifacial": "true",
+            "warranty": 12,
+            "wattage": 590,
+            "pmax": 590
+        }
+    },
+    {
+        "id": 104,
+        "category": "Solar Panel",
+        "subcategory": "DCR",
+        "name": "Adani DCR 620Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 10540.0,
+        "specifications": {
+            "voc": 49.2,
+            "isc": 15.95,
+            "vmp": 41.2,
+            "imp": 15.05,
+            "voc_coeff": -0.25,
+            "pmax_coeff": -0.29,
+            "noct": 45,
+            "bifacial": "true",
+            "warranty": 12,
+            "wattage": 620,
+            "pmax": 620
+        }
+    },
+    {
+        "id": 105,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Evvo NDCR 720Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15.2,
+        "specifications": {
+            "voc": 49.28,
+            "isc": 18.55,
+            "vmp": 41.03,
+            "imp": 17.55,
+            "pmax_coeff": -0.29,
+            "voc_coeff": -0.25,
+            "noct": 45,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 106,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Renewsys NDCR 600Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 14.5,
+        "specifications": {
+            "voc": 54.0,
+            "isc": 14.05,
+            "vmp": 44.37,
+            "imp": 13.53,
+            "pmax_coeff": -0.29,
+            "voc_coeff": -0.25,
+            "noct": 45,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 107,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Waaree NDCR 690Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16.25,
+        "specifications": {
+            "voc": 48.18,
+            "isc": 18.23,
+            "vmp": 40.09,
+            "imp": 17.21,
+            "pmax_coeff": -0.3,
+            "voc_coeff": -0.25,
+            "noct": 43,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 108,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Vikram NDCR 590Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15.4,
+        "specifications": {
+            "voc": 43.3,
+            "isc": 17.16,
+            "vmp": 36.9,
+            "imp": 15.99,
+            "pmax_coeff": -0.34,
+            "voc_coeff": -0.27,
+            "noct": 45,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 109,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Renew NDCR 600Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15.0,
+        "specifications": {
+            "voc": 54.0,
+            "isc": 14.05,
+            "vmp": 44.37,
+            "imp": 13.53,
+            "pmax_coeff": -0.29,
+            "voc_coeff": -0.25,
+            "noct": 45,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 110,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Premier NDCR 610Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 14.9,
+        "specifications": {
+            "voc": 49.0,
+            "isc": 15.86,
+            "vmp": 40.8,
+            "imp": 14.96,
+            "pmax_coeff": -0.3,
+            "voc_coeff": -0.25,
+            "noct": 45,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 111,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Adani NDCR 620Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15.75,
+        "specifications": {
+            "voc": 49.2,
+            "isc": 15.95,
+            "vmp": 41.2,
+            "imp": 15.05,
+            "pmax_coeff": -0.29,
+            "voc_coeff": -0.25,
+            "noct": 45,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 112,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Credence NDCR 725Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16.8,
+        "specifications": {
+            "voc": 48.8,
+            "isc": 18.8,
+            "vmp": 40.95,
+            "imp": 17.71,
+            "pmax_coeff": -0.3,
+            "voc_coeff": -0.25,
+            "noct": 44,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 113,
+        "category": "Solar Panel",
+        "subcategory": "Non-DCR",
+        "name": "Trina NDCR 710Wp",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 14.6,
+        "specifications": {
+            "voc": 49.5,
+            "isc": 18.5,
+            "vmp": 41.6,
+            "imp": 17.1,
+            "pmax_coeff": -0.3,
+            "voc_coeff": -0.25,
+            "noct": 43,
+            "warranty": 12,
+            "bifacial": true
+        }
+    },
+    {
+        "id": 201,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 4 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 45.0,
+        "specifications": {
+            "resistance": 9.48,
+            "ccc": 31
+        }
+    },
+    {
+        "id": 202,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 6 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 5.9,
+            "ccc": 50
+        }
+    },
+    {
+        "id": 203,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 10 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 3.94,
+            "ccc": 67
+        }
+    },
+    {
+        "id": 204,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 16 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 2.44,
+            "ccc": 70
+        }
+    },
+    {
+        "id": 205,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 25 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 1.54,
+            "ccc": 96
+        }
+    },
+    {
+        "id": 206,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 35 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 1.11,
+            "ccc": 117
+        }
+    },
+    {
+        "id": 207,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 50 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.82,
+            "ccc": 142
+        }
+    },
+    {
+        "id": 208,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 70 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.567,
+            "ccc": 179
+        }
+    },
+    {
+        "id": 209,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 95 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.41,
+            "ccc": 221
+        }
+    },
+    {
+        "id": 210,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 120 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.324,
+            "ccc": 257
+        }
+    },
+    {
+        "id": 211,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 150 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.264,
+            "ccc": 292
+        }
+    },
+    {
+        "id": 212,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 185 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.21,
+            "ccc": 337
+        }
+    },
+    {
+        "id": 213,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 240 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.16,
+            "ccc": 399
+        }
+    },
+    {
+        "id": 214,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 300 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.128,
+            "ccc": 455
+        }
+    },
+    {
+        "id": 215,
+        "category": "Cable (AC)",
+        "subcategory": "Aluminium",
+        "name": "4C AL Armored 400 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.1,
+            "ccc": 530
+        }
+    },
+    {
+        "id": 216,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 4 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 5.9,
+            "ccc": 36
+        }
+    },
+    {
+        "id": 217,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 6 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 3.94,
+            "ccc": 47
+        }
+    },
+    {
+        "id": 218,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 10 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 2.34,
+            "ccc": 62
+        }
+    },
+    {
+        "id": 219,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 16 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 1.47,
+            "ccc": 79
+        }
+    },
+    {
+        "id": 220,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 25 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.93,
+            "ccc": 108
+        }
+    },
+    {
+        "id": 221,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 35 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.671,
+            "ccc": 132
+        }
+    },
+    {
+        "id": 222,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 50 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.495,
+            "ccc": 162
+        }
+    },
+    {
+        "id": 223,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 70 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.343,
+            "ccc": 198
+        }
+    },
+    {
+        "id": 224,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 95 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.247,
+            "ccc": 240
+        }
+    },
+    {
+        "id": 225,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 120 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.196,
+            "ccc": 276
+        }
+    },
+    {
+        "id": 226,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 150 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.159,
+            "ccc": 318
+        }
+    },
+    {
+        "id": 227,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 185 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.127,
+            "ccc": 366
+        }
+    },
+    {
+        "id": 228,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 240 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.0965,
+            "ccc": 426
+        }
+    },
+    {
+        "id": 229,
+        "category": "Cable (AC)",
+        "subcategory": "Copper",
+        "name": "4C Cu Armored 300 sq mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 0.0,
+        "specifications": {
+            "resistance": 0.0769,
+            "ccc": 480
+        }
+    },
+    {
+        "id": 301,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 5kW (SE5K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 78000.0,
+        "specifications": {
+            "output_current": 8,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 900,
+            "vmin": 750,
+            "imax": 8.5,
+            "isc": 12,
+            "max_dc_power": 6750,
+            "max_efficiency": 98.0,
+            "euro_efficiency": 97.3,
+            "dimensions": "540 x 315 x 191 mm",
+            "weight": 18.9,
+            "protection_rating": "IP65",
+            "note": "Fixed Voltage (Requires Optimizers)"
+        }
+    },
+    {
+        "id": 302,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 10kW (SE10K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 95000.0,
+        "specifications": {
+            "output_current": 16,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 900,
+            "vmin": 750,
+            "imax": 16.5,
+            "isc": 23,
+            "max_dc_power": 13500,
+            "max_efficiency": 97.6,
+            "euro_efficiency": 97.4,
+            "dimensions": "540 x 315 x 191 mm",
+            "weight": 16.4,
+            "protection_rating": "IP65",
+            "note": "Fixed Voltage (Requires Optimizers)"
+        }
+    },
+    {
+        "id": 303,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 15kW (SE15K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 115000.0,
+        "specifications": {
+            "output_current": 23,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 22,
+            "isc": 30,
+            "max_dc_power": 22500,
+            "max_efficiency": 98.0,
+            "euro_efficiency": 97.7,
+            "dimensions": "540 x 315 x 260 mm",
+            "weight": 30.7,
+            "protection_rating": "IP65",
+            "note": "Fixed Voltage (Requires Optimizers)"
+        }
+    },
+    {
+        "id": 304,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 17kW (SE17K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 125000.0,
+        "specifications": {
+            "output_current": 26,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 23,
+            "isc": 30,
+            "max_dc_power": 22950,
+            "max_efficiency": 98.0,
+            "euro_efficiency": 97.7,
+            "dimensions": "540 x 315 x 260 mm",
+            "weight": 30.7,
+            "protection_rating": "IP65",
+            "note": "Fixed Voltage (Requires Optimizers)"
+        }
+    },
+    {
+        "id": 305,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 25kW (SE25K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 145000.0,
+        "specifications": {
+            "output_current": 38,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 37,
+            "isc": 45,
+            "max_dc_power": 33750,
+            "max_efficiency": 98.3,
+            "euro_efficiency": 98.0,
+            "dimensions": "540 x 315 x 260 mm",
+            "weight": 30.7,
+            "protection_rating": "IP65",
+            "note": "Fixed Voltage (Requires Optimizers)"
+        }
+    },
+    {
+        "id": 306,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 27.6kW (SE27.6K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 155000.0,
+        "specifications": {
+            "output_current": 40,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 40,
+            "isc": 45,
+            "max_dc_power": 37250,
+            "max_efficiency": 98.3,
+            "euro_efficiency": 98.0,
+            "dimensions": "540 x 315 x 260 mm",
+            "weight": 30.7,
+            "protection_rating": "IP65",
+            "note": "Fixed Voltage (Requires Optimizers)"
+        }
+    },
+    {
+        "id": 307,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 33.3kW (SE33.3K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 185000.0,
+        "specifications": {
+            "output_current": 48.5,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 48.25,
+            "isc": 55,
+            "max_dc_power": 45000,
+            "max_efficiency": 98.3,
+            "euro_efficiency": 98.0,
+            "dimensions": "558 x 328 x 273 mm",
+            "weight": 32.0,
+            "protection_rating": "IP65",
+            "note": "Fixed Voltage (Requires Optimizers)"
+        }
+    },
+    {
+        "id": 308,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 50kW (SE50K Synergy)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 280000.0,
+        "specifications": {
+            "output_current": 72.5,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 76,
+            "isc": 80,
+            "max_dc_power": 67500,
+            "max_efficiency": 98.3,
+            "euro_efficiency": 98.0,
+            "dimensions": "Pri: 940x315x260 / Sec: 540x315x260 mm",
+            "weight": 93.0,
+            "protection_rating": "IP65",
+            "synergy_units": 2,
+            "note": "Synergy Technology (2 Units)"
+        }
+    },
+    {
+        "id": 309,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 66.6kW (SE66.6K Synergy)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 320000.0,
+        "specifications": {
+            "output_current": 96.5,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 96.5,
+            "isc": 110,
+            "max_dc_power": 100000,
+            "max_efficiency": 98.3,
+            "euro_efficiency": 98.0,
+            "dimensions": "Unit: 558x328x273mm / Manager: 360x560x295mm",
+            "weight": 82.0,
+            "protection_rating": "IP65",
+            "synergy_units": 2,
+            "note": "Synergy Technology (2 Units)"
+        }
+    },
+    {
+        "id": 310,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 100kW (SE100K Synergy)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 450000.0,
+        "specifications": {
+            "output_current": 145,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 145,
+            "isc": 165,
+            "max_dc_power": 150000,
+            "max_efficiency": 98.3,
+            "euro_efficiency": 98.0,
+            "dimensions": "Unit: 558x328x273mm / Manager: 360x560x295mm",
+            "weight": 114.0,
+            "protection_rating": "IP65",
+            "synergy_units": 3,
+            "note": "Synergy Technology (3 Units)"
+        }
+    },
+    {
+        "id": 311,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "SolarEdge 120kW (SE120K Synergy)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 510000.0,
+        "specifications": {
+            "output_current": 174,
+            "mppt": 0,
+            "warranty": 12,
+            "vmax": 1000,
+            "vmin": 750,
+            "imax": 174,
+            "isc": 195,
+            "max_dc_power": 180000,
+            "max_efficiency": 98.1,
+            "euro_efficiency": 98.0,
+            "dimensions": "Unit: 558x328x273mm / Manager: 360x560x295mm",
+            "weight": 114.0,
+            "protection_rating": "IP65",
+            "synergy_units": 3,
+            "note": "Synergy Technology (3 Units) - 480V Grid Only"
+        }
+    },
+    {
+        "id": 320,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Goodwe 1kW (GW1000-XS-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 13700.0,
+        "specifications": {
+            "output_current": 4.8,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 500,
+            "vmin": 40,
+            "imax": 16,
+            "isc": 25
+        }
+    },
+    {
+        "id": 321,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Goodwe 2kW (GW2000-XS-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15181.0,
+        "specifications": {
+            "output_current": 9.6,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 40,
+            "imax": 16,
+            "isc": 25
+        }
+    },
+    {
+        "id": 322,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Goodwe 3kW (GW3000-XS-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15570.0,
+        "specifications": {
+            "output_current": 14.3,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 40,
+            "imax": 16,
+            "isc": 25
+        }
+    },
+    {
+        "id": 323,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Goodwe 3.3kW (GW3300-XS-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15685.0,
+        "specifications": {
+            "output_current": 15.9,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 40,
+            "imax": 16,
+            "isc": 25
+        }
+    },
+    {
+        "id": 324,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Goodwe 4.2kW (GW4200-DNS-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 26500.93,
+        "specifications": {
+            "output_current": 20.2,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 60,
+            "imax": 16,
+            "isc": 23
+        }
+    },
+    {
+        "id": 325,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Goodwe 5kW (GW5000-DNS-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 29995.0,
+        "specifications": {
+            "output_current": 24,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 60,
+            "imax": 16,
+            "isc": 23
+        }
+    },
+    {
+        "id": 326,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Goodwe 6kW (GW6000-DNS-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 30200.0,
+        "specifications": {
+            "output_current": 28.8,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 60,
+            "imax": 16,
+            "isc": 23
+        }
+    },
+    {
+        "id": 327,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 5kW (GW5000-SDT-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 49240.5,
+        "specifications": {
+            "output_current": 8.4,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 328,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 6kW (GW6000-SDT-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 50201.18,
+        "specifications": {
+            "output_current": 10,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 329,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 8kW (GW8000-SDT-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 52500.1,
+        "specifications": {
+            "output_current": 13.4,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 330,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 10kW (GW10K-SDT-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 54000.83,
+        "specifications": {
+            "output_current": 16.7,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 331,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 15kW (GW15K-SDT-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 65000.0,
+        "specifications": {
+            "output_current": 25,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 332,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 20kW (GW20K-SDT-30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 72200.0,
+        "specifications": {
+            "output_current": 33.3,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 30,
+            "isc": 37.5
+        }
+    },
+    {
+        "id": 333,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 25kW (GW25K-SDT-C30)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 76000.0,
+        "specifications": {
+            "output_current": 41.7,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 30,
+            "isc": 37.5
+        }
+    },
+    {
+        "id": 334,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 30kW (GW30K-MT)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 85000.0,
+        "specifications": {
+            "output_current": 48,
+            "mppt": 3,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 32.5
+        }
+    },
+    {
+        "id": 337,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 50kW (GW50KS-MT)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 155000.0,
+        "specifications": {
+            "output_current": 83.3,
+            "mppt": 5,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 30,
+            "isc": 37.5
+        }
+    },
+    {
+        "id": 338,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 60kW (GW60KS-MT)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 162500.0,
+        "specifications": {
+            "output_current": 100,
+            "mppt": 6,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 30,
+            "isc": 37.5
+        }
+    },
+    {
+        "id": 339,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 80kW (GW80KBF-MT)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 210000.0,
+        "specifications": {
+            "output_current": 133.3,
+            "mppt": 4,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 44,
+            "isc": 55
+        }
+    },
+    {
+        "id": 340,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 100kW (GW100K-HT)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 235000.0,
+        "specifications": {
+            "output_current": 167,
+            "mppt": 10,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 28,
+            "isc": 42
+        }
+    },
+    {
+        "id": 341,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 110kW (GW110K-HT)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 245000.0,
+        "specifications": {
+            "output_current": 183.3,
+            "mppt": 10,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 28,
+            "isc": 42
+        }
+    },
+    {
+        "id": 342,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 120kW (GW120K-HT)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 265000.0,
+        "specifications": {
+            "output_current": 200,
+            "mppt": 12,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 28,
+            "isc": 42
+        }
+    },
+    {
+        "id": 343,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Goodwe 136kW (GW136K-HTH)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 285000.0,
+        "specifications": {
+            "output_current": 157.6,
+            "mppt": 12,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 500,
+            "imax": 26,
+            "isc": 42
+        }
+    },
+    {
+        "id": 350,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Solis 2kW (S6-GR1P2K-M)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16500.0,
+        "specifications": {
+            "output_current": 9.1,
+            "mppt": 1,
+            "warranty": 5,
+            "vmax": 600,
+            "vmin": 60,
+            "imax": 14,
+            "isc": 22
+        }
+    },
+    {
+        "id": 351,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Solis 3kW (S6-GR1P3K-M)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 18200.0,
+        "specifications": {
+            "output_current": 13.6,
+            "mppt": 1,
+            "warranty": 5,
+            "vmax": 600,
+            "vmin": 60,
+            "imax": 14,
+            "isc": 22
+        }
+    },
+    {
+        "id": 352,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Solis 4kW (Solis-1P4K-4G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 24500.0,
+        "specifications": {
+            "output_current": 19,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 600,
+            "vmin": 90,
+            "imax": 11,
+            "isc": 17.2
+        }
+    },
+    {
+        "id": 353,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Solis 5kW (Solis-1P5K-4G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 28000.0,
+        "specifications": {
+            "output_current": 23.8,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 600,
+            "vmin": 90,
+            "imax": 11,
+            "isc": 17.2
+        }
+    },
+    {
+        "id": 354,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 5kW (S5-GR3P5K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 45000.0,
+        "specifications": {
+            "output_current": 7.9,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 355,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 6kW (S5-GR3P6K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 48000.0,
+        "specifications": {
+            "output_current": 9.5,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 356,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 8kW (S5-GR3P8K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 52000.0,
+        "specifications": {
+            "output_current": 12.7,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 357,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 10kW (S5-GR3P10K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 58000.0,
+        "specifications": {
+            "output_current": 15.9,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 160,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 358,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 15kW (S5-GR3P15K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 75000.0,
+        "specifications": {
+            "output_current": 23.8,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 160,
+            "imax": 32,
+            "isc": 40
+        }
+    },
+    {
+        "id": 359,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 20kW (S5-GR3P20K)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 82000.0,
+        "specifications": {
+            "output_current": 31.8,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 160,
+            "imax": 32,
+            "isc": 40
+        }
+    },
+    {
+        "id": 360,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 25kW (Solis-25K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 95000.0,
+        "specifications": {
+            "output_current": 37.9,
+            "mppt": 3,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 361,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 30kW (Solis-30K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 105000.0,
+        "specifications": {
+            "output_current": 45.5,
+            "mppt": 3,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 362,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 40kW (Solis-40K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 125000.0,
+        "specifications": {
+            "output_current": 60.7,
+            "mppt": 4,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 363,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 50kW (Solis-50K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 145000.0,
+        "specifications": {
+            "output_current": 75.9,
+            "mppt": 4,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 364,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 60kW (Solis-60K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 160000.0,
+        "specifications": {
+            "output_current": 91.2,
+            "mppt": 4,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 366,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 80kW (Solis-80K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 195000.0,
+        "specifications": {
+            "output_current": 133.7,
+            "mppt": 9,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 367,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 100kW (Solis-100K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 225000.0,
+        "specifications": {
+            "output_current": 167.1,
+            "mppt": 10,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 368,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 110kW (Solis-110K-5G)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 235000.0,
+        "specifications": {
+            "output_current": 183.8,
+            "mppt": 10,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 180,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 369,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 100kW (S6-GC)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 269500.0,
+        "specifications": {
+            "output_current": 158.8,
+            "mppt": 10,
+            "warranty": 5,
+            "fix_loss": 7
+        }
+    },
+    {
+        "id": 370,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 110kW (S6-GC)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 275500.0,
+        "specifications": {
+            "output_current": 174.6,
+            "mppt": 10,
+            "warranty": 5,
+            "fix_loss": 7
+        }
+    },
+    {
+        "id": 371,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 125kW (S6-GC)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 296400.0,
+        "specifications": {
+            "output_current": 180.4,
+            "mppt": 10,
+            "warranty": 5,
+            "fix_loss": 7
+        }
+    },
+    {
+        "id": 372,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Solis 150kW (S6-GC)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 310900.0,
+        "specifications": {
+            "output_current": 250.6,
+            "mppt": 7,
+            "warranty": 5,
+            "fix_loss": 7
+        }
+    },
+    {
+        "id": 380,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Growatt 1kW (MIC 1000TL-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15547.0,
+        "specifications": {
+            "output_current": 4.8,
+            "mppt": 1,
+            "warranty": 5,
+            "vmax": 500,
+            "vmin": 50,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 381,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Growatt 2kW (MIC 2000TL-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15786.0,
+        "specifications": {
+            "output_current": 9.5,
+            "mppt": 1,
+            "warranty": 5,
+            "vmax": 500,
+            "vmin": 50,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 382,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Growatt 3kW (MIC 3000TL-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16624.0,
+        "specifications": {
+            "output_current": 14.3,
+            "mppt": 1,
+            "warranty": 5,
+            "vmax": 550,
+            "vmin": 50,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 383,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Growatt 3.3kW (MIC 3300TL-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16744.0,
+        "specifications": {
+            "output_current": 14.3,
+            "mppt": 1,
+            "warranty": 5,
+            "vmax": 550,
+            "vmin": 50,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 384,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Growatt 4.2kW (MIN 4200TL-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 28105.0,
+        "specifications": {
+            "output_current": 19,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 550,
+            "vmin": 60,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 385,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Growatt 5kW (MIN 5000TL-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 29301.0,
+        "specifications": {
+            "output_current": 22.7,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 550,
+            "vmin": 60,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 386,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "Growatt 6kW (MIN 6000TL-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 30496.0,
+        "specifications": {
+            "output_current": 27.2,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 550,
+            "vmin": 60,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 387,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 5kW (MOD 5000TL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 47240.0,
+        "specifications": {
+            "output_current": 8.3,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 140,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 388,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 6kW (MOD 6000TL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 48197.0,
+        "specifications": {
+            "output_current": 10,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 140,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 389,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 8kW (MOD 8000TL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 50230.0,
+        "specifications": {
+            "output_current": 13.3,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 140,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 390,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 10kW (MOD 10KTL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 52024.0,
+        "specifications": {
+            "output_current": 16.7,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 140,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 391,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 12kW (MOD 12KTL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 65777.0,
+        "specifications": {
+            "output_current": 20,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 140,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 392,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 15kW (MOD 15KTL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 66973.0,
+        "specifications": {
+            "output_current": 25,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 140,
+            "imax": 16,
+            "isc": 20
+        }
+    },
+    {
+        "id": 393,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 20kW (MID 20KTL3-X)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 87902.0,
+        "specifications": {
+            "output_current": 33.3,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 32
+        }
+    },
+    {
+        "id": 394,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 25kW (MID 25KTL3-X)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 94480.0,
+        "specifications": {
+            "output_current": 41.6,
+            "mppt": 2,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 32
+        }
+    },
+    {
+        "id": 395,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 40kW (MID 40KTL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 141121.0,
+        "specifications": {
+            "output_current": 66.6,
+            "mppt": 4,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 32,
+            "isc": 40
+        }
+    },
+    {
+        "id": 396,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 50kW (MID 50KTL3-X2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 153081.0,
+        "specifications": {
+            "output_current": 83.3,
+            "mppt": 4,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 32,
+            "isc": 40
+        }
+    },
+    {
+        "id": 397,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 50kW (MAC 50KTL3-X)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 159061.0,
+        "specifications": {
+            "output_current": 79.3,
+            "mppt": 3,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 250,
+            "imax": 52,
+            "isc": 65
+        }
+    },
+    {
+        "id": 398,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 60kW (MAC 60KTL3-X)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 165041.0,
+        "specifications": {
+            "output_current": 95.2,
+            "mppt": 3,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 250,
+            "imax": 52,
+            "isc": 65
+        }
+    },
+    {
+        "id": 399,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 70kW (MAX 70KTL3 LV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 221250.0,
+        "specifications": {
+            "output_current": 111.6,
+            "mppt": 7,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 32
+        }
+    },
+    {
+        "id": 400,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 80kW (MAX 80KTL3 LV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 227230.0,
+        "specifications": {
+            "output_current": 127.5,
+            "mppt": 7,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 32
+        }
+    },
+    {
+        "id": 401,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 100kW (MAX 100KTL3-X2 LV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 257129.0,
+        "specifications": {
+            "output_current": 158.8,
+            "mppt": 8,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 195,
+            "imax": 45,
+            "isc": 56.5
+        }
+    },
+    {
+        "id": 402,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 125kW (MAX 125KTL3-X2 LV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 285831.0,
+        "specifications": {
+            "output_current": 198.5,
+            "mppt": 8,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 195,
+            "imax": 45,
+            "isc": 56.5
+        }
+    },
+    {
+        "id": 403,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "Growatt 150kW (MAX 150KTL3-X LV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 304967.0,
+        "specifications": {
+            "output_current": 238.2,
+            "mppt": 10,
+            "warranty": 5,
+            "vmax": 1100,
+            "vmin": 195,
+            "imax": 45,
+            "isc": 56.5
+        }
+    },
+    {
+        "id": 410,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "EVVO 1.6kW (1600Tl-AV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 15900.0,
+        "specifications": {
+            "output_current": 7.5,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 500,
+            "vmin": 50,
+            "imax": 12.5,
+            "isc": 15
+        }
+    },
+    {
+        "id": 411,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "EVVO 2.2kW (2200Tl-AV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16500.0,
+        "specifications": {
+            "output_current": 10,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 500,
+            "vmin": 50,
+            "imax": 12.5,
+            "isc": 15
+        }
+    },
+    {
+        "id": 412,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "EVVO 3kW (3000Tl-AV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 17850.0,
+        "specifications": {
+            "output_current": 15,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 80,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 413,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "EVVO 3.3kW (3300Tl-AV)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 17850.0,
+        "specifications": {
+            "output_current": 16,
+            "mppt": 1,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 80,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 414,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "EVVO 4kW (4000TL G2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 25000.0,
+        "specifications": {
+            "output_current": 17.5,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 80,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 415,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "EVVO 5kW (5000TL G2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 28500.0,
+        "specifications": {
+            "output_current": 22,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 80,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 416,
+        "category": "Inverter",
+        "subcategory": "1-Phase",
+        "name": "EVVO 6kW (6000TL G2)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 31500.0,
+        "specifications": {
+            "output_current": 26,
+            "mppt": 2,
+            "warranty": 10,
+            "vmax": 600,
+            "vmin": 80,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 417,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 4kW (4000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 47000.0,
+        "specifications": {
+            "output_current": 6.4,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 418,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 5kW (5000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 48000.0,
+        "specifications": {
+            "output_current": 8,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 419,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 6kW (6000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 50000.0,
+        "specifications": {
+            "output_current": 9.6,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 420,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 8kW (8000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 52000.0,
+        "specifications": {
+            "output_current": 12.8,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 421,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 10kW (10000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 54000.0,
+        "specifications": {
+            "output_current": 15.9,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1000,
+            "vmin": 160,
+            "imax": 12.8,
+            "isc": 16
+        }
+    },
+    {
+        "id": 422,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 15kW (15000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 63000.0,
+        "specifications": {
+            "output_current": 23.9,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1000,
+            "vmin": 180,
+            "imax": 22,
+            "isc": 30
+        }
+    },
+    {
+        "id": 423,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 20kW (20000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 85000.0,
+        "specifications": {
+            "output_current": 31.8,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 32
+        }
+    },
+    {
+        "id": 424,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 25kW (25000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 89000.0,
+        "specifications": {
+            "output_current": 39.7,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 32,
+            "isc": 40
+        }
+    },
+    {
+        "id": 425,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 30kW (30000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 105000.0,
+        "specifications": {
+            "output_current": 47.8,
+            "mppt": 2,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 40,
+            "isc": 50
+        }
+    },
+    {
+        "id": 426,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 50kW (50000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 153000.0,
+        "specifications": {
+            "output_current": 80,
+            "mppt": 3,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 40,
+            "isc": 50
+        }
+    },
+    {
+        "id": 427,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 60kW (60000TL3P)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 165000.0,
+        "specifications": {
+            "output_current": 95,
+            "mppt": 4,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 40,
+            "isc": 50
+        }
+    },
+    {
+        "id": 428,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 75kW (75000)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 210000.0,
+        "specifications": {
+            "output_current": 119,
+            "mppt": 4,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 40,
+            "isc": 50
+        }
+    },
+    {
+        "id": 429,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 100kW (100000)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 265000.0,
+        "specifications": {
+            "output_current": 158.8,
+            "mppt": 9,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 430,
+        "category": "Inverter",
+        "subcategory": "3-Phase",
+        "name": "EVVO 110kW (110000)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 285000.0,
+        "specifications": {
+            "output_current": 174.6,
+            "mppt": 10,
+            "warranty": 8,
+            "vmax": 1100,
+            "vmin": 200,
+            "imax": 26,
+            "isc": 40
+        }
+    },
+    {
+        "id": 501,
+        "category": "Optimizer",
+        "subcategory": "SolarEdge",
+        "name": "S650B Optimizer",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 2600.0,
+        "specifications": {
+            "power_rated": 650,
+            "ratio": "1:1",
+            "vmax_in": 85,
+            "imax_in": 15,
+            "max_output_voltage": 80,
+            "max_output_current": 15,
+            "max_system_voltage": 1000,
+            "min_optimizers_per_string": 14,
+            "max_optimizers_per_string": 30,
+            "warranty": 25,
+            "note": "For High Voltage/High Power Modules"
+        }
+    },
+    {
+        "id": 502,
+        "category": "Optimizer",
+        "subcategory": "SolarEdge",
+        "name": "S1200 Optimizer",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 2800.0,
+        "specifications": {
+            "power_rated": 1200,
+            "ratio": "2:1",
+            "vmax_in": 125,
+            "imax_in": 15,
+            "max_output_voltage": 80,
+            "max_output_current": 15,
+            "max_system_voltage": 1000,
+            "min_optimizers_per_string": 14,
+            "max_optimizers_per_string": 30,
+            "warranty": 25,
+            "note": "Connects 2 Modules (Series)"
+        }
+    },
+    {
+        "id": 503,
+        "category": "Optimizer",
+        "subcategory": "SolarEdge",
+        "name": "S1400 Optimizer",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 3500.0,
+        "specifications": {
+            "power_rated": 1400,
+            "ratio": "2:1",
+            "vmax_in": 125,
+            "imax_in": 20,
+            "max_output_voltage": 80,
+            "max_output_current": 18,
+            "max_system_voltage": 1000,
+            "min_optimizers_per_string": 14,
+            "max_optimizers_per_string": 30,
+            "warranty": 25,
+            "note": "High Current (20A) for Bifacial Modules"
+        }
+    },
+    {
+        "id": 601,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 1A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4051.0,
+        "specifications": {
+            "model": "A9N4P01C"
+        }
+    },
+    {
+        "id": 602,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 2A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4051.0,
+        "specifications": {
+            "model": "A9N4P02C"
+        }
+    },
+    {
+        "id": 603,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 3A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4051.0,
+        "specifications": {
+            "model": "A9N4P03C"
+        }
+    },
+    {
+        "id": 604,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 4A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4051.0,
+        "specifications": {
+            "model": "A9N4P04C"
+        }
+    },
+    {
+        "id": 605,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 6A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 3293.0,
+        "specifications": {
+            "model": "A9N4P06C"
+        }
+    },
+    {
+        "id": 606,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 10A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 3293.0,
+        "specifications": {
+            "model": "A9N4P10C"
+        }
+    },
+    {
+        "id": 607,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 16A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 3293.0,
+        "specifications": {
+            "model": "A9N4P16C"
+        }
+    },
+    {
+        "id": 608,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 20A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 3293.0,
+        "specifications": {
+            "model": "A9N4P20C"
+        }
+    },
+    {
+        "id": 609,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 25A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 3293.0,
+        "specifications": {
+            "model": "A9N4P25C"
+        }
+    },
+    {
+        "id": 610,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 32A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 3293.0,
+        "specifications": {
+            "model": "A9N4P32C"
+        }
+    },
+    {
+        "id": 611,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 40A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4646.0,
+        "specifications": {
+            "model": "A9N4P40C"
+        }
+    },
+    {
+        "id": 612,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 50A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4784.0,
+        "specifications": {
+            "model": "A9N4P50C"
+        }
+    },
+    {
+        "id": 613,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 63A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4983.0,
+        "specifications": {
+            "model": "A9N4P63C"
+        }
+    },
+    {
+        "id": 614,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 80A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16042.0,
+        "specifications": {
+            "model": "A9N18372"
+        }
+    },
+    {
+        "id": 615,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 100A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 16715.0,
+        "specifications": {
+            "model": "A9N18374"
+        }
+    },
+    {
+        "id": 616,
+        "category": "Protection",
+        "subcategory": "MCB",
+        "name": "Schneider 4P 125A MCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 18917.0,
+        "specifications": {
+            "model": "A9N18376"
+        }
+    },
+    {
+        "id": 617,
+        "category": "Protection",
+        "subcategory": "MCCB",
+        "name": "Schneider 4P 160A MCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 24130.0,
+        "specifications": {
+            "model": "C12E6TM160B"
+        }
+    },
+    {
+        "id": 618,
+        "category": "Protection",
+        "subcategory": "MCCB",
+        "name": "Schneider 4P 200A MCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 24130.0,
+        "specifications": {
+            "model": "LV525342"
+        }
+    },
+    {
+        "id": 619,
+        "category": "Protection",
+        "subcategory": "MCCB",
+        "name": "Schneider 4P 250A MCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 30000.0,
+        "specifications": {
+            "model": "250A"
+        }
+    },
+    {
+        "id": 650,
+        "category": "Protection",
+        "subcategory": "RCCB",
+        "name": "Schneider 4P 25A RCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 7334.0,
+        "specifications": {
+            "model": "A9N16252"
+        }
+    },
+    {
+        "id": 651,
+        "category": "Protection",
+        "subcategory": "RCCB",
+        "name": "Schneider 4P 40A RCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 7440.0,
+        "specifications": {
+            "model": "A9N16256"
+        }
+    },
+    {
+        "id": 652,
+        "category": "Protection",
+        "subcategory": "RCCB",
+        "name": "Schneider 4P 63A RCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 8503.0,
+        "specifications": {
+            "model": "A9N16260"
+        }
+    },
+    {
+        "id": 653,
+        "category": "Protection",
+        "subcategory": "RCCB",
+        "name": "Schneider 4P 80A RCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 13770.0,
+        "specifications": {
+            "model": "A9N16263"
+        }
+    },
+    {
+        "id": 654,
+        "category": "Protection",
+        "subcategory": "RCCB",
+        "name": "Schneider 4P 125A RCCB",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 56805.0,
+        "specifications": {
+            "model": "A9R16907"
+        }
+    },
+    {
+        "id": 701,
+        "category": "Distribution Box",
+        "subcategory": "DBS",
+        "name": "Hensel Mi 0100",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 4325.0,
+        "specifications": {
+            "size": "300x150x170mm"
+        }
+    },
+    {
+        "id": 702,
+        "category": "Distribution Box",
+        "subcategory": "DBS",
+        "name": "Hensel Mi 0200",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 5840.0,
+        "specifications": {
+            "size": "300x300x170mm"
+        }
+    },
+    {
+        "id": 703,
+        "category": "Distribution Box",
+        "subcategory": "DBS",
+        "name": "Hensel Mi 0300",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 7760.0,
+        "specifications": {
+            "model": "Mi 0300"
+        }
+    },
+    {
+        "id": 704,
+        "category": "Distribution Box",
+        "subcategory": "DBS",
+        "name": "Hensel Mi 0400",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 10125.0,
+        "specifications": {
+            "model": "Mi 0400"
+        }
+    },
+    {
+        "id": 705,
+        "category": "Distribution Box",
+        "subcategory": "DBS",
+        "name": "Hensel Mi 0600",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 18355.0,
+        "specifications": {
+            "model": "Mi 0600"
+        }
+    },
+    {
+        "id": 706,
+        "category": "Distribution Box",
+        "subcategory": "DBS",
+        "name": "Hensel Mi 0800",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 24240.0,
+        "specifications": {
+            "model": "Mi 0800"
+        }
+    },
+    {
+        "id": 801,
+        "category": "Civil Material",
+        "subcategory": "Raw",
+        "name": "Cement Bag",
+        "stock": 0,
+        "unit": "Bags",
+        "rate": 350.0,
+        "specifications": {
+            "grade": 53
+        }
+    },
+    {
+        "id": 802,
+        "category": "Civil Material",
+        "subcategory": "Raw",
+        "name": "Sand",
+        "stock": 0,
+        "unit": "Cft",
+        "rate": 90.0,
+        "specifications": {
+            "type": "River Sand"
+        }
+    }
+]

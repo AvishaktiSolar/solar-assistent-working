@@ -1,217 +1,297 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avishakti Solar Design</title>
+  <title>Avishakti Solar Assistent</title>
 
-  <!-- 🌞 External Styles and Scripts -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
-  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" />
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage2_inverter.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage3_switchgear.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage4_AC_cables.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage5_material_costing.css') }}" />
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
-  <!-- jsPDF Libraries for PDF Export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  
-  <!-- xlsx.js (SheetJS) Library for Excel Export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+  <style>
+    /* --- CRITICAL FIX FOR STAGE TOGGLING --- */
+    .stage-view {
+      display: none !important;
+      /* Force hide inactive stages */
+      height: 100%;
+      width: 100%;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    .stage-view.active {
+      display: flex !important;
+      /* Force show active stage */
+      flex-direction: column;
+    }
+
+    /* --- WIZARD STYLES --- */
+    .wizard-step {
+      display: none !important;
+      height: 100%;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease-in-out;
+      width: 100%;
+    }
+
+    .wizard-step.active-step {
+      display: flex !important;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .wizard-footer {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      background: #fff;
+    }
+
+    /* Full Page Card Styling */
+    .full-page-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+      border: 1px solid #e2e8f0;
+    }
+
+    .center-content {
+      display: flex;
+      justify-content: center;
+      height: 100%;
+      padding: 10px;
+    }
+
+    #map {
+      width: 100%;
+      height: 250px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="hero-section">
+  <header class="hero-section">
     <div class="hero-content">
-        <div style="position: absolute; top: 1rem; right: 1rem;">
-            <a href="/logout" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
+      <h1>
+        <i class="fas fa-solar-panel"></i> Avishakti Solar Design Assistant
+      </h1>
+
+      <div id="project-stats-badge"
+        style="display: flex; gap: 20px; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
+
+        <div style="display: flex; flex-direction: column; align-items: center">
+          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Total
+            Panels</span>
+          <input type="number" id="header-panel-input" value="0" min="0" onchange="handleHeaderPanelChange(this.value)"
+            style="
+            width: 60px; 
+            background: rgba(0,0,0,0.2); 
+            border: 1px solid rgba(255,255,255,0.3); 
+            border-radius: 4px;
+            color: white; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 1rem;
+            padding: 2px;
+          " />
         </div>
-      <h1><i class="fas fa-solar-panel"></i> Avishakti Solar Design Assistant</h1>
-      <p>Transform your electricity bills into clean solar energy</p>
+
+        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+
+        <div style="display: flex; flex-direction: column; align-items: center">
+          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">System
+            Size</span>
+          <strong id="header-system-size" style="font-size: 1.1rem; color: #fab760;">0 kWp</strong>
+        </div>
+
+        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+
+        <div style="display: flex; flex-direction: column; align-items: center">
+          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Target
+            Energy</span>
+          <strong id="header-target-energy" style="font-size: 1.1rem; color: #2724fb;">0 kWh</strong>
+        </div>
+
+        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+
+        <div style="display: flex; flex-direction: column; align-items: center">
+          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Annual
+            Energy</span>
+          <strong id="header-annual-energy" style="font-size: 1.1rem; color: #a3e635;">0 kWh</strong>
+        </div>
+
+        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+
+        <div style="display: flex; flex-direction: column; align-items: center">
+          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Achieved
+            Savings</span>
+          <strong id="header-achieved-savings" style="font-size: 1.1rem; color: #4ade80;">0%</strong>
+        </div>
+
+      </div>
+
+      <div class="header-right">
+        <span class="badge">Procurement Login</span>
+        <a href="/logout" class="btn btn-sm btn-outline">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-wrapper" id="initial-input-page">
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="switchStage(1)">
+        <i class="fas fa-map-marked-alt"></i>
+        <span>1. Design Inputs</span>
+      </button>
+
+      <button class="nav-item sub-nav active" onclick="
+            switchStage(1);
+            showS1Page(1);
+          ">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>1.1 Site & Structure</span>
+      </button>
+      <button class="nav-item sub-nav" onclick="
+            switchStage(1);
+            showS1Page(2);
+          ">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>1.2 Electricity Bills</span>
+      </button>
+      <button class="nav-item sub-nav" onclick="
+            switchStage(1);
+            showS1Page(3);
+          ">
+        <i class="fas fa-solar-panel"></i>
+        <span>1.3 Panel Selection</span>
+      </button>
+      <button class="nav-item sub-nav" onclick="
+            switchStage(1);
+            showS1Page(4);
+          ">
+        <i class="fas fa-cloud-sun"></i>
+        <span>1.4 Shadow & Orientation</span>
+      </button>
+
+      <button class="nav-item" onclick="switchStage(2)">
+        <i class="fas fa-plug"></i>
+        <span>2. Strings & Inverter</span>
+      </button>
+      <button class="nav-item" onclick="switchStage(3)">
+        <i class="fas fa-shield-alt"></i>
+        <span>3. Switchgear & Cable</span>
+      </button>
+      <button class="nav-item" onclick="switchStage(4)">
+        <i class="fas fa-bezier-curve"></i>
+        <span>4. AC Sizing & Blocks</span>
+      </button>
+      <button class="nav-item" onclick="switchStage(5)">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>5. Material Costing</span>
+      </button>
+      <div class="nav-divider"></div>
+      <button class="nav-item special" onclick="generateMasterReport()">
+        <i class="fas fa-file-pdf"></i>
+        <span>Final Report</span>
+      </button>
+      <div style="padding: 15px 20px">
+        <p style="
+              font-size: 0.75rem;
+              text-transform: uppercase;
+              color: #94a3b8;
+              font-weight: 700;
+              margin-bottom: 10px;
+              letter-spacing: 0.5px;
+            ">
+          Live Previews
+        </p>
+
+        <button id="sidebar-gen-btn" onclick="showGenerationModal()" class="btn btn-outline-primary btn-sm btn-block"
+          style="text-align: left; margin-bottom: 8px">
+          <i class="fas fa-bolt"></i> Gen. Analysis
+        </button>
+
+        <button onclick="previewStage1Report()" class="btn btn-outline-primary btn-sm btn-block"
+          style="text-align: left; background: #eff6ff; color: #1e40af">
+          <i class="fas fa-chart-pie"></i> Full Preview
+        </button>
+      </div>
+    </nav>
+
+    <div class="stage-container">
+      <section id="stage-1" class="stage-view active">
+        {% include 'stage1/step1_site.html' %} {% include
+        'stage1/step2_bills.html' %} {% include 'stage1/step3_panels.html' %}
+        {% include 'stage1/step4_shadow.html' %}
+      </section>
+
+      {% include 'stage2.html' %} {% include 'stage3.html' %} {% include
+      'stage4.html' %} {% include 'stage5.html' %}
     </div>
   </div>
 
-  <div class="container">
-    <!-- 📋 Initial Input Page -->
-    <section id="initial-input-page" class="page-section active">
-      
-      <!-- Site Details Section -->
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-map-marker-alt"></i>
-          <h2>Site Details</h2>
-        </div>
-        <div class="card-body">
-          <div class="form-group">
-            <label for="site_name">Site Name / Project Name <span class="required">*</span></label>
-            <input type="text" id="site_name" placeholder="Enter site or project name" required>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="latitude">Site Latitude <span class="required">*</span></label>
-              <input type="number" id="latitude" placeholder="e.g., 19.0760" step="any" required onchange="syncMapToInputs()">
-            </div>
-            <div class="form-group">
-              <label for="longitude">Site Longitude <span class="required">*</span></label>
-              <input type="number" id="longitude" placeholder="e.g., 72.8777" step="any" required onchange="syncMapToInputs()">
-            </div>
-          </div>
+  {% include 'modals/result_overlay.html' %} {% include
+  'modals/panel_count_modal.html' %}
 
-          <p class="helper-text"><i class="fas fa-mouse-pointer"></i> Or, click on the map below to set coordinates automatically.</p>
-          <div id="map"></div>
-
-          <div class="form-group" style="margin-top: 2rem;">
-            <button class="btn btn-secondary" id="fetch-solar-btn" onclick="fetchAndPreviewSolarData()">
-              <i class="fas fa-satellite-dish"></i> Fetch Solar Data
-            </button>
-          </div>
-          
-          <div id="solar-data-preview">
-            <!-- Fetched data will be injected here by main.js -->
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Advanced System Parameters Card -->
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-cogs"></i>
-          <h2>Advanced System Parameters</h2>
-        </div>
-        <div class="card-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="savings_target">Savings Target (%) <span class="required">*</span></label>
-              <input type="number" id="savings_target" placeholder="e.g., 107" value="100" required>
-            </div>
-            <div class="form-group">
-              <label for="panel_wattage">Panel Wattage (Wp) <span class="required">*</span></label>
-              <input type="number" id="panel_wattage" placeholder="e.g., 580" value="580" required>
-            </div>
-            <div class="form-group">
-              <label for="panel_noct">Panel NOCT (°C) <span class="required">*</span></label>
-              <input type="number" id="panel_noct" placeholder="e.g., 45" value="45" required>
-            </div>
-            <div class="form-group">
-              <label for="temp_coefficient">Temp. Coefficient (%/°C) <span class="required">*</span></label>
-              <input type="number" id="temp_coefficient" placeholder="e.g., -0.33" step="0.01" value="-0.33" required>
-            </div>
-            <div class="form-group">
-              <label for="shadow_loss">Shadow Loss (%) <span class="required">*</span></label>
-              <input type="number" id="shadow_loss" placeholder="e.g., 24" value="24" required>
-            </div>
-            <div class="form-group">
-              <label for="other_losses">Other Losses Combined (%) <span class="required">*</span></label>
-              <input type="number" id="other_losses" placeholder="e.g., 14" value="14" required>
-            </div>
-            <div class="form-group">
-              <label for="tilt_angle">Panel Tilt Angle (°)</label>
-              <input type="number" id="tilt_angle" placeholder="Default: 20" step="any">
-            </div>
-            <div class="form-group">
-                <label for="capex_per_kw">Cost per kWp (₹)</label>
-                <input type="number" id="capex_per_kw" placeholder="e.g., 50000" value="50000">
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- END NEW CARD -->
-
-
-      <!-- Electricity Bills Section -->
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-file-invoice-dollar"></i>
-          <h2>Electricity Bill Inputs</h2>
-        </div>
-        <div class="card-body">
-          <p class="helper-text">Add all electricity bills for this site to calculate total consumption</p>
-          
-          <div id="bills-container"></div>
-          
-          <button class="btn btn-secondary" onclick="addNewBill()">
-            <i class="fas fa-plus"></i> Add Another Bill
-          </button>
-        </div>
-      </div>
-
-      <!-- Summary Section -->
-      <div class="card summary-card">
-        <div class="card-header">
-          <i class="fas fa-calculator"></i>
-          <h2>Summary</h2>
-        </div>
-        <div class="card-body">
-          <div class="summary-grid">
-            <div class="summary-item">
-              <div class="summary-label">Total Annual Units</div>
-              <div class="summary-value" id="total_annual_units">0 kWh</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Annual Cost</div>
-              <div class="summary-value" id="total_annual_cost">₹0</div>
-            </div>
-            <!-- NEW: Average Cost per Unit -->
-            <div class="summary-item">
-                <div class="summary-label">Avg. Cost / Unit</div>
-                <div class="summary-value" id="avg_cost_per_unit">₹0</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Number of Bills</div>
-              <div class="summary-value" id="bill_count">0</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="action-buttons">
-        <button class="btn btn-primary" id="calculate-btn" onclick="processFinalCalculation()">
-          <i class="fas fa-arrow-right"></i> Calculate Solar Requirements
-        </button>
-      </div>
-    </section>
-
-    <!-- 📊 Solar Panel Requirement Page (Hidden Initially) -->
-    <section id="solar-panel-page" class="page-section">
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-solar-panel"></i>
-          <h2>Solar System Design</h2>
-        </div>
-        <div class="card-body">
-          <div id="solar-output"></div>
-        </div>
-      </div>
-
-      <div class="action-buttons">
-        <button class="btn btn-secondary" onclick="goBackToInput()">
-          <i class="fas fa-arrow-left"></i> Back to Input
-        </button>
-        
-        <button class="btn btn-excel" onclick="exportExcelReport()">
-          <i class="fas fa-file-excel"></i> Export to Excel
-        </button>
-
-        <button class="btn btn-primary" onclick="exportReport()">
-          <i class="fas fa-download"></i> Export Report (PDF)
-        </button>
-      </div>
-    </section>
-  </div>
-
-  <!-- ⚙️ JavaScript Files -->
   <script src="https://cdn.jsdelivr.net/npm/ol/dist/ol.js"></script>
-  
   <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script src="{{ url_for('static', filename='map.js') }}"></script>
   <script src="{{ url_for('static', filename='bill.js') }}"></script>
   <script src="{{ url_for('static', filename='calc.js') }}"></script>
   <script src="{{ url_for('static', filename='export.js') }}"></script>
+  <script src="{{ url_for('static', filename='finance.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='stage2_inverter.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage3_switchgear.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage4_AC_cables.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage5_material_costing.js') }}"></script>
+  <script src="{{ url_for('static', filename='indexScript.js') }}"></script>
 </body>
+
 </html>
