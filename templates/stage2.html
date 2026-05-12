@@ -1,14 +1,12 @@
 <!-- ============================================ -->
 <!-- STAGE 2: INVERTER SIZING & STRING DESIGN   -->
-<!-- ENHANCED VERSION - Proper Visualization    -->
+<!-- VERSION 3.0 - Multi-Inverter + Manual Override -->
 <!-- ============================================ -->
 
 <section id="stage-2" class="stage-view">
   <div class="dashboard-grid">
 
-    <!-- ========================================== -->
-    <!-- LEFT PANEL: Configuration                  -->
-    <!-- ========================================== -->
+    <!-- LEFT PANEL: Configuration -->
     <div class="card full-height-card">
       <div class="card-header compact-header">
         <i class="fas fa-cogs"></i> System Configuration
@@ -34,198 +32,218 @@
 
         <!-- Inverter Selection -->
         <div class="form-group">
-          <label>
+          <label for="inverter_selector">
             <i class="fas fa-server"></i> Inverter Model
-            <small style="color: #64748b; font-weight: 400">(Auto-selected based on DC capacity)</small>
+            <small>(Auto-selected based on DC capacity)</small>
           </label>
-          <select id="inverter_selector" onchange="window.hasAutoSelected = true; window.calculateStage2();">
-            <option value="">-- Loading... --</option>
-          </select>
+          {# <select id="inverter_selector" onchange="window.hasAutoSelected = true; calculateStage2();"> #}
+            <select id="inverter_selector"
+              onchange="window.hasAutoSelected = true; calculateStage2(); if(document.getElementById('ec4-wrap')){_ec4UpdateRatio();_ec4UpdateHealthBar();}">
+
+              <option value="">-- Loading... --</option>
+            </select>
         </div>
 
-        <!-- Optimizer Section (Hidden by default) -->
-        <div id="optimizer_section" class="hidden-section">
+        <!-- Multi-Inverter Controls -->
+        <div id="added_inverters_list" style="margin-top:10px;"></div>
+
+        <button class="btn btn-outline-primary btn-block btn-sm" onclick="addInverterToDesign()"
+          style="margin-top:10px; padding:8px; border:1px dashed #3b82f6; background:#eff6ff; color:#1d4ed8; border-radius:8px; cursor:pointer; font-weight:600; font-size:0.85rem;">
+          <i class="fas fa-plus-circle"></i> Add Another Inverter (Mixed Capacity Design)
+        </button>
+
+        <!-- Optimizer Section -->
+        <div id="optimizer_section" class="hidden-section" style="margin-top:15px;">
           <div class="form-group">
             <label>
               <i class="fas fa-microchip"></i> Optimizer Model
-              <small style="color: #64748b; font-weight: 400">(Select ratio: 1:1 or 2:1)</small>
+              <small>(Select ratio: 1:1 or 2:1)</small>
             </label>
-            <select id="optimizer_selector" onchange="window.calculateStage2()">
-              <option value="">-- Select Optimizer --</option>
-            </select>
+            {# <select id="optimizer_selector" onchange="calculateStage2()"> #}
+              <select id="optimizer_selector"
+                onchange="calculateStage2(); if(document.getElementById('ec4-wrap')){_ec4UpdateRatio();_ec4UpdateHealthBar();}">
+
+                <option value="">-- Select Optimizer --</option>
+              </select>
           </div>
         </div>
 
-        <!-- Inverter Count & Target Ratio -->
-        <div class="mini-row">
+        <!-- Count & Ratio Row -->
+        <div class="mini-row" style="margin-top:12px;">
           <div class="form-group half-width">
-            <label>
-              <i class="fas fa-hashtag"></i> No. of Inverters
-            </label>
-            <input type="number" id="inv_count" value="1" min="1" />
-            <small style="color: #64748b; display: block; margin-top: 3px">
-              Auto-calculated based on load
-            </small>
+            <label><i class="fas fa-hashtag"></i> No. of Inverters</label>
+            <input type="number" id="inv_count" value="1" min="1"
+              oninput="window.hasAutoSelected = true; calculateStage2();" />
+            <small style="color:#64748b; display:block; margin-top:3px;">Auto-calculated</small>
           </div>
-
           <div class="form-group half-width">
             <label>Target DC/AC Ratio</label>
             <input type="number" id="target_dc_ac" value="1.2" step="0.1" readonly
-              style="background: #f1f5f9; color: #64748b" />
-            <small style="color: #64748b; display: block; margin-top: 3px">
-              Optimal: 1.15 - 1.25
-            </small>
+              style="background:#f1f5f9; color:#64748b;" />
+            <small style="color:#64748b; display:block; margin-top:3px;">Optimal: 1.15–1.25</small>
           </div>
         </div>
 
-        <!-- Recalculate Button -->
-        <button id="btn_recalc" class="btn btn-primary btn-block" style="margin-top: 10px">
+        <!-- Recalculate -->
+        <button id="btn_recalc" class="btn btn-primary btn-block" style="margin-top:10px;" onclick="calculateStage2()">
           <i class="fas fa-sync-alt"></i> Recalculate Design
         </button>
 
-        <!-- Quick Info Box -->
-        <div
-          style="margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #3b82f6;">
-          <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 5px">
-            <i class="fas fa-info-circle"></i> Auto-Selection Active
+        <!-- Manual Mode Toggle -->
+        <div style="margin-top:14px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+          <div style="font-size:0.75rem; color:#64748b; font-weight:700; margin-bottom:8px;">
+            <i class="fas fa-sliders-h"></i> Manual Design Mode
           </div>
-          <div style="font-size: 0.7rem; color: #475569; line-height: 1.4">
-            The system automatically selects the best inverter model and quantity based on your DC capacity and target
-            1.2 DC/AC ratio. You can manually override if needed.
+          <div class="manual-mode-toggle">
+            <button id="btn-manual-off" class="manual-mode-btn active" onclick="setManualMode(false)">
+              <i class="fas fa-magic"></i> Auto (Default)
+            </button>
+            <button id="btn-manual-on" class="manual-mode-btn" onclick="setManualMode(true)">
+              <i class="fas fa-wrench"></i> Manual
+            </button>
+          </div>
+          <div style="font-size:0.7rem; color:#64748b; margin-top:6px;">
+            Auto sizing remains the default. Manual lets you edit string lengths within limits.
+          </div>
+        </div>
+
+        <!-- Info Note -->
+        <div
+          style="margin-top:15px; padding:12px; background:#f8fafc; border-radius:8px; border-left:3px solid #3b82f6;">
+          <div style="font-size:0.75rem; color:#64748b; margin-bottom:5px;"><i class="fas fa-info-circle"></i>
+            Multi-Inverter Mode</div>
+          <div style="font-size:0.7rem; color:#475569; line-height:1.5;">
+            Add multiple inverters with different capacities. Each inverter is treated independently for MPPT
+            allocation, string assignment, and DC/AC calculations. Use <strong>"Assign Panels"</strong> per unit to
+            distribute the array.
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- RIGHT PANEL: Report                        -->
-    <!-- ========================================== -->
+    <!-- RIGHT PANEL: Report -->
     <div class="card full-height-card">
       <div class="card-header compact-header">
         <i class="fas fa-file-contract"></i> System Design Report
-        <div style="margin-left: auto; font-size: 0.75rem; color: #64748b">
-          <span id="report_mode_indicator">String Inverter Mode</span>
+        <div style="margin-left:auto; font-size:0.75rem;">
+          <span id="report_mode_indicator"
+            style="background:var(--p); color:white; padding:4px 12px; border-radius:20px; font-weight:800; text-transform:uppercase; font-size:0.65rem;">
+            String Inverter Mode
+          </span>
         </div>
       </div>
 
       <div class="card-body scrollable-y">
+
         <!-- Validation Banner -->
-        <div id="validation_banner" class="info-box validation-box" style="margin-bottom: 15px;">
-          <div class="info-box-label">
-            <i class="fas fa-shield-alt"></i> Validation Status
+        <div id="validation_banner" class="info-box validation-box" style="margin-bottom:15px;">
+          <div class="info-box-label"><i class="fas fa-shield-alt"></i> Validation Status</div>
+          <div class="info-box-value" style="font-size:1.1rem; font-weight:600;" id="design_status">Pending Calculation
           </div>
-          <div class="info-box-value" style="font-size: 1.1rem; font-weight: 600" id="design_status">
-            Pending Calculation
-          </div>
-          <div class="info-box-sub" style="font-size: 0.75rem; color: #64748b; margin-top: 5px"
-            id="design_status_details">
-            Click "Recalculate Design" to validate configuration
-          </div>
+          <div class="info-box-sub" id="design_status_details">Click "Recalculate Design" to validate</div>
         </div>
 
-        <!-- Error/Warning Panel -->
+        <!-- Error Panel -->
         <div id="error_panel" class="error-panel hidden">
-          <div class="error-header">
-            <i class="fas fa-exclamation-triangle"></i> Design Issues Detected
-          </div>
+          <div class="error-header"><i class="fas fa-exclamation-triangle"></i> Design Issues Detected</div>
           <ul id="error_list" class="error-list"></ul>
         </div>
 
-        <!-- ========================================== -->
-        <!-- MODE A: STRING INVERTER REPORT             -->
-        <!-- ========================================== -->
-        <div id="report_mode_a" style="display: block">
-
-          <!-- Project Overview -->
+        <!-- ============================================================
+             UNIFIED VISUAL STRING / CANVAS DIAGRAM
+             Shown for both string manual (slider) and optimizer manual (canvas)
+             Hidden in auto mode, shown when manual mode is enabled
+             ============================================================ -->
+        <div id="visual_string_diagram" class="hidden" style="margin-bottom:20px;">
           <h4 class="report-section-title">
-            <i class="fas fa-info-circle"></i> Project Overview
+            <i class="fas fa-sitemap"></i> Visual String Layout
+            <span id="manual_mode_badge" style="margin-left:8px; background:#f59e0b; color:white; padding:2px 8px; 
+                     border-radius:4px; font-size:0.65rem; font-weight:800; display:none;">
+              Manual
+            </span>
           </h4>
+          <div class="visual-diagram-wrapper" id="diagram_container"></div>
+        </div>
+
+        <!-- ========================================================
+             MODE A: STRING INVERTER REPORT (GoodWe)
+             ======================================================== -->
+        <div id="report_mode_a" style="display:block;">
+
+          <!-- Combined Multi-Inverter Report (GoodWe) -->
+          <div id="goodwe_combined_report"></div>
+
+          <h4 class="report-section-title"><i class="fas fa-info-circle"></i> Project Overview</h4>
           <table class="report-table">
             <tbody>
               <tr>
                 <td class="label-col">Project Name</td>
-                <td id="rpt_project_name">-</td>
+                <td id="rpt_project_name">New Solar Project</td>
               </tr>
               <tr>
                 <td class="label-col">Location</td>
-                <td id="rpt_location">-</td>
+                <td id="rpt_location">Default Location</td>
               </tr>
               <tr>
-                <td class="label-col">Temperature Range</td>
+                <td class="label-col">Temperature Info</td>
                 <td id="rpt_temp_info">-</td>
               </tr>
               <tr>
-                <td class="label-col">PV Array Configuration</td>
+                <td class="label-col">PV Array Config</td>
                 <td id="rpt_pv_array">-</td>
               </tr>
               <tr>
                 <td class="label-col">Annual Generation [kWh]</td>
-                <td id="rpt_annual_gen" style="font-weight: 600; color: #16a34a">-</td>
+                <td id="rpt_annual_gen" style="font-weight:600; color:#16a34a;">-</td>
               </tr>
               <tr>
-                <td class="label-col">DC-to-AC Ratio [%]</td>
-                <td id="rpt_dc_ac" style="font-weight: 600">-</td>
+                <td class="label-col">DC-to-AC Ratio</td>
+                <td id="rpt_dc_ac" style="font-weight:600;">-</td>
               </tr>
               <tr>
-                <td class="label-col">Nominal AC Power [W]</td>
+                <td class="label-col">Nominal AC Power</td>
                 <td id="rpt_nominal_ac">-</td>
               </tr>
               <tr>
-                <td class="label-col">Total Peak Power [W]</td>
+                <td class="label-col">Total Peak Power</td>
                 <td id="rpt_peak_dc">-</td>
               </tr>
             </tbody>
           </table>
 
-          <!-- Inverter Configuration -->
-          <h4 class="report-section-title">
-            <i class="fas fa-server"></i> Inverter Configuration
-          </h4>
+          <h4 class="report-section-title"><i class="fas fa-server"></i> Inverter Configuration</h4>
           <table class="report-table">
             <thead>
               <tr>
                 <th>Inverter Model</th>
                 <th>Quantity</th>
                 <th>PV Modules</th>
-                <th>Cable Loss (Est)</th>
+                <th>Cable Loss</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td id="rpt_inv_model">-</td>
-                <td id="rpt_inv_qty" style="font-weight: 600">-</td>
+                <td id="rpt_inv_qty" style="font-weight:600;">-</td>
                 <td id="rpt_inv_pv_qty">-</td>
-                <td style="color: #64748b">&lt; 1%</td>
+                <td style="color:#64748b;">&lt;1%</td>
               </tr>
             </tbody>
           </table>
 
-          <!-- String Configuration Details -->
-          <h4 class="report-section-title">
-            <i class="fas fa-project-diagram"></i> System Scheme
-          </h4>
-          <div id="string_config_detail" style="margin-bottom: 20px"></div>
-          <div id="rpt_scheme_container" style="margin-bottom: 25px">
+          <h4 class="report-section-title"><i class="fas fa-project-diagram"></i> System Scheme (Per MPPT)</h4>
+          <div id="string_config_detail" style="margin-bottom:20px;"></div>
+          <div id="rpt_scheme_container" style="margin-bottom:25px;">
             <div class="info-placeholder">
               <i class="fas fa-project-diagram"></i>
               <p>Detailed system scheme will appear here after calculation</p>
             </div>
           </div>
 
-          <!-- Visual String Diagram -->
-          <div id="visual_string_diagram" class="hidden">
-            <h4 class="report-section-title">
-              <i class="fas fa-sitemap"></i> Visual String Layout
-            </h4>
-            <div class="visual-diagram-wrapper" id="diagram_container"></div>
-          </div>
-
-          <!-- String Parameter Table -->
+          <!-- Tracker Parameters -->
           <div id="string_parameter_section">
-            <h4 class="report-section-title">
-              <i class="fas fa-table"></i> Tracker Parameters
-            </h4>
-            <div style="overflow-x: auto; background: #fff; border: 1px solid var(--brd); border-radius: 8px;">
+            <h4 class="report-section-title"><i class="fas fa-table"></i> Tracker Parameters</h4>
+            <div style="overflow-x:auto; background:#fff; border:1px solid var(--brd); border-radius:8px;">
               <table class="report-table">
                 <thead id="rpt_param_thead"></thead>
                 <tbody id="rpt_param_tbody"></tbody>
@@ -233,27 +251,21 @@
             </div>
           </div>
 
-          <!-- Single Line Diagram -->
-          <h4 class="report-section-title">
-            <i class="fas fa-bezier-curve"></i> Single Line Diagram
-          </h4>
+          <!-- SLD -->
+          <h4 class="report-section-title"><i class="fas fa-bezier-curve"></i> Single Line Diagram</h4>
           <div class="sld-container">
             <div class="sld-block panels">
               <i class="fas fa-solar-panel"></i>
               <span id="sld_panel_count">-</span>
               <small>PV Modules</small>
             </div>
-
             <div class="sld-line">→</div>
-
             <div class="sld-block inverter">
               <i class="fas fa-server"></i>
               <span id="sld_inv_name">-</span>
               <small id="sld_inv_qty">-</small>
             </div>
-
             <div class="sld-line">→</div>
-
             <div class="sld-block grid">
               <i class="fas fa-bolt"></i>
               <span>Grid</span>
@@ -261,99 +273,66 @@
             </div>
           </div>
 
-          <!-- String Configuration Summary -->
           <div
-            style="margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #10b981;">
-            <div style="font-size: 0.75rem; color: #15803d; font-weight: 700; margin-bottom: 5px">
-              <i class="fas fa-project-diagram"></i> String Layout
-            </div>
-            <div style="font-size: 0.8rem; color: #166534;" id="string_config_summary">
-              Awaiting calculation...
-            </div>
+            style="margin-top:15px; padding:12px; background:#f8fafc; border-radius:8px; border-left:3px solid #10b981;">
+            <div style="font-size:0.75rem; color:#15803d; font-weight:700; margin-bottom:5px;"><i
+                class="fas fa-project-diagram"></i> String Layout</div>
+            <div style="font-size:0.8rem; color:#166534;" id="string_config_summary">Awaiting calculation...</div>
           </div>
 
           <!-- Voltage Analysis -->
-          <h4 class="report-section-title">
-            <i class="fas fa-bolt"></i> Voltage Analysis
-          </h4>
-          <div style="padding: 12px; background: #f8fafc; border-radius: 8px; font-size: 0.75rem; line-height: 1.6">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
-              <div>
-                <strong style="color: #64748b">Max Voltage (Cold):</strong><br />
-                <span id="voltage_max_display" style="color: #3b82f6; font-weight: 600">-</span>
-              </div>
-              <div>
-                <strong style="color: #64748b">Min Voltage (Hot):</strong><br />
-                <span id="voltage_min_display" style="color: #3b82f6; font-weight: 600">-</span>
-              </div>
+          <h4 class="report-section-title"><i class="fas fa-bolt"></i> Voltage Analysis</h4>
+          <div style="padding:12px; background:#f8fafc; border-radius:8px; font-size:0.75rem; line-height:1.6;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div><strong style="color:#64748b;">Max Voltage (Cold):</strong><br /><span id="voltage_max_display"
+                  style="color:#3b82f6; font-weight:600;">-</span></div>
+              <div><strong style="color:#64748b;">Min Voltage (Hot):</strong><br /><span id="voltage_min_display"
+                  style="color:#3b82f6; font-weight:600;">-</span></div>
             </div>
-
-            <div style="margin-top: 10px; padding: 8px; background: white; border-radius: 4px; color: #475569">
-              <i class="fas fa-check-circle" style="color: #16a34a"></i>
+            <div style="margin-top:10px; padding:8px; background:white; border-radius:4px; color:#475569;">
+              <i class="fas fa-check-circle" style="color:#16a34a;"></i>
               Voltage calculations consider temperature coefficients and local weather extremes.
             </div>
           </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- MODE B: OPTIMIZER REPORT (SolarEdge)      -->
-        <!-- ========================================== -->
-        <div id="report_mode_b" style="display: none">
+        <!-- ========================================================
+             MODE B: SOLAREDGE OPTIMIZER REPORT
+             ======================================================== -->
+        <div id="report_mode_b" style="display:none;">
 
-          <!-- System Overview -->
-          <div class="se-section-header">
-            <i class="fas fa-th-large"></i> SYSTEM OVERVIEW
-          </div>
+          <!-- Combined Multi-Inverter Report (SolarEdge) -->
+          <div id="se_combined_report"></div>
+
+          <div class="se-section-header"><i class="fas fa-th-large"></i> SYSTEM OVERVIEW</div>
           <div class="se-overview-grid">
-            <div class="se-metric">
-              <i class="fas fa-solar-panel"></i>
-              <span id="se_panel_count">-</span> PV Modules
+            <div class="se-metric"><i class="fas fa-solar-panel"></i> <span id="se_panel_count_val">-</span> PV Modules
             </div>
-            <div class="se-metric">
-              <i class="fas fa-server"></i>
-              <span id="se_inv_count">-</span> Inverter(s)
-            </div>
-            <div class="se-metric">
-              <i class="fas fa-microchip"></i>
-              <span id="se_opt_count">-</span> Optimizers
+            <div class="se-metric"><i class="fas fa-server"></i> <span id="se_inv_count_val">-</span> Inverter(s)</div>
+            <div class="se-metric"><i class="fas fa-microchip"></i> <span id="se_opt_count_val">-</span> Optimizers
             </div>
           </div>
 
-          <!-- Simulation Results -->
-          <div class="se-section-header">
-            <i class="fas fa-chart-line"></i> SIMULATION RESULTS
-          </div>
+          <div class="se-section-header"><i class="fas fa-chart-line"></i> SIMULATION RESULTS</div>
           <div class="se-results-grid">
-            <div class="se-result-box">
-              <label>Installed DC Power</label>
+            <div class="se-result-box"><label>Installed DC Power</label>
               <div class="value" id="se_dc_power">- kWp</div>
             </div>
-            <div class="se-result-box">
-              <label>Max AC Power</label>
+            <div class="se-result-box"><label>Max AC Power</label>
               <div class="value" id="se_ac_power">- kW</div>
             </div>
-            <div class="se-result-box highlight">
-              <label>Annual Production</label>
+            <div class="se-result-box highlight"><label>Annual Production</label>
               <div class="value" id="se_annual_prod">- MWh</div>
             </div>
           </div>
 
-          <!-- Environmental Impact -->
           <div class="se-env-row">
-            <div class="env-item">
-              <i class="fas fa-cloud"></i>
-              <span id="se_co2_saved">-</span> t CO₂ Saved
-            </div>
-            <div class="env-item">
-              <i class="fas fa-tree"></i>
-              <span id="se_trees_planted">-</span> Trees Equivalent
+            <div class="env-item"><i class="fas fa-cloud"></i> <span id="se_co2_saved">-</span> t CO₂ Saved</div>
+            <div class="env-item"><i class="fas fa-tree"></i> <span id="se_trees_planted">-</span> Trees Equivalent
             </div>
           </div>
 
-          <!-- Bill of Materials -->
-          <div class="se-section-header">
-            <i class="fas fa-clipboard-list"></i> BILL OF MATERIALS (BOM)
-          </div>
+          <div class="se-section-header"><i class="fas fa-clipboard-list"></i> BILL OF MATERIALS (BOM)</div>
           <table class="report-table se-table">
             <thead>
               <tr>
@@ -364,101 +343,72 @@
             </thead>
             <tbody id="se_bom_body">
               <tr>
-                <td colspan="3" style="text-align: center; color: #94a3b8">
-                  Waiting for calculation...
-                </td>
+                <td colspan="3" style="text-align:center; color:#94a3b8;">Waiting for calculation...</td>
               </tr>
             </tbody>
           </table>
 
-          <!-- Electrical Design -->
-          <div class="se-section-header">
-            <i class="fas fa-project-diagram"></i> ELECTRICAL DESIGN
-          </div>
-          <div class="se-elec-design-box">
-            <div class="elec-row header">
-              <span><i class="fas fa-server"></i> Inverter</span>
-              <span><i class="fas fa-grip-lines"></i> Strings</span>
-              <span><i class="fas fa-microchip"></i> Optimizers</span>
-              <span><i class="fas fa-solar-panel"></i> Panels</span>
-            </div>
-            <div class="elec-row content" id="se_elec_design_row">
-              <span>-</span>
-              <span>-</span>
-              <span>-</span>
-              <span>-</span>
-            </div>
-            <div class="elec-footer" id="se_elec_footer">
-              Awaiting calculation...
+          <div class="se-section-header"><i class="fas fa-project-diagram"></i> ELECTRICAL DESIGN - Panel to Optimizer
+            Flow</div>
+          <div class="se-elec-design-box" style="padding: 0; border: none;">
+            <div id="se_elec_design_rows" style="padding: 16px 20px;">
+              <div style="font-size:0.75rem; color:#94a3b8; text-align:center; padding:40px 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:10px;"></i><br />
+                Electrical design diagram will appear after calculation...
+              </div>
             </div>
           </div>
 
-          <!-- System Losses -->
-          <div class="se-section-header">
-            <i class="fas fa-chart-pie"></i> SYSTEM LOSSES (Summary)
-          </div>
+          <div class="se-section-header"><i class="fas fa-chart-pie"></i> SYSTEM LOSSES (Summary)</div>
           <ul class="se-loss-list">
-            <li>
-              <span><i class="fas fa-sun"></i> Global Irradiance (GHI)</span>
-              <span id="se_loss_ghi" style="font-weight: 600">- MWh</span>
-            </li>
-            <li>
-              <span><i class="fas fa-thermometer-half"></i> Temperature & Wiring</span>
-              <span class="text-danger">-8.5% (Est)</span>
-            </li>
-            <li>
-              <span><i class="fas fa-plug"></i> Inverter Efficiency</span>
-              <span class="text-danger">-2.0%</span>
-            </li>
-            <li style="border-top: 2px solid #e2e8f0; font-weight: 700; margin-top: 8px; padding-top: 8px">
+            <li><span><i class="fas fa-sun"></i> Global Irradiance (GHI)</span><span id="se_loss_ghi"
+                style="font-weight:600;">- MWh</span></li>
+            <li><span><i class="fas fa-thermometer-half"></i> Temperature &amp; Wiring</span><span
+                class="text-danger">-8.5% (Est)</span></li>
+            <li><span><i class="fas fa-plug"></i> Inverter Efficiency</span><span class="text-danger">-2.0%</span></li>
+            <li style="border-top:2px solid #e2e8f0; font-weight:700; margin-top:8px; padding-top:8px;">
               <span><i class="fas fa-bolt"></i> Net Exportable Energy</span>
-              <span id="se_loss_final" style="color: #16a34a; font-size: 1.1em">- MWh</span>
+              <span id="se_loss_final" style="color:#16a34a; font-size:1.1em;">- MWh</span>
             </li>
           </ul>
+          <div
+            style="margin-top:10px; padding:8px 12px; background:#f0f9ff; border-radius:6px; font-size:0.72rem; color:#0369a1; font-weight:600;">
+            <i class="fas fa-info-circle"></i> <span id="se_sys_type">Fixed Voltage Optimizer System</span>
+          </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- SHARED: Monthly Energy Chart              -->
-        <!-- ========================================== -->
-        <h4 class="report-section-title" style="margin-top: 20px">
+        <!-- ========================================================
+             SHARED: Monthly Energy Chart
+             ======================================================== -->
+        <h4 class="report-section-title" style="margin-top:20px;">
           <i class="fas fa-chart-bar"></i> Estimated Monthly Energy Production
         </h4>
         <div class="chart-container">
           <div class="simple-bar-chart" id="rpt_bar_chart">
-            <div style="width: 100%; text-align: center; color: #94a3b8; align-self: center; padding: 30px">
-              <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px"></i><br />
-              Waiting for calculation...
+            <div style="width:100%; text-align:center; color:#94a3b8; align-self:center; padding:30px;">
+              <i class="fas fa-spinner fa-spin" style="font-size:2rem; margin-bottom:10px;"></i><br />Waiting for
+              calculation...
             </div>
           </div>
         </div>
 
         <!-- Footer Buttons -->
-        <div class="calc-footer" style="margin-top: 25px; display: flex; gap: 10px; justify-content: space-between">
-          <button class="btn btn-secondary" onclick="switchStage(1)" style="min-width: 120px">
+        <div class="calc-footer" style="margin-top:25px; display:flex; gap:10px; justify-content:space-between;">
+          <button class="btn btn-secondary" onclick="switchStage(1)" style="min-width:120px;">
             <i class="fas fa-arrow-left"></i> Back to Stage 1
           </button>
           <button class="btn btn-success" id="btn-next-stage3" disabled onclick="switchStage(3)"
-            style="min-width: 180px">
+            style="min-width:180px;">
             Confirm Design <i class="fas fa-arrow-right"></i>
           </button>
         </div>
-      </div>
-    </div>
-  </div>
+        <div id="manual_override_section" class="hidden" style="margin-top:15px;">
+          <!-- Manual string builder populated by JS -->
+          <div id="manual_string_builder"></div>
+          <div id="manual_validation_result" style="margin-top:10px;"></div>
+        </div>
+
+      </div><!-- end card-body -->
+    </div><!-- end right card -->
+  </div><!-- end dashboard-grid -->
 </section>
-
-<!-- ============================================ -->
-<!-- MODULAR SCRIPTS (ES6 MODULES)              -->
-<!-- ============================================ -->
-<script type="module">
-  // Import main controller and expose functions globally
-  import { calculateStage2, refreshStage2UI, setSystemType } from "./stage2_inverter.js";
-
-  // Expose to global window object for inline onclick handlers
-  window.calculateStage2 = calculateStage2;
-  window.refreshStage2UI = refreshStage2UI;
-  window.setSystemType = setSystemType;
-
-  // Initialize on load
-  console.log("✅ Stage 2 modules loaded successfully");
-</script>

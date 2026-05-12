@@ -117,59 +117,43 @@
   <header class="hero-section">
     <div class="hero-content">
       <h1>
-        <i class="fas fa-solar-panel"></i> Avishakti Solar Design Assistant
+        <i class="fas fa-solar-panel"></i> Solar Design Assistant
       </h1>
 
-      <div id="project-stats-badge"
-        style="display: flex; gap: 20px; align-items: center; background: rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
+      <div id="project-stats-badge" class="project-stats-badge">
 
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Total
-            Panels</span>
+        <div class="stats-block">
+          <span class="stats-label">Total Panels</span>
           <input type="number" id="header-panel-input" value="0" min="0" onchange="handleHeaderPanelChange(this.value)"
-            style="
-            width: 60px; 
-            background: rgba(0,0,0,0.2); 
-            border: 1px solid rgba(255,255,255,0.3); 
-            border-radius: 4px;
-            color: white; 
-            text-align: center; 
-            font-weight: bold; 
-            font-size: 1rem;
-            padding: 2px;
-          " />
+            class="header-panel-input" />
         </div>
 
-        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+        <div class="stats-divider"></div>
 
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">System
-            Size</span>
-          <strong id="header-system-size" style="font-size: 1.1rem; color: #fab760;">0 kWp</strong>
+        <div class="stats-block">
+          <span class="stats-label">System Size</span>
+          <strong id="header-system-size" class="stats-value stats-value-size">0 kWp</strong>
         </div>
 
-        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+        <div class="stats-divider"></div>
 
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Target
-            Energy</span>
-          <strong id="header-target-energy" style="font-size: 1.1rem; color: #2724fb;">0 kWh</strong>
+        <div class="stats-block">
+          <span class="stats-label">Target Energy</span>
+          <strong id="header-target-energy" class="stats-value stats-value-target">0 kWh</strong>
         </div>
 
-        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+        <div class="stats-divider"></div>
 
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Annual
-            Energy</span>
-          <strong id="header-annual-energy" style="font-size: 1.1rem; color: #a3e635;">0 kWh</strong>
+        <div class="stats-block">
+          <span class="stats-label">Annual Energy</span>
+          <strong id="header-annual-energy" class="stats-value stats-value-annual">0 kWh</strong>
         </div>
 
-        <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2);"></div>
+        <div class="stats-divider"></div>
 
-        <div style="display: flex; flex-direction: column; align-items: center">
-          <span style="opacity: 0.8; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Achieved
-            Savings</span>
-          <strong id="header-achieved-savings" style="font-size: 1.1rem; color: #4ade80;">0%</strong>
+        <div class="stats-block">
+          <span class="stats-label">Achieved Savings</span>
+          <strong id="header-achieved-savings" class="stats-value stats-value-savings">0%</strong>
         </div>
 
       </div>
@@ -236,7 +220,7 @@
         <span>5. Material Costing</span>
       </button>
       <div class="nav-divider"></div>
-      <button class="nav-item special" onclick="generateMasterReport()">
+      <button class="nav-item special" onclick="openFinalReportOptions()">
         <i class="fas fa-file-pdf"></i>
         <span>Final Report</span>
       </button>
@@ -257,10 +241,10 @@
           <i class="fas fa-bolt"></i> Gen. Analysis
         </button>
 
-        <button onclick="previewStage1Report()" class="btn btn-outline-primary btn-sm btn-block"
+        {# <button onclick="previewStage1Report()" class="btn btn-outline-primary btn-sm btn-block"
           style="text-align: left; background: #eff6ff; color: #1e40af">
           <i class="fas fa-chart-pie"></i> Full Preview
-        </button>
+        </button> #}
       </div>
     </nav>
 
@@ -278,6 +262,35 @@
 
   {% include 'modals/result_overlay.html' %} {% include
   'modals/panel_count_modal.html' %}
+
+  <section id="final-report-options-modal" class="page-section overlay-view">
+    <div class="overlay-container" style="max-width: 560px;">
+      <div class="card result-card">
+        <div class="card-header">
+          <h2><i class="fas fa-file-export"></i> Final Report Options</h2>
+          <button class="btn-close" onclick="closeFinalReportOptions()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="card-body" style="padding: 24px;">
+          <p style="color:#475569; margin-bottom: 14px;">
+            Choose how you want to proceed with the final report.
+          </p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="generateMasterReport(); closeFinalReportOptions();">
+              <i class="fas fa-eye"></i> View Proposal
+            </button>
+            <button class="btn btn-secondary" onclick="exportReport(); closeFinalReportOptions();">
+              <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+            <button class="btn btn-secondary" onclick="exportExcelReport(); closeFinalReportOptions();">
+              <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <script src="https://cdn.jsdelivr.net/npm/ol/dist/ol.js"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>

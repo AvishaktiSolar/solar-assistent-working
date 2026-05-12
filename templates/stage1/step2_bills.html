@@ -136,17 +136,108 @@
 }
 
 .bill-card {
-  background: white;
+  background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 15px;
+  border-radius: 12px;
   transition: all 0.2s ease;
   position: relative;
+  overflow: hidden;
+  padding: 0 !important;
 }
 
 .bill-card:hover {
   border-color: #3b82f6;
   box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+}
+
+/* Ensure the wrapper doesn't allow children to wrap or shift */
+.bill-card-collapse-wrapper {
+  overflow: hidden;
+  transition: max-height 0.3s ease-out; /* Smooth collapse */
+  max-height: 2000px; /* Large enough to show content */
+}
+
+/* Add this class via JS when collapsed */
+.bill-card-collapse-wrapper.collapsed {
+  max-height: 0;
+}
+
+.bill-card-content {
+  display: grid;
+  /* Use fixed or fractional widths that cannot change */
+  grid-template-columns: 1fr 1fr; 
+  align-items: stretch;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+  /* CRITICAL: Prevents columns from resizing during collapse */
+  min-width: 100%; 
+  width: 100%;
+}
+
+.bill-details-left {
+  padding: 20px;
+  border-right: 1px solid #e2e8f0;
+  min-width: 0;
+}
+
+.bill-monthly-right {
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  /* Ensure the monthly right block doesn't shrink or grow unexpectedly */
+  min-width: 0;
+}
+
+.monthly-grid-header {
+  background: #e0f2fe;
+  padding: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #0369a1;
+  letter-spacing: 1px;
+  text-align: center;
+  border-bottom: 1px solid #bae6fd;
+  text-transform: uppercase;
+}
+
+.monthly-inputs-grid {
+  padding: 10px 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  flex: 1;
+}
+
+.monthly-input-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.monthly-input-row span {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.monthly-input-row input {
+  width: 100px;
+  padding: 3px 8px;
+  font-size: 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  text-align: right;
+  background: #fff;
+}
+
+.monthly-total-bar {
+  margin-top: auto;
+  background: #eff6ff;
+  padding: 12px 20px;
+  border-top: 1px solid #dbeafe;
+  display: flex;
+  justify-content: space-between;
 }
 
 .bill-card.editing {
@@ -180,6 +271,15 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .bill-card-content {
+    grid-template-columns: 1fr;
+  }
+
+  .bill-details-left {
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
   .full-page-card {
     padding: 15px;
   }

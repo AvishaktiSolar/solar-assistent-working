@@ -26,14 +26,20 @@
     </script>
 
     <header class="hero-section procurement-header">
+      <div class="logo-corner">
+        <picture>
+          <source srcset="{{ url_for('static', filename='avishakti.avif') }}" type="image/avif" />
+          <img src="{{ url_for('static', filename='avishakti.jpg') }}" alt="Avishakti" class="procurement-logo" />
+        </picture>
+      </div>
       <div class="hero-content">
-        <h1><i class="fas fa-boxes"></i> Avishakti Procurement</h1>
-        <div class="header-right">
-          <span class="badge procurement-badge">Inventory Manager</span>
-          <a href="/logout" class="btn-logout"
-            ><i class="fas fa-sign-out-alt"></i
-          ></a>
-        </div>
+        <h1><i class="fas fa-boxes"></i> Procurement</h1>
+      </div>
+      <div class="header-right">
+        <span class="badge procurement-badge">Inventory Manager</span>
+        <a href="/logout" class="btn-logout"
+          ><i class="fas fa-sign-out-alt"></i
+        ></a>
       </div>
     </header>
 
@@ -98,87 +104,35 @@
           </div>
 
           <div class="card-body scrollable-y">
-            <div class="table-responsive-wrapper">
-              <table class="full-data-table" id="inventoryTable">
-                <thead>
-                  <tr>
-                    <th>Category</th>
-                    <th>Sub-Type</th>
-                    <th>Component Name</th>
-                    <th>Tech Specs</th>
-                    <th>Stock</th>
-                    <th>Unit</th>
-                    <th>Cost (₹)</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- UPDATE YOUR TABLE ROWS TO INCLUDE data-label ATTRIBUTES FOR MOBILE -->
-                  <!-- Replace your existing <tr> loop with this: -->
-
-                  {% for item in materials %}
-                  <tr
-                    data-category="{{ item.category }}"
-                    id="row-{{ item.id }}"
-                  >
-                    <td class="category-cell" data-label="Category">
-                      {{ item.category }}
-                    </td>
-
-                    <td data-label="Sub-Type">
-                      <span class="badge-sub">{{ item.subcategory }}</span>
-                    </td>
-
-                    <td class="name-cell" data-label="Component Name">
-                      {{ item.name }}
-                    </td>
-
-                    <td class="specs-cell" data-label="Tech Specs">
-                      {% if item.specifications %} {% for key, value in
-                      item.specifications.items() %}
-                      <span class="spec-badge">
-                        <strong>{{ key|replace('_', ' ')|title }}:</strong> {{
-                        value }}
-                      </span>
-                      {% endfor %} {% else %}
-                      <span style="color: #ccc">-</span>
-                      {% endif %}
-                    </td>
-
-                    <td
-                      class="stock-cell {% if item.stock < 20 %}low-stock{% endif %}"
-                      data-label="Stock"
-                    >
-                      {{ item.stock }}
-                    </td>
-
-                    <td data-label="Unit">{{ item.unit }}</td>
-
-                    <td data-label="Cost">₹{{ item.rate }}</td>
-
-                    <td data-label="Actions" style="display: flex; gap: 5px">
-                      <button
-                        class="btn-icon-edit"
-                        type="button"
-                        onclick="openEditModal({{ item.id }})"
-                        title="Edit Item"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-
-                      <a
-                        href="/procurement/delete/{{ item.id }}"
-                        class="btn-icon-delete"
-                        onclick="return confirm('Delete {{ item.name }}?')"
-                        title="Delete"
-                      >
-                        <i class="fas fa-trash"></i>
-                      </a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            <div class="compact-list" id="inventoryList">
+              <!-- Compact List View -->
+              {% for item in materials %}
+              <div class="list-row" data-category="{{ item.category }}" id="row-{{ item.id }}">
+                <div class="row-content">
+                  <span class="badge-category">{{ item.category }}</span>
+                  <span class="component-title">{{ item.name }}</span>
+                  {% if item.specifications %}
+                    <span class="specs-summary">
+                      {% for key, value in item.specifications.items() %}
+                        <span class="spec-tag">{{ key|replace('_', ' ')|title }}: {{ value }}</span>
+                      {% endfor %}
+                    </span>
+                  {% endif %}
+                </div>
+                <div class="row-actions">
+                  <span class="stock-badge {% if item.stock < 20 %}low-stock{% endif %}">
+                    <i class="fas fa-box"></i> {{ item.stock }}
+                  </span>
+                  <span class="cost-badge">₹{{ "%.2f" % (item.rate | default(0.0, true)) }}</span>
+                  <button class="btn-icon-small" onclick="openEditModal({{ item.id }})" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-icon-small danger" onclick="if(confirm('Delete?')) window.location.href='/procurement/delete/{{ item.id }}'" title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
             </div>
           </div>
         </div>
@@ -263,6 +217,22 @@
           </div>
 
           <div id="dynamicSpecsContainer" class="specs-grid"></div>
+
+          <div class="mini-row" id="protectionRatingsGroup" style="display: none">
+            <div class="form-group half-width">
+              <label>Rating (A)</label>
+              <input type="number" name="rating_amp" id="ratingAmpInput" step="1" />
+            </div>
+            <div class="form-group half-width">
+              <label>Sensitivity (mA)</label>
+              <input
+                type="number"
+                name="sensitivity_ma"
+                id="sensitivityMaInput"
+                step="1"
+              />
+            </div>
+          </div>
 
           <div class="mini-row" style="margin-top: 15px">
             <div class="form-group half-width">

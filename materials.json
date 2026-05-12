@@ -3,23 +3,22 @@
         "id": 101,
         "category": "Solar Panel",
         "subcategory": "DCR",
-        "name": "Renew DCR 550Wp",
-        "stock": 0,
-        "unit": "Nos",
-        "rate": 13750.0,
+        "name": "RenewSys DESERV EXTREME 550Wp",
+        "stock": 2,
         "specifications": {
-            "voc": 50.32,
-            "isc": 13.79,
-            "vmp": 42.64,
-            "imp": 12.91,
-            "voc_coeff": -0.26,
-            "pmax_coeff": -0.33,
+            "voc": 49.8,
+            "isc": 13.96,
+            "vmp": 41.95,
+            "imp": 13.11,
+            "voc_coeff": -0.3,
+            "pmax_coeff": -0.35,
             "noct": 45,
             "bifacial": "false",
-            "warranty": 12,
             "wattage": 550,
             "pmax": 550
-        }
+        },
+        "unit": "undefined",
+        "rate": 0.0
     },
     {
         "id": 102,
@@ -27,165 +26,215 @@
         "subcategory": "DCR",
         "name": "Waaree DCR 580Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 8700.0,
         "specifications": {
+            "pmax": 580,
             "voc": 51.48,
             "isc": 14.3,
             "vmp": 42.99,
             "imp": 13.49,
-            "voc_coeff": -0.25,
-            "pmax_coeff": -0.29,
+            "voc_coeff": -0.26,
+            "isc_coeff": 0.046,
+            "pmax_coeff": -0.31,
             "noct": 43,
-            "bifacial": "true",
-            "warranty": 12,
-            "wattage": 580,
-            "pmax": 580
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 25,
+            "bifacial": true,
+            "bifaciality_factor": 0.8,
+            "cell_type": "TOPCON",
+            "cells": 144
+        },
+        "rate": 0.0
     },
     {
         "id": 103,
         "category": "Solar Panel",
-        "subcategory": "Non-DCR",
-        "name": "Waaree NDCR 590Wp",
+        "subcategory": "DCR",
+        "name": "Adani ELAN SHINE 620Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 9440.0,
         "specifications": {
-            "voc": 51.68,
-            "isc": 14.36,
-            "vmp": 43.15,
-            "imp": 13.68,
-            "voc_coeff": -0.25,
-            "pmax_coeff": -0.29,
-            "noct": 43,
-            "bifacial": "true",
-            "warranty": 12,
-            "wattage": 590,
-            "pmax": 590
-        }
+            "pmax": 620,
+            "voc": 49.6,
+            "isc": 15.91,
+            "vmp": 41.4,
+            "imp": 14.99,
+            "voc_coeff": -0.23,
+            "isc_coeff": 0.061,
+            "pmax_coeff": -0.28,
+            "noct": 45,
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 35,
+            "bifacial": true,
+            "bifaciality_factor": 0.8,
+            "cell_type": "TOPCON",
+            "cells": 132
+        },
+        "rate": 0.0
     },
     {
         "id": 104,
         "category": "Solar Panel",
-        "subcategory": "DCR",
-        "name": "Adani DCR 620Wp",
+        "subcategory": "Non-DCR",
+        "name": "AXIbiperfect FXXL TS 580 Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 10540.0,
         "specifications": {
-            "voc": 49.2,
-            "isc": 15.95,
-            "vmp": 41.2,
-            "imp": 15.05,
-            "voc_coeff": -0.25,
-            "pmax_coeff": -0.29,
+            "pmax": 580,
+            "voc": 51.4,
+            "isc": 14.18,
+            "vmp": 43.2,
+            "imp": 13.43,
+            "voc_coeff": -0.26,
+            "isc_coeff": 0.046,
+            "pmax_coeff": -0.31,
             "noct": 45,
-            "bifacial": "true",
-            "warranty": 12,
-            "wattage": 620,
-            "pmax": 620
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 30,
+            "bifacial": true,
+            "bifaciality_factor": 0.8,
+            "cell_type": "TOPCON",
+            "cells": 144
+        },
+        "rate": 0.0
     },
     {
         "id": 105,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Evvo NDCR 720Wp",
+        "name": "Evvo IA Series 720Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 15.2,
         "specifications": {
-            "voc": 49.28,
-            "isc": 18.55,
-            "vmp": 41.03,
-            "imp": 17.55,
-            "pmax_coeff": -0.29,
+            "pmax": 720,
+            "voc": 53.57,
+            "isc": 13.95,
+            "vmp": 45.5,
+            "imp": 13.12,
             "voc_coeff": -0.25,
+            "isc_coeff": 0.045,
+            "pmax_coeff": -0.29,
             "noct": 45,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 30,
+            "bifacial": true,
+            "bifaciality_factor": 0.8,
+            "cell_type": "TOPCON",
+            "cells": 144
+        },
+        "rate": 0.0
     },
     {
         "id": 106,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Renewsys NDCR 600Wp",
+        "name": "RenewSys DESERV EXTREME 600Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 14.5,
         "specifications": {
+            "pmax": 600,
             "voc": 54.0,
             "isc": 14.05,
             "vmp": 44.37,
             "imp": 13.53,
-            "pmax_coeff": -0.29,
             "voc_coeff": -0.25,
+            "isc_coeff": 0.05,
+            "pmax_coeff": -0.29,
             "noct": 45,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 30,
+            "bifacial": true,
+            "bifaciality_factor": 0.7,
+            "cell_type": "TOPCON",
+            "cells": 144
+        },
+        "rate": 0.0
     },
     {
         "id": 107,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Waaree NDCR 690Wp",
+        "name": "Waaree Elite Series BiN-03-690Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 16.25,
         "specifications": {
+            "pmax": 690,
             "voc": 48.18,
             "isc": 18.23,
             "vmp": 40.09,
             "imp": 17.21,
+            "voc_coeff": -0.26,
+            "isc_coeff": 0.046,
             "pmax_coeff": -0.3,
-            "voc_coeff": -0.25,
             "noct": 43,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 35,
+            "bifacial": true,
+            "bifaciality_factor": 0.6,
+            "cell_type": "TOPCON",
+            "cells": 132
+        },
+        "rate": 0.0
     },
     {
         "id": 108,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Vikram NDCR 590Wp",
+        "name": "Vikram Somera Grand 370Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 15.4,
         "specifications": {
-            "voc": 43.3,
-            "isc": 17.16,
-            "vmp": 36.9,
-            "imp": 15.99,
-            "pmax_coeff": -0.34,
-            "voc_coeff": -0.27,
+            "pmax": 370,
+            "voc": 48.0,
+            "isc": 9.9,
+            "vmp": 38.4,
+            "imp": 9.63,
+            "voc_coeff": -0.28,
+            "isc_coeff": 0.057,
+            "pmax_coeff": -0.39,
             "noct": 45,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1000,
+            "module_fuse_rating": 15,
+            "bifacial": false,
+            "bifaciality_factor": 0,
+            "cell_type": "MONO",
+            "cells": 72
+        },
+        "rate": 0.0
     },
     {
         "id": 109,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Renew NDCR 600Wp",
+        "name": "RenewSys DESERV EXTREME 590Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 15.0,
         "specifications": {
-            "voc": 54.0,
-            "isc": 14.05,
-            "vmp": 44.37,
-            "imp": 13.53,
-            "pmax_coeff": -0.29,
+            "pmax": 590,
+            "voc": 53.51,
+            "isc": 13.97,
+            "vmp": 43.93,
+            "imp": 13.44,
             "voc_coeff": -0.25,
+            "isc_coeff": 0.05,
+            "pmax_coeff": -0.29,
             "noct": 45,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 30,
+            "bifacial": true,
+            "bifaciality_factor": 0.7,
+            "cell_type": "TOPCON",
+            "cells": 144
+        },
+        "rate": 0.0
     },
     {
         "id": 110,
@@ -193,79 +242,107 @@
         "subcategory": "Non-DCR",
         "name": "Premier NDCR 610Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 14.9,
         "specifications": {
-            "voc": 49.0,
-            "isc": 15.86,
-            "vmp": 40.8,
-            "imp": 14.96,
-            "pmax_coeff": -0.3,
-            "voc_coeff": -0.25,
-            "noct": 45,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "pmax": 610,
+            "voc": 41.95,
+            "isc": 18.41,
+            "vmp": 34.73,
+            "imp": 17.57,
+            "voc_coeff": -0.27,
+            "isc_coeff": 0.04,
+            "pmax_coeff": -0.35,
+            "noct": 42,
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 30,
+            "bifacial": true,
+            "bifaciality_factor": 0.7,
+            "cell_type": "MONO_PERC",
+            "cells": 120
+        },
+        "rate": 0.0
     },
     {
         "id": 111,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Adani NDCR 620Wp",
+        "name": "Adani ELAN SHINE 610Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 15.75,
         "specifications": {
-            "voc": 49.2,
-            "isc": 15.95,
-            "vmp": 41.2,
-            "imp": 15.05,
-            "pmax_coeff": -0.29,
-            "voc_coeff": -0.25,
+            "pmax": 610,
+            "voc": 49.0,
+            "isc": 15.86,
+            "vmp": 40.8,
+            "imp": 14.96,
+            "voc_coeff": -0.23,
+            "isc_coeff": 0.061,
+            "pmax_coeff": -0.28,
             "noct": 45,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 35,
+            "bifacial": true,
+            "bifaciality_factor": 0.8,
+            "cell_type": "TOPCON",
+            "cells": 132
+        },
+        "rate": 0.0
     },
     {
         "id": 112,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Credence NDCR 725Wp",
+        "name": "Credence Quasar N 725Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 16.8,
         "specifications": {
+            "pmax": 725,
             "voc": 48.8,
             "isc": 18.8,
             "vmp": 40.95,
             "imp": 17.71,
-            "pmax_coeff": -0.3,
             "voc_coeff": -0.25,
+            "isc_coeff": 0.045,
+            "pmax_coeff": -0.3,
             "noct": 44,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 30,
+            "bifacial": true,
+            "bifaciality_factor": 0.8,
+            "cell_type": "TOPCON",
+            "cells": 132
+        },
+        "rate": 0.0
     },
     {
         "id": 113,
         "category": "Solar Panel",
         "subcategory": "Non-DCR",
-        "name": "Trina NDCR 710Wp",
+        "name": "Trina Vertex N 710Wp",
         "stock": 0,
-        "unit": "Nos",
-        "rate": 14.6,
         "specifications": {
-            "voc": 49.5,
-            "isc": 18.5,
-            "vmp": 41.6,
-            "imp": 17.1,
-            "pmax_coeff": -0.3,
-            "voc_coeff": -0.25,
+            "pmax": 710,
+            "voc": 49.0,
+            "isc": 18.4,
+            "vmp": 40.9,
+            "imp": 17.36,
+            "voc_coeff": -0.24,
+            "isc_coeff": 0.04,
+            "pmax_coeff": -0.29,
             "noct": 43,
-            "warranty": 12,
-            "bifacial": true
-        }
+            "operating_temp_min": -40,
+            "operating_temp_max": 85,
+            "max_system_voltage": 1500,
+            "module_fuse_rating": 35,
+            "bifacial": true,
+            "bifaciality_factor": 0.6,
+            "cell_type": "TOPCON",
+            "cells": 132
+        },
+        "rate": 0.0
     },
     {
         "id": 201,
@@ -653,6 +730,9 @@
         "unit": "Nos",
         "rate": 78000.0,
         "specifications": {
+            "ac_power_kw": 5,
+            "string_class": "SE3K-10K",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 8,
             "mppt": 0,
             "warranty": 12,
@@ -678,6 +758,9 @@
         "unit": "Nos",
         "rate": 95000.0,
         "specifications": {
+            "ac_power_kw": 10,
+            "string_class": "SE3K-10K",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 16,
             "mppt": 0,
             "warranty": 12,
@@ -703,6 +786,9 @@
         "unit": "Nos",
         "rate": 115000.0,
         "specifications": {
+            "ac_power_kw": 15,
+            "string_class": "SE12.5K-20K",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 23,
             "mppt": 0,
             "warranty": 12,
@@ -728,6 +814,9 @@
         "unit": "Nos",
         "rate": 125000.0,
         "specifications": {
+            "ac_power_kw": 17,
+            "string_class": "SE12.5K-20K",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 26,
             "mppt": 0,
             "warranty": 12,
@@ -753,6 +842,9 @@
         "unit": "Nos",
         "rate": 145000.0,
         "specifications": {
+            "ac_power_kw": 25,
+            "string_class": "SE25K+",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 38,
             "mppt": 0,
             "warranty": 12,
@@ -778,6 +870,9 @@
         "unit": "Nos",
         "rate": 155000.0,
         "specifications": {
+            "ac_power_kw": 27.6,
+            "string_class": "SE25K+",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 40,
             "mppt": 0,
             "warranty": 12,
@@ -803,6 +898,9 @@
         "unit": "Nos",
         "rate": 185000.0,
         "specifications": {
+            "ac_power_kw": 33.3,
+            "string_class": "SE25K+",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 48.5,
             "mppt": 0,
             "warranty": 12,
@@ -828,6 +926,9 @@
         "unit": "Nos",
         "rate": 280000.0,
         "specifications": {
+            "ac_power_kw": 50,
+            "string_class": "SE25K+",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 72.5,
             "mppt": 0,
             "warranty": 12,
@@ -854,6 +955,9 @@
         "unit": "Nos",
         "rate": 320000.0,
         "specifications": {
+            "ac_power_kw": 66.6,
+            "string_class": "SE25K+",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 96.5,
             "mppt": 0,
             "warranty": 12,
@@ -880,6 +984,9 @@
         "unit": "Nos",
         "rate": 450000.0,
         "specifications": {
+            "ac_power_kw": 100,
+            "string_class": "SE25K+",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 145,
             "mppt": 0,
             "warranty": 12,
@@ -906,6 +1013,9 @@
         "unit": "Nos",
         "rate": 510000.0,
         "specifications": {
+            "ac_power_kw": 120,
+            "string_class": "SE25K+",
+            "architecture": "Fixed Voltage Optimized",
             "output_current": 174,
             "mppt": 0,
             "warranty": 12,
@@ -1094,7 +1204,7 @@
         "unit": "Nos",
         "rate": 52500.1,
         "specifications": {
-            "output_current": 13.4,
+            "output_current": 13.3,
             "mppt": 2,
             "warranty": 10,
             "vmax": 1000,
@@ -2523,16 +2633,40 @@
         "rate": 2600.0,
         "specifications": {
             "power_rated": 650,
-            "ratio": "1:1",
+            "ratio": 1,
+            "max_modules_per_optimizer": 1,
             "vmax_in": 85,
             "imax_in": 15,
+            "isc_max": 18,
+            "regulated_output_voltage": 80,
             "max_output_voltage": 80,
             "max_output_current": 15,
             "max_system_voltage": 1000,
-            "min_optimizers_per_string": 14,
-            "max_optimizers_per_string": 30,
+            "string_limits": {
+                "1-Phase": {
+                    "min": 8,
+                    "max": 25
+                },
+                "3-Phase": {
+                    "min": 8,
+                    "max": 25
+                },
+                "SE3K-10K": {
+                    "min": 8,
+                    "max": 25
+                },
+                "SE12.5K-20K": {
+                    "min": 14,
+                    "max": 30
+                },
+                "SE25K+": {
+                    "min": 16,
+                    "max": 30
+                }
+            },
+            "application": "Commercial / Residential",
             "warranty": 25,
-            "note": "For High Voltage/High Power Modules"
+            "note": "1:1 optimizer for standard commercial modules"
         }
     },
     {
@@ -2545,16 +2679,40 @@
         "rate": 2800.0,
         "specifications": {
             "power_rated": 1200,
-            "ratio": "2:1",
+            "ratio": 2,
+            "max_modules_per_optimizer": 2,
             "vmax_in": 125,
             "imax_in": 15,
+            "isc_max": 18,
+            "regulated_output_voltage": 80,
             "max_output_voltage": 80,
             "max_output_current": 15,
             "max_system_voltage": 1000,
-            "min_optimizers_per_string": 14,
-            "max_optimizers_per_string": 30,
+            "string_limits": {
+                "1-Phase": {
+                    "min": 14,
+                    "max": 30
+                },
+                "3-Phase": {
+                    "min": 14,
+                    "max": 30
+                },
+                "SE3K-10K": {
+                    "min": 8,
+                    "max": 25
+                },
+                "SE12.5K-20K": {
+                    "min": 14,
+                    "max": 30
+                },
+                "SE25K+": {
+                    "min": 16,
+                    "max": 30
+                }
+            },
+            "application": "Commercial",
             "warranty": 25,
-            "note": "Connects 2 Modules (Series)"
+            "note": "2:1 optimizer, two modules in series"
         }
     },
     {
@@ -2567,304 +2725,389 @@
         "rate": 3500.0,
         "specifications": {
             "power_rated": 1400,
-            "ratio": "2:1",
+            "ratio": 2,
+            "max_modules_per_optimizer": 2,
             "vmax_in": 125,
             "imax_in": 20,
+            "isc_max": 30,
+            "regulated_output_voltage": 80,
             "max_output_voltage": 80,
             "max_output_current": 18,
             "max_system_voltage": 1000,
-            "min_optimizers_per_string": 14,
-            "max_optimizers_per_string": 30,
+            "string_limits": {
+                "SE3K-10K": {
+                    "min": 8,
+                    "max": 25
+                },
+                "SE12.5K-20K": {
+                    "min": 14,
+                    "max": 30
+                },
+                "SE25K+": {
+                    "min": 16,
+                    "max": 30
+                }
+            },
+            "application": "Commercial / Bifacial",
             "warranty": 25,
-            "note": "High Current (20A) for Bifacial Modules"
+            "note": "High-current optimizer for bifacial and large-format modules"
         }
     },
     {
         "id": 601,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 1A MCB",
+        "rating_amp": 1,
+        "name": "Schneider A9N4P01C",
         "stock": 0,
         "unit": "Nos",
         "rate": 4051.0,
         "specifications": {
-            "model": "A9N4P01C"
+            "model": "A9N4P01C",
+            "poles": "4P"
         }
     },
     {
         "id": 602,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 2A MCB",
+        "rating_amp": 2,
+        "name": "Schneider A9N4P02C",
         "stock": 0,
         "unit": "Nos",
         "rate": 4051.0,
         "specifications": {
-            "model": "A9N4P02C"
+            "model": "A9N4P02C",
+            "poles": "4P"
         }
     },
     {
         "id": 603,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 3A MCB",
+        "rating_amp": 3,
+        "name": "Schneider A9N4P03C",
         "stock": 0,
         "unit": "Nos",
         "rate": 4051.0,
         "specifications": {
-            "model": "A9N4P03C"
+            "model": "A9N4P03C",
+            "poles": "4P"
         }
     },
     {
         "id": 604,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 4A MCB",
+        "rating_amp": 4,
+        "name": "Schneider A9N4P04C",
         "stock": 0,
         "unit": "Nos",
         "rate": 4051.0,
         "specifications": {
-            "model": "A9N4P04C"
+            "model": "A9N4P04C",
+            "poles": "4P"
         }
     },
     {
         "id": 605,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 6A MCB",
+        "rating_amp": 6,
+        "name": "Schneider A9N4P06C",
         "stock": 0,
         "unit": "Nos",
         "rate": 3293.0,
         "specifications": {
-            "model": "A9N4P06C"
+            "model": "A9N4P06C",
+            "poles": "4P"
         }
     },
     {
         "id": 606,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 10A MCB",
+        "rating_amp": 10,
+        "name": "Schneider A9N4P10C",
         "stock": 0,
         "unit": "Nos",
         "rate": 3293.0,
         "specifications": {
-            "model": "A9N4P10C"
+            "model": "A9N4P10C",
+            "poles": "4P"
         }
     },
     {
         "id": 607,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 16A MCB",
+        "rating_amp": 16,
+        "name": "Schneider A9N4P16C",
         "stock": 0,
         "unit": "Nos",
         "rate": 3293.0,
         "specifications": {
-            "model": "A9N4P16C"
+            "model": "A9N4P16C",
+            "poles": "4P"
         }
     },
     {
         "id": 608,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 20A MCB",
+        "rating_amp": 20,
+        "name": "Schneider A9N4P20C",
         "stock": 0,
         "unit": "Nos",
         "rate": 3293.0,
         "specifications": {
-            "model": "A9N4P20C"
+            "model": "A9N4P20C",
+            "poles": "4P"
         }
     },
     {
         "id": 609,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 25A MCB",
+        "rating_amp": 25,
+        "name": "Schneider A9N4P25C",
         "stock": 0,
         "unit": "Nos",
         "rate": 3293.0,
         "specifications": {
-            "model": "A9N4P25C"
+            "model": "A9N4P25C",
+            "poles": "4P"
         }
     },
     {
         "id": 610,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 32A MCB",
+        "rating_amp": 32,
+        "name": "Schneider A9N4P32C",
         "stock": 0,
         "unit": "Nos",
         "rate": 3293.0,
         "specifications": {
-            "model": "A9N4P32C"
+            "model": "A9N4P32C",
+            "poles": "4P"
         }
     },
     {
         "id": 611,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 40A MCB",
+        "rating_amp": 40,
+        "name": "Schneider A9N4P40C",
         "stock": 0,
         "unit": "Nos",
         "rate": 4646.0,
         "specifications": {
-            "model": "A9N4P40C"
+            "model": "A9N4P40C",
+            "poles": "4P"
         }
     },
     {
         "id": 612,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 50A MCB",
+        "rating_amp": 50,
+        "name": "Schneider A9N4P50C",
         "stock": 0,
         "unit": "Nos",
         "rate": 4784.0,
         "specifications": {
-            "model": "A9N4P50C"
+            "model": "A9N4P50C",
+            "poles": "4P"
         }
     },
     {
         "id": 613,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 63A MCB",
+        "rating_amp": 63,
+        "name": "Schneider A9N4P63C",
         "stock": 0,
         "unit": "Nos",
         "rate": 4983.0,
         "specifications": {
-            "model": "A9N4P63C"
+            "model": "A9N4P63C",
+            "poles": "4P"
         }
     },
     {
         "id": 614,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 80A MCB",
+        "rating_amp": 80,
+        "name": "Schneider A9N4P80C",
         "stock": 0,
         "unit": "Nos",
         "rate": 16042.0,
         "specifications": {
-            "model": "A9N18372"
+            "model": "A9N18372",
+            "poles": "4P"
         }
     },
     {
         "id": 615,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 100A MCB",
+        "rating_amp": 100,
+        "name": "Schneider A9N4P100C",
         "stock": 0,
         "unit": "Nos",
         "rate": 16715.0,
         "specifications": {
-            "model": "A9N18374"
+            "model": "A9N18374",
+            "poles": "4P"
         }
     },
     {
         "id": 616,
         "category": "Protection",
         "subcategory": "MCB",
-        "name": "Schneider 4P 125A MCB",
+        "rating_amp": 125,
+        "name": "Schneider A9N4P125C",
         "stock": 0,
         "unit": "Nos",
         "rate": 18917.0,
         "specifications": {
-            "model": "A9N18376"
+            "model": "A9N18376",
+            "poles": "4P"
         }
     },
     {
         "id": 617,
         "category": "Protection",
         "subcategory": "MCCB",
-        "name": "Schneider 4P 160A MCCB",
+        "rating_amp": 160,
+        "name": "Schneider C12E6TM160B",
         "stock": 0,
         "unit": "Nos",
         "rate": 24130.0,
         "specifications": {
-            "model": "C12E6TM160B"
+            "model": "C12E6TM160B",
+            "poles": "4P"
         }
     },
     {
         "id": 618,
         "category": "Protection",
         "subcategory": "MCCB",
-        "name": "Schneider 4P 200A MCCB",
+        "rating_amp": 200,
+        "name": "Schneider C12E6TM200B",
         "stock": 0,
         "unit": "Nos",
         "rate": 24130.0,
         "specifications": {
-            "model": "LV525342"
+            "model": "C12E6TM200B",
+            "poles": "4P"
         }
     },
     {
         "id": 619,
         "category": "Protection",
         "subcategory": "MCCB",
-        "name": "Schneider 4P 250A MCCB",
+        "rating_amp": 250,
+        "name": "Schneider C12E6TM250B",
         "stock": 0,
         "unit": "Nos",
         "rate": 30000.0,
         "specifications": {
-            "model": "250A"
+            "model": "250A",
+            "poles": "4P"
+        }
+    },
+    {
+        "id": 620,
+        "category": "Protection",
+        "subcategory": "MCCB",
+        "name": "Vivek Enterprise 200A LT Panel",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 75000.0,
+        "rating_amp": 200,
+        "sensitivity_ma": 300,
+        "specifications": {
+            "model": "LT Panel 200A",
+            "rating": 200,
+            "poles": "4"
         }
     },
     {
         "id": 650,
         "category": "Protection",
         "subcategory": "RCCB",
-        "name": "Schneider 4P 25A RCCB",
+        "rating_amp": 25,
+        "sensitivity_ma": 30,
+        "name": "Schneider A9N16252",
         "stock": 0,
         "unit": "Nos",
         "rate": 7334.0,
         "specifications": {
-            "model": "A9N16252"
+            "model": "A9N16252",
+            "poles": "4P"
         }
     },
     {
         "id": 651,
         "category": "Protection",
         "subcategory": "RCCB",
-        "name": "Schneider 4P 40A RCCB",
+        "rating_amp": 40,
+        "sensitivity_ma": 30,
+        "name": "Schneider A9N16256",
         "stock": 0,
         "unit": "Nos",
         "rate": 7440.0,
         "specifications": {
-            "model": "A9N16256"
+            "model": "A9N16256",
+            "poles": "4P"
         }
     },
     {
         "id": 652,
         "category": "Protection",
         "subcategory": "RCCB",
-        "name": "Schneider 4P 63A RCCB",
+        "rating_amp": 63,
+        "sensitivity_ma": 30,
+        "name": "Schneider A9N16260",
         "stock": 0,
         "unit": "Nos",
         "rate": 8503.0,
         "specifications": {
-            "model": "A9N16260"
+            "model": "A9N16260",
+            "poles": "4P"
         }
     },
     {
         "id": 653,
         "category": "Protection",
         "subcategory": "RCCB",
-        "name": "Schneider 4P 80A RCCB",
+        "rating_amp": 80,
+        "sensitivity_ma": 30,
+        "name": "Schneider A9N16263",
         "stock": 0,
         "unit": "Nos",
         "rate": 13770.0,
         "specifications": {
-            "model": "A9N16263"
+            "model": "A9N16263",
+            "poles": "4P"
         }
     },
     {
         "id": 654,
         "category": "Protection",
         "subcategory": "RCCB",
-        "name": "Schneider 4P 125A RCCB",
+        "rating_amp": 125,
+        "sensitivity_ma": 30,
+        "name": "Schneider A9R16907",
         "stock": 0,
         "unit": "Nos",
         "rate": 56805.0,
         "specifications": {
-            "model": "A9R16907"
+            "model": "A9R16907",
+            "poles": "4P"
         }
     },
     {
@@ -2961,6 +3204,80 @@
         "rate": 90.0,
         "specifications": {
             "type": "River Sand"
+        }
+    },
+    {
+        "id": 803,
+        "category": "Civil Material",
+        "subcategory": "Foundation",
+        "name": "M20 Concrete Block (Site Mix)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 350.0,
+        "specifications": {
+            "grade": "M20",
+            "adhesive_kg_per_block": 0.5
+        }
+    },
+    {
+        "id": 804,
+        "category": "Civil Material",
+        "subcategory": "Foundation",
+        "name": "M25 Concrete Block (Site Mix)",
+        "stock": 0,
+        "unit": "Nos",
+        "rate": 400.0,
+        "specifications": {
+            "grade": "M25",
+            "adhesive_kg_per_block": 0.6
+        }
+    },
+    {
+        "id": 805,
+        "category": "Civil Material",
+        "subcategory": "Adhesive",
+        "name": "Metlock MytBond",
+        "stock": 0,
+        "unit": "400ml",
+        "rate": 1400,
+        "specifications": {
+            "type": "Epoxy"
+        }
+    },
+    {
+        "id": 806,
+        "category": "Civil Material",
+        "subcategory": "Adhesive",
+        "name": "Fosroc Nitobond",
+        "stock": 0,
+        "unit": "20Kg",
+        "rate": 3000,
+        "specifications": {
+            "type": "Adhesive"
+        }
+    },
+    {
+        "id": 807,
+        "category": "Civil Material",
+        "subcategory": "Conduit",
+        "name": "PVC Conduit 25mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 65.0,
+        "specifications": {
+            "material": "PVC"
+        }
+    },
+    {
+        "id": 808,
+        "category": "Civil Material",
+        "subcategory": "Conduit",
+        "name": "Flexible Conduit 32mm",
+        "stock": 0,
+        "unit": "Mtr",
+        "rate": 85.0,
+        "specifications": {
+            "material": "Flexible PVC"
         }
     }
 ]

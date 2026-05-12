@@ -21,7 +21,7 @@ window.showS1Page = function (pageNum) {
   // STRICT VALIDATION: Can't skip pages - must go sequentially
   if (pageNum > currentPage + 1) {
     alert(
-      "Please complete the current step before proceeding to the next one."
+      "Please complete the current step first."
     );
     return;
   }
@@ -370,7 +370,7 @@ window.switchStage = function (stageNum) {
       // Validate that Stage 1 is complete
       if (!validateStage1Complete()) {
         alert(
-          "Please complete all steps in Stage 1 before proceeding to Stage 2."
+          "Complete Stage 1 before proceeding."
         );
         return;
       }
@@ -453,6 +453,10 @@ function getCurrentActiveStage() {
 
 // Validate that entire Stage 1 is complete
 function validateStage1Complete() {
+  if (typeof setStageCompletion === "function") {
+    setStageCompletion(1, false);
+  }
+
   if (!validatePage1()) {
     return false;
   }
@@ -469,8 +473,160 @@ function validateStage1Complete() {
     return false;
   }
 
+  if (typeof setStageCompletion === "function") {
+    setStageCompletion(1, true);
+  }
   return true;
 }
+
+// ==================================================================
+//  STAGE COMPLETION (MAIN NAV)
+// ==================================================================
+
+function setStageCompletion(stageNum, isComplete) {
+  const items = document.querySelectorAll(".nav-item:not(.sub-nav):not(.special)");
+  const item = items[stageNum - 1];
+  if (!item) return;
+
+  const complete = Boolean(isComplete);
+  item.classList.toggle("completed", complete);
+
+  const existingCheck = item.querySelector(".stage-complete-check");
+  if (complete && !existingCheck) {
+    const check = document.createElement("i");
+    check.className = "fas fa-check stage-complete-check";
+    item.appendChild(check);
+  }
+  if (!complete && existingCheck) {
+    existingCheck.remove();
+  }
+}
+
+window.setStageCompletion = setStageCompletion;
+window.markStageAsComplete = function (stageNum) {
+  setStageCompletion(stageNum, true);
+};
+
+
+// ==================================================================
+//  RESET ALL STAGES
+// ==================================================================
+
+window.resetAllStages = function () {
+  const ok = confirm("Reset all stages and clear all inputs?");
+  if (!ok) return;
+
+  // Hard reset to fresh state so all auto-suggestions recalc from new inputs
+  window.location.reload();
+  return;
+
+  // Clear global data
+  window.fetchedSolarData = null;
+  window.siteData = {};
+  window.bills = [];
+  window.billCounter = 0;
+  window.projectData = {};
+  window.finalReportData = {};
+  window.selectedPanelSpecs = {};
+  window.calculatedPanelCount = 0;
+  window.stage2Result = null;
+  window.multiInverterDesign = [];
+  window.currentSystemType = "string";
+  window.hasAutoSelected = false;
+  window.stage5Subsidy = 0;
+
+  // Clear bill UI
+  const billsContainer = document.getElementById("bills-container");
+  if (billsContainer) billsContainer.innerHTML = "";
+  const emptyState = document.getElementById("bills-empty-state");
+  if (emptyState) emptyState.style.display = "block";
+
+  // Reset all inputs/selects/textareas in stage container
+  const fields = document.querySelectorAll(".stage-container input, .stage-container select, .stage-container textarea");
+  fields.forEach((el) => {
+    if (el.tagName === "SELECT") {
+      const opts = Array.from(el.options || []);
+      const def = opts.find(o => o.defaultSelected) || opts[0];
+      if (def) el.value = def.value;
+    } else if (el.type === "checkbox" || el.type === "radio") {
+      el.checked = el.defaultChecked || false;
+    } else {
+      el.value = (typeof el.defaultValue !== "undefined") ? el.defaultValue : "";
+    }
+  });
+
+  // Clear Stage 1 sub-nav completion styling
+  document.querySelectorAll(".sidebar-nav .nav-item.sub-nav").forEach((btn) => {
+    btn.style.borderLeft = "";
+    btn.style.backgroundColor = "";
+    const icon = btn.querySelector("i");
+    if (icon) icon.style.color = "";
+    btn.querySelectorAll(".fa-check").forEach((c) => c.remove());
+  });
+
+  // Clear wizard step completion styling (if present)
+  document.querySelectorAll(".wizard-steps li").forEach((li) => {
+    li.style.borderLeft = "";
+    li.style.backgroundColor = "";
+    const icon = li.querySelector("i");
+    if (icon) icon.style.color = "";
+    li.querySelectorAll(".fa-check").forEach((c) => c.remove());
+  });
+
+  // Clear main stage completion styling
+  document.querySelectorAll(".sidebar-nav .nav-item.completed").forEach((btn) => {
+    btn.classList.remove("completed");
+    btn.querySelectorAll(".stage-complete-check").forEach((c) => c.remove());
+  });
+
+  // Reset Stage 2 next button
+  const nextBtn = document.getElementById("btn-next-stage3");
+  if (nextBtn) nextBtn.disabled = true;
+
+  // Reset map marker and view (if available)
+  try {
+    if (typeof markerSource !== "undefined" && markerSource) {
+      markerSource.clear();
+    }
+    if (typeof map !== "undefined" && map) {
+      map.getView().animate({
+        center: ol.proj.fromLonLat([78.9629, 22.5937]),
+        zoom: 5,
+        duration: 300
+      });
+    }
+  } catch (e) { /* no-op */ }
+
+  // Close overlays/modals if open
+  document.getElementById("final-report-options-modal")?.classList.remove("active");
+  if (document.getElementById("gen-analysis-modal")) {
+    document.getElementById("gen-analysis-modal").style.display = "none";
+  }
+  document.getElementById("solar-panel-page")?.classList.remove("active");
+  document.getElementById("initial-input-page")?.classList.add("active");
+
+  // Reset header/nav inputs
+  const headerPanel = document.getElementById("header-panel-input");
+  if (headerPanel) headerPanel.value = 0;
+  const headerSystem = document.getElementById("header-system-size");
+  if (headerSystem) headerSystem.innerText = "0 kWp";
+  const headerTarget = document.getElementById("header-target-energy");
+  if (headerTarget) headerTarget.innerText = "0 kWh";
+  const headerAnnual = document.getElementById("header-annual-energy");
+  if (headerAnnual) headerAnnual.innerText = "0 kWh";
+  const headerSavings = document.getElementById("header-achieved-savings");
+  if (headerSavings) headerSavings.innerText = "0%";
+
+  // Reset computed UI
+  if (typeof calculateShadowTable === "function") calculateShadowTable();
+  if (typeof updateLiveHeader === "function") updateLiveHeader();
+  if (typeof refreshStage5UI === "function") refreshStage5UI();
+  if (typeof calcStage5 === "function") calcStage5();
+
+  // Go back to Stage 1, Page 1
+  if (typeof switchStage === "function") switchStage(1);
+  if (typeof showS1Page === "function") showS1Page(1);
+};
 
 // ==================================================================
 //  SAVE & PROCEED FUNCTIONS
@@ -482,7 +638,7 @@ window.saveAndProceedToStage2 = function () {
   if (typeof updateLiveHeader === "function") updateLiveHeader();
 
   if (!validateStage1Complete()) {
-    alert("Please complete all required fields in all 4 steps before proceeding to Stage 2.");
+    alert("Complete all Stage 1 steps before proceeding.");
     return;
   }
 
@@ -490,7 +646,7 @@ window.saveAndProceedToStage2 = function () {
     const data = getStage1Data();
 
     if (!data) {
-      alert("Error: Could not generate Stage 1 data. Please check console.");
+      alert("Unable to generate Stage 1 data. Check console.");
       return;
     }
 
@@ -525,6 +681,9 @@ window.saveAndProceedToStage2 = function () {
       markStepAsComplete(3);
       markStepAsComplete(4);
     }
+    if (typeof setStageCompletion === "function") {
+      setStageCompletion(1, true);
+    }
 
     switchStage(2);
 
@@ -541,7 +700,7 @@ window.saveAndProceedToStage2 = function () {
     }, 100);
 
   } catch (err) {
-    alert(`Error saving Stage 1: ${err.message}`);
+    alert(`Stage 1 save failed: ${err.message}`);
     console.error(err);
   }
 };
@@ -557,12 +716,102 @@ window.goBackToInput = function () {
 //  REPORT GENERATION
 // ==================================================================
 
+function toNumSafe(v, fallback = 0) {
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function buildNormalizedReportPayload(stage1Raw) {
+  const s1 = stage1Raw || {};
+  const site = s1.site || window.projectData?.site || {};
+  const design = s1.design || window.projectData?.design || {};
+  const params = s1.parameters || window.projectData?.parameters || {};
+  const consumption = s1.consumption || window.projectData?.consumption || {};
+  const perf = s1.performance || {};
+
+  const monthlyTable =
+    (Array.isArray(perf.monthlyTable) && perf.monthlyTable.length > 0 ? perf.monthlyTable : null) ||
+    (Array.isArray(s1.monthlyTable) && s1.monthlyTable.length > 0 ? s1.monthlyTable : null) ||
+    (Array.isArray(window.projectData?.performance?.monthlyTable) ? window.projectData.performance.monthlyTable : []);
+
+  const totalAnnualUnits = toNumSafe(s1.totalAnnualUnits, toNumSafe(consumption.totalAnnualUnits, 0));
+  const totalAnnualEnergy = toNumSafe(s1.totalAnnualEnergy, toNumSafe(design.totalAnnualEnergy, 0));
+  const systemSizeKwp = toNumSafe(s1.systemSizeKwp, toNumSafe(design.systemSizeKwp, 0));
+  const specificYieldAnnual = toNumSafe(
+    s1.specificYieldAnnual,
+    systemSizeKwp > 0 ? (totalAnnualEnergy / systemSizeKwp) : toNumSafe(design.specificYield, 0)
+  );
+  const plfAnnual = toNumSafe(
+    s1.plfAnnual,
+    systemSizeKwp > 0 ? (totalAnnualEnergy / (systemSizeKwp * 24 * 365)) : toNumSafe(design.plf, 0)
+  );
+  const achievedSavingsPercent = toNumSafe(
+    s1.achievedSavingsPercent,
+    totalAnnualUnits > 0 ? (totalAnnualEnergy / totalAnnualUnits) * 100 : 0
+  );
+
+  const monthlyShadowLosses = Array.isArray(params.monthlyShadowLosses) ? params.monthlyShadowLosses : [];
+  const avgShadowLoss = monthlyShadowLosses.length > 0
+    ? monthlyShadowLosses.reduce((a, b) => a + toNumSafe(b, 0), 0) / monthlyShadowLosses.length
+    : 0;
+
+  return {
+    ...s1,
+    siteName: s1.siteName || site.name || document.getElementById("site_name")?.value || "Solar_Project",
+    designerName: s1.designerName || site.designer || document.getElementById("designer_name")?.value || "-",
+    latitude: toNumSafe(s1.latitude, toNumSafe(site?.location?.lat, 0)),
+    longitude: toNumSafe(s1.longitude, toNumSafe(site?.location?.lon, 0)),
+    totalAnnualUnits,
+    savingsTargetPercent: toNumSafe(s1.savingsTargetPercent, toNumSafe(params.savingsTargetPercent, 0)),
+    panelCount: toNumSafe(s1.panelCount, toNumSafe(design.panelCount, 0)),
+    panelWattage: toNumSafe(s1.panelWattage, toNumSafe(params.panelWattage, toNumSafe(design.panelWattage, 0))),
+    panelNoct: toNumSafe(s1.panelNoct, toNumSafe(params.panelNoct, 45)),
+    tempCoefficient: toNumSafe(s1.tempCoefficient, toNumSafe(params.tempCoefficient, 0)),
+    shadowLoss: toNumSafe(s1.shadowLoss, avgShadowLoss),
+    fixedDerating: toNumSafe(s1.fixedDerating, toNumSafe(params.otherLosses, 0)),
+    systemSizeKwp,
+    totalAnnualEnergy,
+    specificYieldAnnual,
+    averageDailyEnergy: toNumSafe(s1.averageDailyEnergy, totalAnnualEnergy / 365),
+    plfAnnual,
+    achievedSavingsPercent,
+    monthlyTable,
+  };
+}
+
+window.openFinalReportOptions = function () {
+  const s1 = window.projectData?.stage1;
+  if (!s1) {
+    alert("Complete Stage 1 inputs first.");
+    return;
+  }
+
+  const reportBase = buildNormalizedReportPayload(s1);
+  const data = calculateFinancials(reportBase, reportBase.totalAnnualUnits, window.bills);
+  const fullReport = { ...reportBase, ...data };
+  window.finalReportData = fullReport;
+  if (typeof finalReportData !== "undefined") {
+    finalReportData = fullReport;
+  }
+
+  document.getElementById("final-report-options-modal")?.classList.add("active");
+};
+
+window.closeFinalReportOptions = function () {
+  document.getElementById("final-report-options-modal")?.classList.remove("active");
+};
+
 // Generate Master Report
 window.generateMasterReport = function () {
   const s1 = window.projectData?.stage1;
   if (s1) {
-    const data = calculateFinancials(s1, s1.totalAnnualUnits, window.bills);
-    const fullReport = { ...s1, ...data };
+    const reportBase = buildNormalizedReportPayload(s1);
+    const data = calculateFinancials(reportBase, reportBase.totalAnnualUnits, window.bills);
+    const fullReport = { ...reportBase, ...data };
+    window.finalReportData = fullReport;
+    if (typeof finalReportData !== "undefined") {
+      finalReportData = fullReport;
+    }
     if (typeof renderFinalReport === "function") {
       renderFinalReport(fullReport);
       document.getElementById("initial-input-page")?.classList.remove("active");
@@ -571,7 +820,7 @@ window.generateMasterReport = function () {
       alert("Report renderer not loaded.");
     }
   } else {
-    alert("Please complete Stage 1 inputs first.");
+    alert("Complete Stage 1 inputs first.");
   }
 };
 
@@ -579,7 +828,7 @@ window.generateMasterReport = function () {
 window.previewStage1Report = function () {
   // Validate that all pages are complete
   if (!validateStage1Complete()) {
-    alert("Please complete all 4 steps before previewing.");
+    alert("Complete all Stage 1 steps before previewing.");
     return;
   }
 
@@ -593,24 +842,31 @@ window.previewStage1Report = function () {
     const data = getStage1Data(); // From calc.js
 
     if (!data) {
-      alert("Error: Could not generate Stage 1 data.");
+      alert("Unable to generate Stage 1 data.");
       return;
     }
 
-    window.finalReportData = data;
+    const normalized = buildNormalizedReportPayload(data);
+    const fin = calculateFinancials(normalized, normalized.totalAnnualUnits, window.bills);
+    const reportData = { ...normalized, ...fin };
+
+    window.finalReportData = reportData;
+    if (typeof finalReportData !== "undefined") {
+      finalReportData = reportData;
+    }
 
     // Call report renderer
     if (typeof renderFinalReport !== "function") {
       throw new Error("finance.js missing render function");
     }
 
-    renderFinalReport(data);
+    renderFinalReport(reportData);
 
     // Show report overlay
     document.getElementById("initial-input-page").classList.remove("active");
     document.getElementById("solar-panel-page").classList.add("active");
   } catch (err) {
-    alert(`Preview error: ${err.message}`);
+    alert(`Preview failed: ${err.message}`);
   }
 };
 
@@ -630,7 +886,7 @@ window.openPanelCountEditor = function () {
   const stage1Data = window.projectData?.stage1;
 
   if (!stage1Data || !stage1Data.panelCount) {
-    alert("Please complete Stage 1 calculations first.");
+    alert("Complete Stage 1 calculations first.");
     return;
   }
 
@@ -736,7 +992,7 @@ window.applyManualPanelCount = function () {
   );
 
   if (!newPanelCount || newPanelCount <= 0) {
-    alert("Please enter a valid panel count.");
+    alert("Enter a valid panel count.");
     return;
   }
 
@@ -759,7 +1015,7 @@ window.applyManualPanelCount = function () {
   const otherFactor = 1 - stage1Data.fixedDerating / 100;
 
   if (typeof simulateEnergyYield === "undefined") {
-    alert("Simulation function not available. Please reload the page.");
+    alert("Simulation unavailable. Reload the page.");
     return;
   }
 

@@ -1,4 +1,6 @@
 // map.js - All OpenLayers Map Logic
+let osmLayer;
+let satelliteLayer;
 
 // Function to initialize the OpenLayers Map
 function initializeMap() {
@@ -13,18 +15,27 @@ function initializeMap() {
         })
     });
 
+    osmLayer = new ol.layer.Tile({
+        source: new ol.source.OSM(),
+        visible: true
+    });
+
+    satelliteLayer = new ol.layer.Tile({
+        source: new ol.source.XYZ({
+            url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+            maxZoom: 20
+        }),
+        visible: false
+    });
+
     const markerLayer = new ol.layer.Vector({
         source: markerSource,
         style: markerStyle
     });
 
-    const osmLayer = new ol.layer.Tile({
-        source: new ol.source.OSM()
-    });
-
     map = new ol.Map({
         target: 'map',
-        layers: [osmLayer, markerLayer],
+        layers: [osmLayer, satelliteLayer, markerLayer],
         view: new ol.View({
             center: ol.proj.fromLonLat([78.9629, 22.5937]),
             zoom: 5
@@ -54,6 +65,18 @@ function initializeMap() {
         markerSource.addFeature(marker);
     });
 }
+
+function switchMapLayer(type) {
+    if (!osmLayer || !satelliteLayer) return;
+    if (type === 'satellite') {
+        osmLayer.setVisible(false);
+        satelliteLayer.setVisible(true);
+    } else {
+        osmLayer.setVisible(true);
+        satelliteLayer.setVisible(false);
+    }
+}
+window.switchMapLayer = switchMapLayer;
 
 // Function to sync the input fields *to* the map
 function syncMapToInputs() {

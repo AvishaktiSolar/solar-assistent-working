@@ -6,7 +6,7 @@ api_bp = Blueprint('api', __name__)
 
 # 🔑 NREL API Key
 API_KEY = "oaT4eQqmbGkxXXUXeHBo7de2MQYTE0VF8LKUlbVF"
-NREL_URL = "https://developer.nrel.gov/api/pvwatts/v8.json"
+NREL_URL = "https://developer.nlr.gov/api/pvwatts/v8.json"
 
 @api_bp.route('/get_data', methods=['POST'])
 def get_data():
@@ -64,8 +64,19 @@ def get_data():
             return jsonify({'error': 'No valid solar data found for this location.'}), 404
 
         if not temp_avg or len(temp_avg) != 12:
-            base_temp = 25 - abs(lat) * 0.5
-            temp_avg = [base_temp + 5 * (i % 6) - 10 for i in range(12)]
+            # Prefer deriving ambient from cell temperature if API provides tcell.
+            if tcell_monthly and len(tcell_monthly) == 12:
+                temp_avg = [t - 25 for t in tcell_monthly]
+            else:
+                # Sheet-like fallback: keep ambient near 26-31C if no API temp is returned.
+                # Use available solar profile to shape month-to-month variation.
+                if solar_rad and len(solar_rad) == 12:
+                    s_min = min(solar_rad)
+                    s_max = max(solar_rad)
+                    span = (s_max - s_min) if (s_max - s_min) > 0 else 1
+                    temp_avg = [26 + ((s - s_min) / span) * 5 for s in solar_rad]  # 26..31
+                else:
+                    temp_avg = [28.0] * 12
         
         temp_min = [t - 7 for t in temp_avg]
         temp_max = [t + 8 for t in temp_avg]
@@ -73,7 +84,8 @@ def get_data():
         if not poa_monthly: poa_monthly = solar_rad
         if not dc_monthly: dc_monthly = [0] * 12
         if not ac_energy: ac_energy = [0] * 12
-        if not tcell_monthly: tcell_monthly = [t + 25 for t in temp_avg]
+        if not tcell_monthly:
+            tcell_monthly = [t + 25 for t in temp_avg]
         
         months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 

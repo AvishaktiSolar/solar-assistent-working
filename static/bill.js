@@ -24,13 +24,13 @@ function addNewBill() {
   };
 
   // 1. Auto-Collapse Feature: Close all existing bills before adding a new one
-  const existingBodies = document.querySelectorAll(".bill-card-body");
-  existingBodies.forEach((body) => (body.style.display = "none"));
+  const existingWrappers = document.querySelectorAll(".bill-card-collapse-wrapper");
+  existingWrappers.forEach((wrapper) => wrapper.classList.add('collapsed'));
 
   // Reset all existing icons to "down" arrow
   const existingIcons = document.querySelectorAll(".toggle-icon");
   existingIcons.forEach(
-    (icon) => (icon.className = "fas fa-chevron-down toggle-icon")
+    (icon) => (icon.style.transform = "rotate(180deg)")
   );
 
   // Hide empty state if it exists
@@ -49,142 +49,109 @@ function renderBill(bill) {
   const billCard = document.createElement("div");
   billCard.className = "bill-card";
   billCard.id = bill.id;
-  // Basic styling for the card to look distinct
-  billCard.style.border = "1px solid #e2e8f0";
   billCard.style.marginBottom = "10px";
-  billCard.style.borderRadius = "8px";
-  billCard.style.backgroundColor = "#fff";
 
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
   ];
 
-  // 2. HTML Structure with Header Click Event
   billCard.innerHTML = `
-    <div class="bill-header" style="cursor: pointer; user-select: none; padding: 10px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0;" onclick="toggleBill('${bill.id}')">
-      <div class="bill-title" style="font-weight: 600; color: var(--primary);">
-        <i class="fas fa-file-invoice"></i>
-        Bill ${window.bills.length}
-      </div>
-      <div style="display: flex; align-items: center; gap: 15px;">
-        <i class="fas fa-chevron-up toggle-icon" id="icon_${bill.id}"></i>
-        
-        <button class="btn btn-sm text-danger" onclick="event.stopPropagation(); removeBill('${bill.id}')" title="Remove Bill" style="border: none; background: transparent;">
-             <i class="fas fa-trash"></i>
-        </button>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; cursor: pointer; background: #fff;" onclick="toggleBillCollapse('${bill.id}')">
+      <span class="bill-title" style="font-weight: 700; color: #1e40af;"><i class="fas fa-file-invoice"></i> Bill Record #${window.bills.length}</span>
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <i class="fas fa-chevron-up toggle-icon" id="icon_${bill.id}" style="color: #94a3b8; transition: transform 0.3s ease;"></i>
+        <button onclick="event.stopPropagation(); removeBill('${bill.id}')" style="background:none; border:none; color:#f87171; padding:0; width:auto;" title="Remove Bill"><i class="fas fa-trash-alt"></i></button>
       </div>
     </div>
-    
-    <div class="bill-card-body" id="body_${bill.id}" style="display: block; padding: 15px;">
-      <div class="mini-row">
-        <div class="form-group half-width">
-          <label>Consumer Number</label>
-          <input type="text" id="${bill.id}_customer_number" placeholder="Enter customer number" 
-                 onchange="updateBillData('${bill.id}', 'customer_number', this.value)">
+
+    <div id="collapse-wrapper-${bill.id}" class="bill-card-collapse-wrapper">
+      <div class="bill-card-content">
+      <div class="bill-details-left">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+          <div class="form-group">
+            <label style="font-size: 0.75rem; color: #64748b;">Consumer Number</label>
+            <input type="text" id="${bill.id}_customer_number" style="font-size: 0.9rem;" placeholder="Enter customer number"
+              onchange="updateBillData('${bill.id}', 'customer_number', this.value)">
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.75rem; color: #64748b;">Sanctioned Load (kW)</label>
+            <input type="number" id="${bill.id}_sanctioned_load" style="font-size: 0.9rem;" placeholder="5" step="0.01"
+              onchange="updateBillData('${bill.id}', 'sanctioned_load', parseFloat(this.value))">
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.75rem; color: #64748b;">Billing Month</label>
+            <input type="month" id="${bill.id}_billing_month" style="font-size: 0.9rem;"
+              onchange="updateBillData('${bill.id}', 'billing_month', this.value); autoUpdateMonthlyTable('${bill.id}')">
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.75rem; color: #64748b;">Bill Amount (INR)</label>
+            <input type="number" id="${bill.id}_bill_amount" style="font-size: 0.9rem;" placeholder="5000" step="0.01"
+              onchange="updateBillData('${bill.id}', 'bill_amount', parseFloat(this.value))">
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.75rem; color: #64748b;">Current Units (kWh)</label>
+            <input type="number" id="${bill.id}_current_units" style="font-size: 0.9rem;" placeholder="500" step="0.01"
+              onchange="updateBillData('${bill.id}', 'current_units', parseFloat(this.value)); autoUpdateMonthlyTable('${bill.id}')">
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.75rem; color: #64748b;">Phase Type</label>
+            <select id="${bill.id}_phase_type" style="font-size: 0.9rem;" onchange="updateBillData('${bill.id}', 'phase_type', this.value)">
+              <option value="Single Phase">Single Phase</option>
+              <option value="Three Phase">Three Phase</option>
+            </select>
+          </div>
         </div>
-        
-        <div class="form-group half-width">
-          <label>Sanctioned Load (kW)</label>
-          <input type="number" id="${bill.id}_sanctioned_load" placeholder="e.g., 5" step="0.01" 
-                 onchange="updateBillData('${bill.id}', 'sanctioned_load', parseFloat(this.value))">
-        </div>
-      </div>
-      
-      <div class="mini-row">
-        <div class="form-group half-width">
-          <label>Billing Month</label>
-           <input type="month" id="${bill.id}_billing_month" 
-                 onchange="updateBillData('${bill.id}', 'billing_month', this.value); autoUpdateMonthlyTable('${bill.id}')">
-        </div>
-        
-        <div class="form-group half-width">
-          <label>Bill Amount (₹)</label>
-          <input type="number" id="${bill.id}_bill_amount" placeholder="e.g., 5000" step="0.01" 
-                 onchange="updateBillData('${bill.id}', 'bill_amount', parseFloat(this.value))">
-        </div>
-      </div>
-      
-      <div class="mini-row">
-        <div class="form-group half-width">
-          <label>Units (kWh) - Current</label>
-          <input type="number" id="${bill.id}_current_units" placeholder="e.g., 500" step="0.01" 
-                 onchange="updateBillData('${bill.id}', 'current_units', parseFloat(this.value)); autoUpdateMonthlyTable('${bill.id}')">
-        </div>
-        
-        <div class="form-group half-width">
-          <label>Phase Type</label>
-          <select id="${bill.id}_phase_type" onchange="updateBillData('${bill.id}', 'phase_type', this.value)">
-            <option value="Single Phase">Single Phase</option>
-            <option value="Three Phase">Three Phase</option>
-          </select>
+
+        <div style="border-top: 1px dashed #cbd5e1; padding-top: 15px; background: #f0f9ff; padding: 15px; border-radius: 8px;">
+          <label style="color: #0369a1; font-weight: 700; font-size: 0.85rem;">Total Annual Consumption (kWh)</label>
+          <input type="number" id="${bill.id}_total_annual_input" style="margin: 8px 0;" placeholder="Enter total annual kWh" step="0.01"
+            onchange="updateAnnualConsumptionDirectly('${bill.id}', parseFloat(this.value))">
+          <small style="color: #64748b; font-size: 0.7rem;"><i class="fas fa-info-circle"></i> Manual entry here will override the monthly table.</small>
         </div>
       </div>
 
-      <div class="form-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-        <label style="color: var(--primary-dark); font-weight: bold;">Total Annual Consumption (kWh)</label>
-        <input type="number" 
-               id="${bill.id}_total_annual_input" 
-               placeholder="Enter total kWh for the year" 
-               step="0.01" 
-               style="font-weight: bold; border-color: var(--primary);"
-               onchange="updateAnnualConsumptionDirectly('${bill.id}', parseFloat(this.value))">
-        <p class="helper-text" style="margin-bottom: 0; margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
-          <i class="fas fa-info-circle"></i> Entering value here overrides the monthly table.
-        </p>
-      </div>
-      
-      <div class="text-center" style="margin: 10px 0; font-size: 0.8rem; color: #94a3b8; font-weight: 600;">— OR ENTER MONTHLY —</div>
-      
-      <div class="form-group">
-        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 4px;">
-            <table class="table table-sm table-striped" style="margin-bottom: 0; font-size: 0.85rem;">
-            <thead style="position: sticky; top: 0; background: #f1f5f9;">
-                <tr>
-                <th>Month</th>
-                <th>Units (kWh)</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${months.map((month, idx) => `
-                <tr>
-                    <td>${month}</td>
-                    <td style="padding: 2px;">
-                    <input type="number" 
-                            id="${bill.id}_month_${idx}" 
-                            placeholder="0" 
-                            step="0.01" 
-                            style="width: 100%; border: none; background: transparent; padding: 4px;"
-                            onchange="updateMonthlyConsumption('${bill.id}', ${idx}, parseFloat(this.value))">
-                    </td>
-                </tr>
-                `).join("")}
-            </tbody>
-            </table>
+      <div class="bill-monthly-right">
+        <div class="monthly-grid-header">? OR ENTER MONTHLY ?</div>
+        <div class="monthly-inputs-grid">
+          ${months.map((month, idx) => `
+            <div class="monthly-input-row">
+              <span>${month}</span>
+              <input type="number" id="${bill.id}_month_${idx}" value="0" step="0.01"
+                onchange="updateMonthlyConsumption('${bill.id}', ${idx}, parseFloat(this.value))">
+            </div>
+          `).join("")}
         </div>
-        <div style="background: #f8fafc; padding: 8px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 4px 4px; display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem;">
-            <span>Total:</span>
-            <span id="${bill.id}_total_annual">0.00 kWh</span>
+
+        <div class="monthly-total-bar">
+          <strong style="font-size: 0.9rem; color: #475569;">Calculated Total:</strong>
+          <strong id="${bill.id}_total_annual" style="font-size: 0.9rem; color: #16a34a;">0.00 kWh</strong>
         </div>
       </div>
+    </div>
     </div>
   `;
 
   container.appendChild(billCard);
 }
-
-// 3. Toggle Logic: Hides body, swaps icon
-function toggleBill(billId) {
-  const body = document.getElementById(`body_${billId}`);
+// 3. Toggle Logic: Uses max-height animation for smooth collapse
+function toggleBillCollapse(billId) {
+  const wrapper = document.getElementById(`collapse-wrapper-${billId}`);
   const icon = document.getElementById(`icon_${billId}`);
-
-  if (body.style.display === "none") {
-    body.style.display = "block";
-    icon.className = "fas fa-chevron-up toggle-icon"; // Arrow Up
+  
+  wrapper.classList.toggle('collapsed');
+  
+  // Rotate icon
+  if (wrapper.classList.contains('collapsed')) {
+    icon.style.transform = 'rotate(180deg)';
   } else {
-    body.style.display = "none";
-    icon.className = "fas fa-chevron-down toggle-icon"; // Arrow Down
+    icon.style.transform = 'rotate(0deg)';
   }
+}
+
+// Legacy function for backwards compatibility
+function toggleBill(billId) {
+  toggleBillCollapse(billId);
 }
 
 // Update bill data in the global 'bills' array
@@ -343,3 +310,4 @@ function autoUpdateMonthlyTable(billId) {
     }
   }
 }
+

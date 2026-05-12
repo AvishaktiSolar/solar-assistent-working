@@ -2,12 +2,27 @@
    LOGIN PAGE STYLES
    ============================================ */
 
+:root {
+  --brand-yellow: #f0d040;
+  --brand-yellow-dark: #d9b020;
+  --brand-cream: #fff9e6;
+  --brand-gray: #6b6b6b;
+  --brand-charcoal: #222222;
+  --brand-shadow: rgba(34, 34, 34, 0.25);
+}
+
+body {
+  font-family: "Nunito Sans", "Segoe UI", Tahoma, sans-serif;
+  background: var(--brand-cream);
+  color: var(--brand-charcoal);
+}
+
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+  background: linear-gradient(135deg, #fff3b0 0%, #f0d040 45%, #e4c14a 100%);
   padding: 20px;
   position: relative;
   overflow: hidden;
@@ -16,19 +31,14 @@
 /* Animated Background Pattern */
 .login-container::before {
   content: "";
+  pointer-events: none;
   position: absolute;
   top: -50%;
   left: -50%;
   width: 200%;
   height: 200%;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(255, 255, 255, 0.03) 10px,
-    rgba(255, 255, 255, 0.03) 20px
-  );
-  animation: slide 20s linear infinite;
+  background: none;
+  animation: none;
 }
 
 @keyframes slide {
@@ -41,14 +51,15 @@
 }
 
 .login-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+  background: #fffdf4;
+  border-radius: 18px;
+  border: 1px solid rgba(240, 208, 64, 0.5);
+  box-shadow: 0 24px 60px var(--brand-shadow);
   padding: 40px;
   width: 100%;
   max-width: 450px;
-  position: relative;
-  z-index: 1;
   animation: fadeInUp 0.6s ease-out;
 }
 
@@ -67,30 +78,46 @@
   text-align: center;
   margin-bottom: 35px;
   padding-bottom: 25px;
-  border-bottom: 2px solid #e2e8f0;
+}
+
+.logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.login-logo {
+  width: 240px;
+  max-width: 90%;
+  height: auto;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .login-header h1 {
   font-size: 2rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 800;
+  color: var(--brand-charcoal);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
+  letter-spacing: 0.4px;
 }
 
 .login-header h1 i {
-  color: #0ea5e9;
+  color: var(--brand-yellow-dark);
   font-size: 2.2rem;
 }
 
 .login-header p {
-  color: #64748b;
+  color: var(--brand-gray);
   font-size: 1rem;
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 #loginSubtext {
@@ -104,8 +131,8 @@
 
 .form-group label {
   display: block;
-  font-weight: 600;
-  color: #334155;
+  font-weight: 700;
+  color: #3a3a3a;
   margin-bottom: 8px;
   font-size: 0.95rem;
 }
@@ -119,7 +146,7 @@
 .input-icon i {
   position: absolute;
   left: 16px;
-  color: #64748b;
+  color: var(--brand-gray);
   font-size: 1.1rem;
   pointer-events: none;
 }
@@ -127,10 +154,10 @@
 .input-icon input {
   width: 100%;
   padding: 14px 16px 14px 48px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #efe4b5;
   border-radius: 10px;
   font-size: 1rem;
-  color: #0f172a;
+  color: var(--brand-charcoal);
   transition: all 0.3s ease;
   font-family: inherit;
   background: white;
@@ -138,12 +165,12 @@
 
 .input-icon input:focus {
   outline: none;
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+  border-color: var(--brand-yellow-dark);
+  box-shadow: 0 0 0 4px rgba(240, 208, 64, 0.25);
 }
 
 .input-icon input::placeholder {
-  color: #94a3b8;
+  color: #a29a7a;
 }
 
 /* Error Message */
@@ -183,7 +210,7 @@
   width: 100%;
   padding: 14px 24px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 10px;
   border: 2px solid transparent;
   cursor: pointer;
@@ -196,15 +223,20 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  color: white;
-  border-color: #0ea5e9;
+  background: linear-gradient(135deg, #f6de73 0%, #f0d040 60%, #f2d13e 100%);
+  color: #2a2a2a;
+  border-color: var(--brand-yellow-dark);
 }
 
-.btn-primary:hover {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:focus-visible {
+  background: linear-gradient(135deg, #8a8a8a 0%, #6b6b6b 100%) !important;
+  color: #ffffff !important;
+  border-color: var(--brand-gray) !important;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 10px 20px rgba(107, 107, 107, 0.35) !important;
+  outline: none;
 }
 
 .btn-primary:active {
@@ -218,12 +250,14 @@
 
 .btn-secondary {
   background: transparent;
-  color: #3b82f6;
-  border: 1px dashed #3b82f6;
+  color: var(--brand-yellow-dark);
+  border: 1px solid var(--brand-yellow-dark);
 }
 
 .btn-secondary:hover {
-  background: #eff6ff;
+  background: rgba(107, 107, 107, 0.12);
+  border-color: var(--brand-gray);
+  color: var(--brand-gray);
   border-style: solid;
 }
 
@@ -234,18 +268,17 @@
 /* Procurement Portal Section */
 .procurement-divider {
   margin-top: 2rem;
-  border-top: 1px solid #e2e8f0;
   padding-top: 1.5rem;
   text-align: center;
 }
 
 .procurement-divider p {
-  color: #64748b;
+  color: var(--brand-gray);
   font-size: 0.85rem;
   margin-bottom: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
+  letter-spacing: 0.6px;
+  font-weight: 700;
 }
 
 /* Responsive Design */
@@ -253,15 +286,20 @@
   .login-card {
     padding: 30px 20px;
   }
-  
+
   .login-header h1 {
     font-size: 1.6rem;
   }
-  
+
   .login-header h1 i {
     font-size: 1.8rem;
   }
-  
+
+  .login-logo {
+    width: 210px;
+    max-width: 90%;
+  }
+
   .input-icon input {
     padding: 12px 14px 12px 44px;
   }
@@ -270,7 +308,7 @@
 /* Hover Effects */
 @media (hover: hover) {
   .input-icon input:hover {
-    border-color: #cbd5e1;
+    border-color: var(--brand-gray);
   }
 }
 
@@ -301,3 +339,26 @@
     transform: rotate(360deg);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.login-card button:focus-visible {
+  outline: 2px solid var(--brand-gray);
+  outline-offset: 2px;
+}
+

@@ -170,7 +170,18 @@ def get_stage3_materials():
                           
         "protection_ac": [m for m in materials if 
                           (has(m.get('category'), 'Protection') or has(m.get('category'), 'Switchgear') or has(m.get('category'), 'Breaker'))
-                          and (has(m.get('name'), 'AC') or has(m.get('name'), 'MCB') or has(m.get('name'), 'MCCB') or has(m.get('subcategory'), 'AC'))],
+                          and (
+                              has(m.get('name'), 'AC')
+                              or has(m.get('name'), 'MCB')
+                              or has(m.get('name'), 'MCCB')
+                              or has(m.get('name'), 'RCCB')
+                              or has(m.get('name'), 'ELCB')
+                              or has(m.get('subcategory'), 'AC')
+                              or has(m.get('subcategory'), 'MCB')
+                              or has(m.get('subcategory'), 'MCCB')
+                              or has(m.get('subcategory'), 'RCCB')
+                              or has(m.get('subcategory'), 'ELCB')
+                          )],
         
         "boxes": [m for m in materials if 
                   has(m.get('category'), 'Box') or has(m.get('category'), 'DB') or has(m.get('category'), 'Enclosure') 
@@ -178,6 +189,72 @@ def get_stage3_materials():
     }
     
     return jsonify(response)
+
+@procurement_bp.route('/procurement/api/get_stage5_materials', methods=['GET'])
+def get_stage5_materials():
+    """
+    Returns Stage 5 civil and conduit material lists from procurement inventory.
+    Keeps Stage 5 dropdowns editable via materials.json.
+    """
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    materials = load_data()
+
+    def has(text, keyword):
+        if not text:
+            return False
+        return keyword.upper() in str(text).upper()
+
+    civil_items = [m for m in materials if has(m.get('category'), 'Civil')]
+
+    foundation = [
+        m for m in civil_items
+        if has(m.get('subcategory'), 'FOUND')
+        or has(m.get('name'), 'CONCRETE')
+        or has(m.get('name'), 'PRECAST')
+        or has(m.get('name'), 'BLOCK')
+    ]
+    adhesive = [
+        m for m in civil_items
+        if has(m.get('subcategory'), 'ADH')
+        or has(m.get('name'), 'EPOXY')
+        or has(m.get('name'), 'ADHESIVE')
+        or has(m.get('name'), 'SIKA')
+        or has(m.get('name'), 'FOSROC')
+        or has(m.get('name'), 'MYTOBOND')
+        or has(m.get('name'), 'NITON')
+    ]
+    walkway = [
+        m for m in civil_items
+        if has(m.get('subcategory'), 'WALK')
+        or has(m.get('name'), 'WALKWAY')
+        or has(m.get('name'), 'FRP')
+        or has(m.get('name'), 'GRATING')
+    ]
+    anchor = [
+        m for m in civil_items
+        if has(m.get('subcategory'), 'ANCHOR')
+        or has(m.get('name'), 'ANCHOR')
+        or has(m.get('name'), 'FASTENER')
+        or has(m.get('name'), 'PLUG')
+        or has(m.get('name'), 'BOLT')
+    ]
+    conduits = [
+        m for m in civil_items
+        if has(m.get('subcategory'), 'CONDUIT')
+        or has(m.get('name'), 'PVC')
+        or has(m.get('name'), 'FLEXIBLE')
+        or has(m.get('name'), 'CONDUIT')
+    ]
+
+    return jsonify({
+        "civil_foundation": foundation,
+        "civil_adhesive": adhesive,
+        "walkway": walkway,
+        "anchor_fastener": anchor,
+        "conduits": conduits
+    })
 
 # --- Actions (Add / Edit / Delete) ---
 
@@ -206,6 +283,17 @@ def save_material():
         
     unit = request.form.get('unit')
 
+    def parse_optional_int(value):
+        if value is None or value == "":
+            return None
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return None
+
+    rating_amp = parse_optional_int(request.form.get('rating_amp'))
+    sensitivity_ma = parse_optional_int(request.form.get('sensitivity_ma'))
+
     # 2. Handle Specifications (JSON String -> Object)
     specs_input = request.form.get('specs')
     specifications = {}
@@ -229,6 +317,14 @@ def save_material():
                     item['stock'] = stock
                     item['unit'] = unit
                     item['rate'] = rate
+                    if category == 'Protection':
+                        if rating_amp is not None:
+                            item['rating_amp'] = rating_amp
+                        if sensitivity_ma is not None:
+                            item['sensitivity_ma'] = sensitivity_ma
+                    else:
+                        item.pop('rating_amp', None)
+                        item.pop('sensitivity_ma', None)
                     break
         except ValueError:
             pass 
@@ -248,6 +344,11 @@ def save_material():
             "unit": unit,
             "rate": rate
         }
+        if category == 'Protection':
+            if rating_amp is not None:
+                new_item["rating_amp"] = rating_amp
+            if sensitivity_ma is not None:
+                new_item["sensitivity_ma"] = sensitivity_ma
         materials.append(new_item)
     
     save_data(materials)

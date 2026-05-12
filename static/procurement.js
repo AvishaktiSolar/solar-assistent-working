@@ -58,16 +58,87 @@ const specFieldsMap = {
     ]
 };
 
+// Extend spec fields to cover all keys in materials.json
+specFieldsMap["Solar Panel"].push(
+    { key: "isc_coeff", label: "Isc Temp Coeff (%/C)", type: "number", step: "0.001" },
+    { key: "operating_temp_min", label: "Operating Temp Min (deg C)", type: "number" },
+    { key: "operating_temp_max", label: "Operating Temp Max (deg C)", type: "number" },
+    { key: "max_system_voltage", label: "Max System Voltage (V)", type: "number" },
+    { key: "module_fuse_rating", label: "Module Fuse Rating (A)", type: "number" },
+    { key: "bifaciality_factor", label: "Bifaciality Factor", type: "number", step: "0.01" },
+    { key: "cell_type", label: "Cell Type", type: "text" },
+    { key: "cells", label: "Cell Count", type: "number" }
+);
+
+specFieldsMap["Inverter"].push(
+    { key: "ac_power_kw", label: "AC Power (kW)", type: "number", step: "0.1" },
+    { key: "string_class", label: "String Class", type: "text" },
+    { key: "architecture", label: "Architecture", type: "text" },
+    { key: "max_dc_power", label: "Max DC Power (W)", type: "number" },
+    { key: "max_efficiency", label: "Max Efficiency (%)", type: "number", step: "0.1" },
+    { key: "euro_efficiency", label: "Euro Efficiency (%)", type: "number", step: "0.1" },
+    { key: "dimensions", label: "Dimensions", type: "text" },
+    { key: "weight", label: "Weight (kg)", type: "number", step: "0.1" },
+    { key: "protection_rating", label: "Protection Rating", type: "text" },
+    { key: "synergy_units", label: "Synergy Units", type: "number" },
+    { key: "note", label: "Notes", type: "text" }
+);
+
+specFieldsMap["Optimizer"].push(
+    { key: "max_modules_per_optimizer", label: "Max Modules per Optimizer", type: "number" },
+    { key: "isc_max", label: "Max Short Circuit (A)", type: "number", step: "0.1" },
+    { key: "regulated_output_voltage", label: "Regulated Output Voltage (V)", type: "number" },
+    { key: "max_output_voltage", label: "Max Output Voltage (V)", type: "number" },
+    { key: "max_output_current", label: "Max Output Current (A)", type: "number", step: "0.1" },
+    { key: "max_system_voltage", label: "Max System Voltage (V)", type: "number" },
+    { key: "string_limits", label: "String Limits (JSON)", type: "textarea", json: true },
+    { key: "application", label: "Application", type: "text" },
+    { key: "note", label: "Notes", type: "text" }
+);
+
+specFieldsMap["Protection"].push(
+    { key: "poles", label: "Poles", type: "text" }
+);
+
+specFieldsMap["Civil Material"].push(
+    { key: "type", label: "Type", type: "text" }
+);
+
 // Global Store
 window.materialsDB = window.materialsDB || []; 
 
 document.addEventListener('DOMContentLoaded', () => {
     loadInventory();
+    setupFormSubmission();
+    setupDetailRowToggles();
 });
 
+// ==================================================================
+//  EXPANDABLE STOCK DETAILS FUNCTIONALITY
+// ==================================================================
+
+// Setup click handlers for toggling detail rows
+function setupDetailRowToggles() {
+    const mainRows = document.querySelectorAll('tr.main-row');
+    mainRows.forEach(row => {
+        row.addEventListener('click', function() {
+            toggleDetailRow(this);
+        });
+    });
+}
+
+// Toggle visibility of detail row
+function toggleDetailRow(mainRow) {
+    const detailRow = document.getElementById('detail-' + mainRow.id.substring(4)); // Remove "row-" prefix
+    if (detailRow) {
+        const isVisible = detailRow.style.display !== 'none';
+        detailRow.style.display = isVisible ? 'none' : 'table-row';
+        mainRow.classList.toggle('expanded');
+    }
+}
 
 // ==================================================================
-//  1. UI INTERACTION & FORM LOGIC
+//  0. CARD RENDERING
 // ==================================================================
 
 // --- Handle Category Switch (Shows/Hides Wattage Field) ---
@@ -106,6 +177,12 @@ function handleCategoryChange() {
 
     // 3. Render Standard Dynamic Fields
     renderDynamicFields();
+
+    // 4. Protection-specific top-level fields
+    const protectionGroup = document.getElementById('protectionRatingsGroup');
+    if (protectionGroup) {
+        protectionGroup.style.display = (cat === 'Protection') ? 'grid' : 'none';
+    }
 }
 
 // --- Render Dynamic Fields based on Category ---
@@ -132,14 +209,21 @@ function renderDynamicFields(existingData = {}) {
         const label = document.createElement("label");
         label.innerText = field.label;
         
-        const input = document.createElement("input");
-        input.type = field.type;
+        const input = (field.type === "textarea") ? document.createElement("textarea") : document.createElement("input");
+        if (field.type !== "textarea") input.type = field.type;
         input.className = "dynamic-spec-input";
         input.dataset.key = field.key; 
         if (field.step) input.step = field.step;
+        if (field.json) input.dataset.json = "true";
+        if (field.type === "textarea") input.rows = 3;
         
         if (existingData && existingData[field.key] !== undefined) {
-            input.value = existingData[field.key];
+            const val = existingData[field.key];
+            if (field.json && typeof val === "object") {
+                input.value = JSON.stringify(val, null, 2);
+            } else {
+                input.value = val;
+            }
         }
 
         wrapper.appendChild(label);
@@ -167,10 +251,24 @@ function prepareSpecsForSubmit() {
     
     // 1. Gather Dynamic Inputs
     inputs.forEach(inp => {
-        if (inp.value.trim() !== "") {
-            const val = (inp.type === 'number') ? parseFloat(inp.value) : inp.value;
-            specsObj[inp.dataset.key] = val;
+        const raw = (inp.value || "").trim();
+        if (raw === "") return;
+
+        const isJson = inp.dataset.json === "true";
+        const isNumber = inp.type === 'number';
+
+        let val = raw;
+        if (isJson) {
+            try {
+                val = JSON.parse(raw);
+            } catch (e) {
+                val = raw;
+            }
+        } else if (isNumber) {
+            val = parseFloat(raw);
         }
+
+        specsObj[inp.dataset.key] = val;
     });
 
     // 2. CRITICAL: Inject Panel Wattage into Specs (for Stage 1)
@@ -185,6 +283,52 @@ function prepareSpecsForSubmit() {
 
     document.getElementById('finalSpecsJSON').value = JSON.stringify(specsObj);
     return true; 
+}
+
+// --- Smooth Save/Update (Prevent Page Jump) ---
+function setupFormSubmission() {
+    const form = document.getElementById('materialForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const ok = prepareSpecsForSubmit();
+        if (!ok) return;
+
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) saveBtn.classList.add('loading');
+
+        const scrollContainer = document.querySelector('.card-body.scrollable-y');
+        const prevScroll = scrollContainer ? scrollContainer.scrollTop : window.scrollY;
+
+        try {
+            const formData = new FormData(form);
+            const res = await fetch(form.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) throw new Error('Save failed');
+
+            closeModal();
+            await loadInventory();
+
+            // Restore scroll position smoothly
+            requestAnimationFrame(() => {
+                if (scrollContainer) {
+                    scrollContainer.scrollTo({ top: prevScroll, behavior: 'smooth' });
+                } else {
+                    window.scrollTo({ top: prevScroll, behavior: 'smooth' });
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            alert('Update failed. Please try again.');
+        } finally {
+            if (saveBtn) saveBtn.classList.remove('loading');
+        }
+    });
 }
 
 
@@ -207,6 +351,10 @@ function openAddModal() {
     if(wInput) wInput.value = "";
     const rwInput = document.getElementById('ratePerWattInput');
     if(rwInput) rwInput.value = "";
+    const ratingAmp = document.getElementById('ratingAmpInput');
+    if (ratingAmp) ratingAmp.value = "";
+    const sensitivityMa = document.getElementById('sensitivityMaInput');
+    if (sensitivityMa) sensitivityMa.value = "";
     
     handleCategoryChange(); // Reset visibility
 }
@@ -249,6 +397,12 @@ function openEditModal(id) {
     }
 
     renderDynamicFields(item.specifications || {});
+
+    // Fill Protection top-level fields
+    const ratingAmp = document.getElementById('ratingAmpInput');
+    if (ratingAmp) ratingAmp.value = item.rating_amp ?? "";
+    const sensitivityMa = document.getElementById('sensitivityMaInput');
+    if (sensitivityMa) sensitivityMa.value = item.sensitivity_ma ?? "";
 }
 
 function closeModal() { 
@@ -267,13 +421,13 @@ window.onclick = function(event) {
 function searchTable() {
     let input = document.getElementById("searchBox");
     let filter = input.value.toUpperCase();
-    let rows = document.querySelectorAll("#inventoryTable tbody tr");
+    let rows = document.querySelectorAll(".list-row");
 
     rows.forEach(row => {
-        let cat = row.querySelector(".category-cell")?.innerText || "";
-        let name = row.querySelector(".name-cell")?.innerText || "";
+        let name = row.querySelector(".component-title")?.innerText || "";
+        let category = row.getAttribute('data-category') || "";
         
-        if (name.toUpperCase().includes(filter) || cat.toUpperCase().includes(filter)) {
+        if (name.toUpperCase().includes(filter) || category.toUpperCase().includes(filter)) {
             row.style.display = "";
         } else {
             row.style.display = "none";
@@ -282,7 +436,7 @@ function searchTable() {
 }
 
 function filterCategory(event, cat) {
-    let rows = document.querySelectorAll("#inventoryTable tbody tr");
+    let rows = document.querySelectorAll(".list-row");
     
     rows.forEach(row => {
         const rowCat = row.getAttribute('data-category');
@@ -303,8 +457,8 @@ function filterCategory(event, cat) {
 // ==================================================================
 
 async function loadInventory() {
-    const tbody = document.querySelector("#inventoryTable tbody");
-    if (!tbody) return; // Guard clause
+    const container = document.getElementById("inventoryList");
+    if (!container) return; // Guard clause
 
     try {
         const res = await fetch('/procurement/api/get_inventory'); 
@@ -319,45 +473,105 @@ async function loadInventory() {
 }
 
 function renderTable(data) {
-    const tbody = document.querySelector("#inventoryTable tbody");
-    tbody.innerHTML = "";
+    const container = document.getElementById("inventoryList");
+    container.innerHTML = "";
 
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No items found. Add one!</td></tr>';
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px; color: #999;">No items found. Add one!</td></tr>';
         return;
     }
 
     data.forEach(item => {
-        const tr = document.createElement("tr");
-        tr.setAttribute("data-category", item.category);
-        tr.id = `row-${item.id}`;
+        const formatSpecValue = (val) => {
+            if (val && typeof val === "object") return JSON.stringify(val);
+            return val;
+        };
 
-        let specHtml = "";
-        if (item.specifications) {
-            for (const [key, val] of Object.entries(item.specifications)) {
-                // Formatting key names nicely
-                const keyName = key.replace(/_/g, ' '); 
-                specHtml += `<span class="spec-badge"><strong>${keyName}:</strong> ${val}</span> `;
-            }
+        // Build specs HTML
+        let specsHTML = "";
+        const mergedSpecs = Object.assign({}, item.specifications || {});
+        if (item.rating_amp !== undefined) mergedSpecs.rating_amp = item.rating_amp;
+        if (item.sensitivity_ma !== undefined) mergedSpecs.sensitivity_ma = item.sensitivity_ma;
+
+        if (Object.keys(mergedSpecs).length) {
+            const specs = Object.entries(mergedSpecs);
+            specs.forEach(([key, val]) => {
+                const keyName = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.replace(/_/g, ' ').slice(1);
+                specsHTML += `<span class="spec-badge"><strong>${keyName}:</strong> ${formatSpecValue(val)}</span>`;
+            });
         } else {
-            specHtml = '<span style="color:#ccc">-</span>';
+            specsHTML = '<span style="color:#999;">No specifications</span>';
         }
 
-        tr.innerHTML = `
-            <td class="category-cell" data-label="Category">${item.category}</td>
-            <td data-label="Sub-Type"><span class="badge-sub">${item.subcategory || '-'}</span></td>
-            <td class="name-cell" data-label="Name">${item.name}</td>
-            <td class="specs-cell" data-label="Specs">${specHtml}</td>
-            <td class="stock-cell ${item.stock < 20 ? 'low-stock' : ''}" data-label="Stock">${item.stock}</td>
-            <td data-label="Unit">${item.unit}</td>
-            <td data-label="Cost">₹${item.rate}</td>
-            <td data-label="Action" style="display:flex; gap:5px;">
-                <button class="btn-icon-edit" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i></button>
-                <button class="btn-icon-delete" onclick="deleteMaterial(${item.id})"><i class="fas fa-trash"></i></button>
+        // Build detail specs grid HTML
+        let detailSpecsHTML = "";
+        if (Object.keys(mergedSpecs).length) {
+            const specs = Object.entries(mergedSpecs);
+            specs.forEach(([key, val]) => {
+                const keyName = key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.replace(/_/g, ' ').slice(1);
+                detailSpecsHTML += `<div class="spec-detail"><strong>${keyName}:</strong> <span>${formatSpecValue(val)}</span></div>`;
+            });
+        }
+
+        // Main row
+        const mainRow = document.createElement("tr");
+        mainRow.className = "main-row";
+        mainRow.setAttribute("data-category", item.category);
+        mainRow.id = `row-${item.id}`;
+        mainRow.innerHTML = `
+            <td class="name-cell" data-label="Component Name">
+                <div class="component-info">
+                    <h3 class="component-name">${item.name}</h3>
+                    <div class="component-badges">
+                        <span class="badge-sub">${item.subcategory || '-'}</span>
+                    </div>
+                </div>
+            </td>
+            <td class="category-cell" data-label="Category">
+                <span class="badge-sub">${item.category}</span>
+            </td>
+            <td class="specs-cell" data-label="Key Specs">
+                <div class="specs-container">
+                    ${specsHTML}
+                </div>
+            </td>
+            <td class="stock-cell ${item.stock < 20 ? 'low-stock' : ''}" data-label="Stock">
+                <span class="stock-pill">${item.stock}</span>
+            </td>
+            <td class="unit-cell" data-label="Unit">
+                <span class="meta-pill unit-pill">${item.unit}</span>
+            </td>
+            <td class="cost-cell" data-label="Cost">
+                <span class="meta-pill cost-pill">₹${"%.2f".replace("%", (item.rate || 0).toFixed(2))}</span>
+            </td>
+            <td class="actions-cell" data-label="Actions">
+                <button class="btn-icon-edit" onclick="openEditModal(${item.id})" title="Edit Item" type="button">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <a href="/procurement/delete/${item.id}" class="btn-icon-delete" onclick="return confirm('Delete ${item.name}?')" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </a>
             </td>
         `;
-        tbody.appendChild(tr);
+        container.appendChild(mainRow);
+
+        // Detail row
+        const detailRow = document.createElement("tr");
+        detailRow.className = "stock-detail-row";
+        detailRow.id = `detail-${item.id}`;
+        detailRow.style.display = "none";
+        detailRow.innerHTML = `
+            <td colspan="7" class="detail-content">
+                <div class="detail-specs-grid">
+                    ${detailSpecsHTML}
+                </div>
+            </td>
+        `;
+        container.appendChild(detailRow);
     });
+
+    // Re-attach toggle event listeners
+    setupDetailRowToggles();
 }
 
 // Custom Save Function (if not using standard form submit)
@@ -372,7 +586,7 @@ async function deleteMaterial(id) {
         if (res.ok) {
             loadInventory(); // Refresh UI
         } else {
-            alert("Failed to delete.");
+            alert("Delete failed.");
         }
     } catch (err) {
         console.error(err);

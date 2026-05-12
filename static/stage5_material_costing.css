@@ -1,231 +1,690 @@
 /* =========================================
-   STAGE 5: COMMERCIAL PROPOSAL (ADVANCED)
+   STAGE 5: COMMERCIAL PROPOSAL — CLEAN REDESIGN
    ========================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
 :root {
-  --navy: #0f172a;
-  --blue: #0ea5e9;
-  --green: #10b981;
-  --red: #ef4444;
-  --amber: #f59e0b;
-  --bg: #f8fafc;
-  --bd: #e2e8f0;
-  --txt: #1e293b;
+  --navy:       #0f172a;
+  --navy-mid:   #1e293b;
+  --navy-soft:  #334155;
+  --blue:       #0ea5e9;
+  --blue-light: #e0f2fe;
+  --green:      #10b981;
+  --green-light:#ecfdf5;
+  --red:        #ef4444;
+  --amber:      #f59e0b;
+  --amber-light:#fffbeb;
+  --purple:     #8b5cf6;
+  --purple-light:#f3e8ff;
+  --pink:       #ec4899;
+  --pink-light: #fce7f3;
+  --teal:       #14b8a6;
+  --teal-light: #ccfbf1;
+  --orange:     #f97316;
+  --orange-light:#ffedd5;
+
+  --bg:         #f0f4f8;
+  --card-bg:    #ffffff;
+  --bd:         #e2e8f0;
+  --bd-strong:  #cbd5e1;
+  --txt:        #1e293b;
+  --txt-muted:  #64748b;
+  --txt-faint:  #94a3b8;
+
+  --font-ui:    'DM Sans', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
+
+  /* Table column widths — single source of truth */
+  --col-use:    52px;
+  --col-desc:   22%;
+  --col-spec:   30%;
+  --col-qty:    90px;
+  --col-rate:   130px;
+  --col-total:  130px;
+
+  --row-h:      48px;
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --shadow-sm:  0 1px 3px rgba(15,23,42,.08);
+  --shadow-md:  0 4px 12px rgba(15,23,42,.10);
+  --shadow-lg:  0 10px 30px rgba(15,23,42,.12);
 }
 
-/* --- MAIN CONTAINER OVERRIDE (CRITICAL FIX) --- */
-/* We use !important to override the Stage 2 grid settings */
+/* ── LAYOUT ───────────────────────────────── */
+
 #stage-5 .dashboard-grid {
   display: grid !important;
-  grid-template-columns: 1fr !important; /* Force Single Column Full Width */
+  grid-template-columns: 1fr !important;
   padding: 20px;
   height: 100%;
   width: 100%;
-  max-width: 1600px; /* Max width for readability on ultra-wide screens */
+  max-width: 1600px;
   margin: 0 auto;
-  overflow: hidden;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* --- CARD SYSTEM --- */
 #stage-5 .full-height-card {
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 12px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--bd);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   height: 100%;
   overflow: hidden;
   position: relative;
 }
 
-/* --- SCROLLABLE BODY --- */
+#stage-5 .compact-header {
+  background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%);
+  color: #fff;
+  padding: 14px 24px;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 2px solid var(--blue);
+}
+
 .card-body {
   flex: 1;
-  padding: 30px;
-  padding-bottom: 100px; /* Space for footer */
+  padding: 24px;
+  padding-bottom: 100px;
   overflow-y: auto;
-  background: #f8fafc;
+  background: var(--bg);
   scroll-behavior: smooth;
 }
 
-/* --- COST SHEET CONTAINER (The "Paper" Look) --- */
+/* ── COST SHEET PAPER ─────────────────────── */
+
 .cost-sheet-container {
-  background: #fff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background: var(--card-bg);
+  border: 1px solid var(--bd-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
   margin-bottom: 20px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: var(--font-ui);
 }
 
-/* --- SECTION HEADERS --- */
+.cost-section {
+  border-bottom: 1px solid var(--bd);
+}
+
+.cost-section:last-child {
+  border-bottom: none;
+}
+
+/* ── SECTION HEADERS ──────────────────────── */
+
 .cost-section-header {
-  background: var(--navy);
-  color: #fff;
-  padding: 12px 20px;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-  letter-spacing: 0.5px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-left: 4px solid transparent;
 }
 
-/* --- TABLES --- */
+/* Section A — Major */
+.cost-section:nth-child(1) .cost-section-header {
+  background: linear-gradient(90deg, #0f172a 0%, #1e3a5f 100%);
+  color: #e0f2fe;
+  border-left-color: var(--blue);
+}
+
+/* Section B — BoS */
+.cost-section:nth-child(2) .cost-section-header {
+  background: linear-gradient(90deg, #451a03 0%, #78350f 100%);
+  color: #fef3c7;
+  border-left-color: var(--amber);
+}
+
+/* Section C — Services */
+.cost-section:nth-child(3) .cost-section-header {
+  background: linear-gradient(90deg, #052e16 0%, #14532d 100%);
+  color: #bbf7d0;
+  border-left-color: var(--green);
+}
+
+/* ── TABLE BASE ───────────────────────────── */
+
 .cost-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  table-layout: fixed;       /* ← KEY: fixed layout enforces column widths */
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+}
+
+/* THEAD */
+.cost-table thead tr {
+  background: #f1f5f9;
 }
 
 .cost-table th {
-  background: #e2e8f0;
-  color: #475569;
+  padding: 10px 12px;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  padding: 12px 15px;
+  letter-spacing: 0.8px;
+  color: var(--txt-muted);
+  border-bottom: 2px solid var(--bd-strong);
   text-align: left;
-  border-bottom: 2px solid #cbd5e1;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
+/* Fixed column widths on headers */
+.cost-table th:nth-child(1) { width: var(--col-use);   text-align: center; }
+.cost-table th:nth-child(2) { width: var(--col-desc);  }
+/*.cost-table th:nth-child(3) { spec — fills remaining }*/
+.cost-table th:nth-child(4) { width: var(--col-qty);   text-align: center; }
+.cost-table th:nth-child(5) { width: var(--col-rate);  text-align: right;  }
+.cost-table th:nth-child(6) { width: var(--col-total); text-align: right;  }
+
+/* TD BASE */
 .cost-table td {
-  padding: 10px 15px;
+  padding: 0 12px;
+  height: var(--row-h);
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
   color: var(--txt);
+  overflow: hidden;
 }
 
-.cost-table tr:nth-child(even) { background-color: #f8fafc; }
-.cost-table tr:hover { background-color: #f0f9ff; }
+/* Alternating rows */
+.cost-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
 
-/* Column Specifics */
-.col-desc { width: 30%; font-weight: 600; color: var(--navy); }
-.col-spec { width: 25%; font-style: italic; color: #64748b; font-size: 0.85rem; }
-.col-qty { width: 10%; text-align: center; background: #f1f5f9; font-weight: 700; }
-.col-rate { width: 15%; text-align: right; }
-.col-total { width: 20%; text-align: right; font-weight: 800; font-family: 'Consolas', monospace; color: var(--navy); }
+.cost-table tbody tr:hover {
+  background: #eff6ff !important;
+  transition: background 0.15s;
+}
 
-/* --- INPUTS --- */
+/* ── COLUMN ALIGNMENT (enforced on TDs too) ─ */
+
+.cost-table td.col-use,
+.cost-table td:nth-child(1) {
+  width: var(--col-use);
+  text-align: center;
+  padding: 0 8px;
+}
+
+.cost-table td.col-desc,
+.cost-table td:nth-child(2) {
+  width: var(--col-desc);
+  font-weight: 600;
+  color: var(--navy-mid);
+  padding-left: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cost-table td.col-spec,
+.cost-table td:nth-child(3) {
+  color: var(--txt-muted);
+  font-size: 0.83rem;
+  padding-right: 8px;
+}
+
+.cost-table td.col-qty,
+.cost-table td:nth-child(4) {
+  width: var(--col-qty);
+  text-align: center;
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--navy-soft);
+}
+
+.cost-table td.col-rate,
+.cost-table td:nth-child(5) {
+  width: var(--col-rate);
+  text-align: right;
+}
+
+.cost-table td.col-total,
+.cost-table td:nth-child(6) {
+  width: var(--col-total);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--navy);
+  background: linear-gradient(180deg, #f0f9ff, #e0f2fe);
+  padding-right: 16px;
+}
+
+.cost-table tbody tr:hover td.col-total,
+.cost-table tbody tr:hover td:nth-child(6) {
+  background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+  color: #0c4a6e;
+}
+
+/* ── ACCENT LEFT BORDER SYSTEM ────────────── */
+
+.cost-table tbody tr td:nth-child(2) {
+  border-left: 3px solid transparent;
+  transition: border-left-color 0.15s;
+}
+
+/* Major Components */
+.row-panel    td:nth-child(2) { border-left-color: var(--blue);   }
+.row-inverter td:nth-child(2),
+tr[class*="row-inverter_"] td:nth-child(2) { border-left-color: #6366f1; }
+tr[class*="row-optimizer_"] td:nth-child(2) { border-left-color: var(--amber); }
+.row-fabrication td:nth-child(2) { border-left-color: #a855f7; }
+
+/* BoS Fixed Civil */
+.row-blocks   td:nth-child(2) { border-left-color: var(--purple); }
+.row-adhesive td:nth-child(2) { border-left-color: var(--pink);   }
+.row-walkway  td:nth-child(2) { border-left-color: var(--teal);   }
+.row-anchor   td:nth-child(2) { border-left-color: var(--orange); }
+
+/* BoS Dynamic */
+#boq_bos_body tr td:nth-child(2) { border-left-color: var(--amber); }
+
+/* Services */
+#boq_services_body tr td:nth-child(2) { border-left-color: var(--green); }
+
+/* ── BADGE LABELS ─────────────────────────── */
+
+.col-desc [data-tag],
+.row-panel    .col-desc::before,
+.row-inverter .col-desc::before,
+tr[class*="row-inverter_"] .col-desc::before,
+tr[class*="row-optimizer_"] .col-desc::before {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.row-panel .col-desc::before {
+  content: "PV";
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.row-inverter .col-desc::before,
+tr[class*="row-inverter_"] .col-desc::before {
+  content: "INV";
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+tr[class*="row-optimizer_"] .col-desc::before {
+  content: "OPT";
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.row-blocks .col-desc::before {
+  content: "BLOCK";
+  background: var(--purple-light);
+  color: #6d28d9;
+}
+
+.row-adhesive .col-desc::before {
+  content: "ADH";
+  background: var(--pink-light);
+  color: #be185d;
+}
+
+.row-walkway .col-desc::before {
+  content: "WALK";
+  background: var(--teal-light);
+  color: #0d9488;
+}
+
+.row-anchor .col-desc::before {
+  content: "ANCHOR";
+  background: var(--orange-light);
+  color: #c2410c;
+}
+
+/* ── INPUTS ───────────────────────────────── */
+
 .cost-input {
   width: 100%;
-  padding: 8px;
+  padding: 6px 8px;
   border: 1px solid transparent;
-  border-radius: 4px;
-  text-align: right;
-  font-family: 'Consolas', monospace;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
   font-weight: 600;
+  font-size: 0.85rem;
   color: var(--txt);
   background: transparent;
-  transition: all 0.2s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
 }
 
 .cost-input:hover {
   background: #fff;
-  border-color: #cbd5e1;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border-color: var(--bd-strong);
 }
 
 .cost-input:focus {
   background: #fff;
   border-color: var(--blue);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
 }
 
-.cost-input[readonly] { pointer-events: none; color: #64748b; }
+.cost-input[readonly] {
+  color: var(--txt-muted);
+  cursor: default;
+  pointer-events: none;
+}
 
-/* --- SUMMARY SECTION --- */
+/* Checkbox */
+input.boq-include {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--blue);
+}
+
+/* Qty inputs inside td */
+input.qty-input.cost-input {
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+/* Rate inputs inside td */
+input.item-rate.cost-input {
+  text-align: right;
+}
+
+/* Select dropdowns */
+select.cost-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* ── FABRICATION ROW (special tall row) ────── */
+
+.row-fabrication td {
+  height: auto !important;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  vertical-align: top;
+}
+
+.row-fabrication .col-spec {
+  padding-top: 10px;
+}
+
+/* Panel type + row rate display */
+.fab-panel-type {
+  font-size: 0.78rem !important;
+  color: var(--txt-muted) !important;
+  font-style: italic;
+  text-align: left !important;
+}
+
+/* Row panel count grid */
+.fab-row-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.fab-row-inputs label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--txt-muted);
+  white-space: nowrap;
+}
+
+.fab-row-inputs input {
+  font-size: 0.8rem !important;
+}
+
+/* ── BLOCKS ROW — keep spec cell clean ──────── */
+
+.row-blocks .col-spec,
+.row-adhesive .col-spec {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  vertical-align: middle;
+}
+
+.row-blocks select.cost-input,
+.row-adhesive select.cost-input {
+  background-color: #f8fafc;
+  border: 1px solid var(--bd);
+}
+
+/* ── SUMMARY SECTION ──────────────────────── */
+
 .summary-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  padding: 30px;
-  background: #fff;
-  border-top: 2px solid #e2e8f0;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 32px;
+  padding: 28px 32px;
+  background: #f8fafc;
+  border-top: 2px solid var(--bd);
 }
 
 .summary-label {
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--txt-faint);
   text-transform: uppercase;
-  margin-bottom: 5px;
+  letter-spacing: 1px;
   display: block;
+  margin-bottom: 8px;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px dashed #e2e8f0;
-  font-size: 0.95rem;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--bd);
+  font-size: 0.9rem;
+  font-family: var(--font-ui);
+}
+
+.summary-row:last-of-type {
+  border-bottom: none;
 }
 
 .summary-val {
-  font-family: 'Consolas', monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
+  font-size: 0.95rem;
   color: var(--navy);
+}
+
+/* GST config box */
+.gst-config-box {
+  background: #fff;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+/* Subsidy box */
+.subsidy-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#s5_subsidy_amt {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--green);
+  font-size: 1.05rem;
 }
 
 /* Grand Total Box */
 .grand-total-row {
   margin-top: 20px;
-  background: var(--navy);
+  background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%);
   color: #fff;
-  padding: 15px 20px;
-  border-radius: 8px;
+  padding: 18px 22px;
+  border-radius: var(--radius-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 6px 20px rgba(15,23,42,.20);
 }
 
-.grand-total-label { font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; }
-.grand-total-val { font-size: 1.8rem; font-weight: 800; color: #4ade80; font-family: 'Consolas', monospace; }
+.grand-total-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
 
-/* --- FIXED FOOTER --- */
+.grand-total-val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #4ade80;
+  font-family: var(--font-mono);
+  letter-spacing: -0.5px;
+}
+
+.cost-per-watt {
+  margin-top: 10px;
+  padding: 10px 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e40af;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+/* ── FOOTER ───────────────────────────────── */
+
 .calc-footer {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  height: 72px;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
   border-top: 1px solid var(--bd);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 30px;
+  padding: 0 28px;
   z-index: 50;
+  box-sizing: border-box;
 }
 
-/* Buttons */
+/* ── BUTTONS ──────────────────────────────── */
+
 .btn {
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
   font-weight: 600;
+  font-size: 0.9rem;
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s;
+  transition: all 0.18s;
+  letter-spacing: 0.2px;
 }
 
-.btn-primary { background: var(--blue); color: white; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
-.btn-primary:hover { background: #0284c7; transform: translateY(-2px); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue), #0284c7);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(14,165,233,.30);
+}
 
-.btn-secondary { background: #fff; border: 1px solid var(--bd); color: #64748b; }
-.btn-secondary:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(14,165,233,.40);
+}
 
-/* Responsive */
-@media(max-width: 1024px) {
+.btn-secondary {
+  background: #fff;
+  border: 1.5px solid var(--bd-strong);
+  color: var(--txt-muted);
+}
+
+.btn-secondary:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: var(--navy);
+}
+
+.btn-danger {
+  background: #fff;
+  border: 1.5px solid #fecaca;
+  color: var(--red);
+}
+
+.btn-danger:hover {
+  background: #fef2f2;
+  border-color: var(--red);
+}
+
+/* ── SCROLLBAR ────────────────────────────── */
+
+.card-body::-webkit-scrollbar { width: 6px; }
+.card-body::-webkit-scrollbar-track { background: transparent; }
+.card-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.card-body::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── RESPONSIVE ───────────────────────────── */
+
+@media (max-width: 1100px) {
   .summary-grid { grid-template-columns: 1fr; gap: 20px; }
-  .cost-table th, .cost-table td { padding: 8px 5px; font-size: 0.8rem; }
+  :root {
+    --col-desc: 20%;
+    --col-qty: 70px;
+    --col-rate: 110px;
+    --col-total: 110px;
+  }
+  .cost-table th, .cost-table td { font-size: 0.78rem; padding: 0 8px; }
 }

@@ -13,6 +13,7 @@
                         <table class="cost-table">
                             <thead>
                                 <tr>
+                                    <th style="width:56px;">Use</th>
                                     <th class="col-desc">Item Description</th>
                                     <th class="col-spec">Specification / Make</th>
                                     <th class="col-qty">Qty</th>
@@ -32,15 +33,86 @@
                         <table class="cost-table">
                             <thead>
                                 <tr>
+                                    <th style="width:56px;">Use</th>
                                     <th class="col-desc">Item Description</th>
-                                    <th class="col-spec">Specification</th>
+                                    <th class="col-spec">Specification / Make</th>
                                     <th class="col-qty">Qty</th>
                                     <th class="col-rate">Unit Rate (₹)</th>
                                     <th class="col-total">Amount (₹)</th>
                                 </tr>
                             </thead>
-                            <tbody id="boq_bos_body">
-                                </tbody>
+                            <tbody id="boq_bos_fixed">
+                                <!-- BLOCKS ROW -->
+                                <tr class="boq-row row-blocks" id="row_blocks">
+                                    <td class="col-use">
+                                        <input type="checkbox" class="boq-include" checked onchange="calcStage5()">
+                                    </td>
+                                    <td class="col-desc">Blocks</td>
+                                    <td class="col-spec">
+                                        <div style="display:grid; grid-template-columns: 1fr; gap:6px;">
+                                            <select id="civil_make_s5" class="cost-input" onchange="calcCivilBlocksNew()" style="text-align:left; font-weight:500;">
+                                                <option value="">-- Select Block Type --</option>
+                                                <option value="none">None</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td class="col-qty"><input type="number" id="qty_blocks" value="0" class="cost-input" onchange="calcCivilBlocksNew()" min="0" style="text-align:left;"></td>
+                                    <td class="col-rate">
+                                        <input type="number" class="cost-input item-rate" id="rate_blocks" value="0" onchange="calcCivilBlocksNew()" step="0.01">
+                                    </td>
+                                    <td class="col-total" id="total_blocks">₹ 0</td>
+                                </tr>
+
+                                <!-- ADHESIVE ROW (Conditional) -->
+                                <tr class="boq-row row-adhesive" id="row_adhesive">
+                                    <td class="col-use">
+                                        <input type="checkbox" class="boq-include" checked onchange="calcStage5()">
+                                    </td>
+                                    <td class="col-desc">Adhesive (Sticking)</td>
+                                    <td class="col-spec">
+                                        <div style="display:grid; grid-template-columns: 1fr; gap:6px;">
+                                            <select id="adhesive_make_s5" class="cost-input" onchange="calcCivilBlocksNew()" style="text-align:left; font-weight:500;">
+                                                <option value="">-- Select Adhesive --</option>
+                                                <option value="MyBond MetLock">MyBond MetLock</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td class="col-qty"><input type="number" class="cost-input qty-input" id="qty_adhesive" value="400" step="0.01" min="0" onchange="calcCivilBlocksNew()" style="text-align:center;"></td>
+                                    <td class="col-rate">
+                                        <input type="number" class="cost-input item-rate" id="rate_adhesive" value="2800" onchange="calcStage5()" step="0.01">
+                                    </td>
+                                    <td class="col-total" id="total_adhesive">₹ 0</td>
+                                </tr>
+
+                                <!-- WALKWAY ROW -->
+                                <tr class="boq-row row-walkway">
+                                    <td class="col-use">
+                                        <input type="checkbox" class="boq-include" checked onchange="calcStage5()">
+                                    </td>
+                                    <td class="col-desc">Walkway</td>
+                                    <td class="col-spec" style="text-align:left; color:#64748b; font-size:0.9rem;">FRP</td>
+                                    <td class="col-qty"><input type="number" id="qty_walkway" value="15" class="cost-input qty-input" onchange="calcWalkway()" min="0" step="0.01" style="text-align:center;"></td>
+                                    <td class="col-rate">
+                                        <input type="number" class="cost-input item-rate" id="rate_walkway" value="550" onchange="calcStage5()" step="0.01">
+                                    </td>
+                                    <td class="col-total" id="total_walkway">₹ 0</td>
+                                </tr>
+
+                                <!-- ANCHOR FASTENER ROW -->
+                                <tr class="boq-row row-anchor">
+                                    <td class="col-use">
+                                        <input type="checkbox" class="boq-include" checked onchange="calcStage5()">
+                                    </td>
+                                    <td class="col-desc">Anchor Fastener</td>
+                                    <td class="col-spec" style="text-align:left; color:#64748b; font-size:0.9rem;">Raul Plug SS 304 10x100</td>
+                                    <td class="col-qty"><input type="number" id="qty_anchor" value="380" class="cost-input qty-input" onchange="calcAnchor()" min="0" step="0.01" style="text-align:center;"></td>
+                                    <td class="col-rate">
+                                        <input type="number" class="cost-input item-rate" id="rate_anchor" value="39" onchange="calcStage5()" step="0.01">
+                                    </td>
+                                    <td class="col-total" id="total_anchor">₹ 0</td>
+                                </tr>
+                            </tbody>
+                            <tbody id="boq_bos_body"></tbody>
                         </table>
                     </div>
 
@@ -108,9 +180,14 @@
                     <button class="btn btn-secondary" onclick="switchStage(4)">
                         <i class="fas fa-arrow-left"></i> Back to Engineering
                     </button>
-                    <button class="btn btn-primary" onclick="generateMasterReport()" style="padding:12px 30px; font-weight:700; font-size:1rem; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
-                        <i class="fas fa-file-contract"></i> Generate Final Proposal
-                    </button>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn btn-danger" onclick="resetAllStages()">
+                            <i class="fas fa-rotate-left"></i> Reset All
+                        </button>
+                        <button class="btn btn-primary" onclick="generateMasterReport()" style="padding:12px 30px; font-weight:700; font-size:1rem; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
+                            <i class="fas fa-file-contract"></i> Generate Final Proposal
+                        </button>
+                    </div>
                 </div>
 
             </div>
