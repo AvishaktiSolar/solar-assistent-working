@@ -11,9 +11,9 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='stage2_inverter.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='stage3_switchgear.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='stage4_AC_cables.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='stage5_material_costing.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage4_switchgear.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage3_cable.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage5_bom.css') }}" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -169,9 +169,9 @@
 
   <div class="main-wrapper" id="initial-input-page">
     <nav class="sidebar-nav">
-      <button class="nav-item active" onclick="switchStage(1)">
+      <button class="nav-item active" data-stage-main="1" onclick="switchStage(1)">
         <i class="fas fa-map-marked-alt"></i>
-        <span>1. Design Inputs</span>
+        <span>1. Input</span>
       </button>
 
       <button class="nav-item sub-nav active" onclick="
@@ -195,29 +195,25 @@
         <i class="fas fa-solar-panel"></i>
         <span>1.3 Panel Selection</span>
       </button>
-      <button class="nav-item sub-nav" onclick="
-            switchStage(1);
-            showS1Page(4);
-          ">
-        <i class="fas fa-cloud-sun"></i>
-        <span>1.4 Shadow & Orientation</span>
-      </button>
-
-      <button class="nav-item" onclick="switchStage(2)">
+      <button class="nav-item" data-stage-main="2" onclick="switchStage(2)">
         <i class="fas fa-plug"></i>
-        <span>2. Strings & Inverter</span>
+        <span>2. Inverter</span>
       </button>
-      <button class="nav-item" onclick="switchStage(3)">
-        <i class="fas fa-shield-alt"></i>
-        <span>3. Switchgear & Cable</span>
+      <button id="nav-shadow-stage" class="nav-item" onclick="switchStage(1); showS1Page(4, true);">
+        <i class="fas fa-cloud-sun"></i>
+        <span>3. Shadow</span>
       </button>
-      <button class="nav-item" onclick="switchStage(4)">
+      <button class="nav-item" data-stage-main="4" onclick="switchStage(4)">
         <i class="fas fa-bezier-curve"></i>
-        <span>4. AC Sizing & Blocks</span>
+        <span>4. Cable</span>
       </button>
-      <button class="nav-item" onclick="switchStage(5)">
+      <button class="nav-item" data-stage-main="3" onclick="switchStage(3)">
+        <i class="fas fa-shield-alt"></i>
+        <span>5. Switchgear</span>
+      </button>
+      <button class="nav-item" data-stage-main="5" onclick="switchStage(5)">
         <i class="fas fa-file-invoice-dollar"></i>
-        <span>5. Material Costing</span>
+        <span>6. BOM</span>
       </button>
       <div class="nav-divider"></div>
       <button class="nav-item special" onclick="openFinalReportOptions()">
@@ -250,9 +246,9 @@
 
     <div class="stage-container">
       <section id="stage-1" class="stage-view active">
-        {% include 'stage1/step1_site.html' %} {% include
-        'stage1/step2_bills.html' %} {% include 'stage1/step3_panels.html' %}
-        {% include 'stage1/step4_shadow.html' %}
+        {% include 'stage1/stage1_site.html' %} {% include
+        'stage1/stage1_bills.html' %} {% include 'stage1/stage1_panels.html' %}
+        {% include 'stage1/stage1_shadow.html' %}
       </section>
 
       {% include 'stage2.html' %} {% include 'stage3.html' %} {% include
@@ -294,16 +290,17 @@
 
   <script src="https://cdn.jsdelivr.net/npm/ol/dist/ol.js"></script>
   <script src="{{ url_for('static', filename='main.js') }}"></script>
-  <script src="{{ url_for('static', filename='map.js') }}"></script>
-  <script src="{{ url_for('static', filename='bill.js') }}"></script>
-  <script src="{{ url_for('static', filename='calc.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage1_map.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage1_bills.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage1_calc.js') }}"></script>
   <script src="{{ url_for('static', filename='export.js') }}"></script>
   <script src="{{ url_for('static', filename='finance.js') }}"></script>
 
+  <!-- Stage Scripts (UI order): 2 Inverter -> 3 Cable -> 4 Switchgear -> 5 BOM -->
   <script src="{{ url_for('static', filename='stage2_inverter.js') }}"></script>
-  <script src="{{ url_for('static', filename='stage3_switchgear.js') }}"></script>
-  <script src="{{ url_for('static', filename='stage4_AC_cables.js') }}"></script>
-  <script src="{{ url_for('static', filename='stage5_material_costing.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage3_cable.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage4_switchgear.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage5_bom.js') }}"></script>
   <script src="{{ url_for('static', filename='indexScript.js') }}"></script>
 </body>
 

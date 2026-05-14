@@ -9,7 +9,7 @@
     <!-- LEFT PANEL: Configuration -->
     <div class="card full-height-card">
       <div class="card-header compact-header">
-        <i class="fas fa-cogs"></i> System Configuration
+        <i class="fas fa-cogs"></i> Inverter
       </div>
 
       <div class="card-body">
@@ -395,11 +395,11 @@
         <!-- Footer Buttons -->
         <div class="calc-footer" style="margin-top:25px; display:flex; gap:10px; justify-content:space-between;">
           <button class="btn btn-secondary" onclick="switchStage(1)" style="min-width:120px;">
-            <i class="fas fa-arrow-left"></i> Back to Stage 1
+            <i class="fas fa-arrow-left"></i> Back to Input
           </button>
-          <button class="btn btn-success" id="btn-next-stage3" disabled onclick="switchStage(3)"
+          <button class="btn btn-success" id="btn-next-stage3" disabled onclick="switchStage(1); showS1Page(4, true);"
             style="min-width:180px;">
-            Confirm Design <i class="fas fa-arrow-right"></i>
+            Confirm Design & Go To 3 <i class="fas fa-arrow-right"></i>
           </button>
         </div>
         <div id="manual_override_section" class="hidden" style="margin-top:15px;">

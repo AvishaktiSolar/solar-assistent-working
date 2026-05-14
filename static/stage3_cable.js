@@ -1252,7 +1252,7 @@ window.saveStage4 = function() {
     if (typeof setStageCompletion === 'function') {
         setStageCompletion(4, true);
     }
-    if (typeof switchStage === 'function') switchStage(5);
+    if (typeof switchStage === 'function') switchStage(3);
 };
 
 

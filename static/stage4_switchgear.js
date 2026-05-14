@@ -810,5 +810,5 @@ window.saveStage3 = function() {
     }
 
     // Proceed
-    if (typeof switchStage === 'function') switchStage(4);
+    if (typeof switchStage === 'function') switchStage(5);
 };

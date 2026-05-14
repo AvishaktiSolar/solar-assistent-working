@@ -1,6 +1,8 @@
 from flask import Flask, render_template, session, redirect, url_for, request, jsonify
 import os
 from datetime import timedelta
+from pymongo import MongoClient
+from dotenv import load_dotenv
 
 # --- Import Routes ---
 from routes.auth import auth_bp
@@ -10,8 +12,26 @@ from routes.procurement import procurement_bp
 # Initialize Flask App
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
+# Load environment variables from .env (if present)
+load_dotenv()
+
 # Set Secret Key
-app.secret_key = os.environ.get('SECRET_KEY', 'super_secret_key_change_this_in_production')
+app.secret_key = os.environ.get('SECRET_KEY', 'avishakti_secure_key')
+
+# --- MongoDB Configuration ---
+MONGO_URI = os.environ.get('MONGO_URI')
+
+db = None
+try:
+    if not MONGO_URI:
+        raise ValueError("MONGO_URI is missing. Set it in your environment or .env file.")
+    client = MongoClient(MONGO_URI)
+    db = client['avishakti_solar']
+    app.config['DB'] = db
+    print("Connected to MongoDB Atlas successfully!")
+except Exception as e:
+    app.config['DB'] = None
+    print(f"MongoDB connection failed: {e}")
 
 # ============================================
 # SESSION CONFIGURATION - UPDATED TO FIX AUTO-LOGOUT

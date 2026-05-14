@@ -1125,24 +1125,42 @@ WIZARD STEPS - FULL SCREEN LAYOUT
 @media (max-width: 767px) {
   :root {
     --sidebar-width: 70px;
-    --header-height: 60px;
+    --header-height: 148px;
   }
 
-  .hero-content h1 {
-    display: none;
-  }
-
-  .hero-content h1 i {
-    font-size: 1.4rem;
+  .hero-section {
+    padding: 8px 10px 12px;
+    align-items: flex-start;
+    min-height: var(--header-height);
+    height: var(--header-height);
   }
 
   .hero-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
     gap: 8px;
+    align-items: start;
+  }
+
+  .hero-content h1 {
+    display: flex;
+    font-size: 1rem;
+    gap: 8px;
+    grid-column: 1 / 2;
+  }
+
+  .hero-content h1 i {
+    font-size: 1.1rem;
   }
 
   .badge {
     font-size: 0.75rem;
     padding: 4px 10px;
+  }
+
+  .header-right {
+    grid-column: 2 / 3;
+    justify-self: end;
   }
 
   .project-stats-badge {
@@ -1152,6 +1170,7 @@ WIZARD STEPS - FULL SCREEN LAYOUT
     padding: 6px;
     border-radius: 12px;
     max-width: 100%;
+    grid-column: 1 / -1;
   }
 
   .stats-divider {
@@ -1171,7 +1190,7 @@ WIZARD STEPS - FULL SCREEN LAYOUT
   }
 
   .stats-value {
-    font-size: 0.9rem;
+    font-size: 0.84rem;
   }
 
   .header-panel-input {
@@ -1308,11 +1327,13 @@ WIZARD STEPS - FULL SCREEN LAYOUT
 @media (max-width: 480px) {
   :root {
     --sidebar-width: 60px;
-    --header-height: 55px;
+    --header-height: 170px;
   }
 
   .hero-section {
-    padding: 0 8px;
+    padding: 8px 8px 12px;
+    min-height: var(--header-height);
+    height: var(--header-height);
   }
 
   .hero-content h1 {

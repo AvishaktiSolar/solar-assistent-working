@@ -8,18 +8,189 @@ window.siteData = {};
 window.bills = window.bills || [];
 window.projectData = {};
 window.finalReportData = {};
+window.currentProjectNumber = null;
+window.stage1SaveTimer = null;
+
+function getSelectedProjectNumber() {
+  const selector = document.getElementById("project_number_selector");
+  const input = document.getElementById("project_number_input");
+  if (!selector) return "";
+  if (selector.value === "new") {
+    return (input?.value || "").trim();
+  }
+  return selector.value;
+}
+
+window.handleProjectNumberSelection = function () {
+  const selector = document.getElementById("project_number_selector");
+  const input = document.getElementById("project_number_input");
+  if (!selector || !input) return;
+
+  const isNew = selector.value === "new";
+  input.disabled = !isNew;
+  input.style.opacity = isNew ? "1" : "0.7";
+
+  if (!isNew) {
+    input.value = selector.value || "";
+    loadProjectIntoStage1(selector.value);
+  }
+};
+
+async function loadProjectNumbers() {
+  const selector = document.getElementById("project_number_selector");
+  if (!selector) return;
+  try {
+    const res = await fetch("/projects");
+    if (!res.ok) return;
+    const list = await res.json();
+
+    selector.innerHTML = '<option value="new">New Project</option>';
+    list.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.project_number;
+      opt.textContent = `${p.project_number} - ${p.project_name || "Project"}`;
+      selector.appendChild(opt);
+    });
+  } catch (e) {
+    console.warn("Failed to load project numbers", e);
+  }
+}
+
+async function loadProjectIntoStage1(projectNumber) {
+  if (!projectNumber) return;
+  try {
+    const res = await fetch(`/projects/${encodeURIComponent(projectNumber)}`);
+    if (!res.ok) return;
+    const p = await res.json();
+
+    const s11 = p.stage11 || {};
+    const s12 = p.stage12 || {};
+
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val !== undefined && val !== null) el.value = val;
+    };
+
+    setVal("site_name", p.project_name || "");
+    setVal("project_number_input", p.project_number || "");
+    setVal("designer_name", s11.designer_name);
+    setVal("project_type", s11.project_type);
+    setVal("subsidy_amount", s11.subsidy_amount);
+    setVal("num_floors", s11.num_floors);
+    setVal("structure_type", s11.structure_type);
+    setVal("terrace_type", s11.terrace_type);
+    setVal("tilt_angle", s11.tilt_angle);
+    setVal("latitude", s11.latitude);
+    setVal("longitude", s11.longitude);
+
+    if (Array.isArray(s12.bills) && typeof renderBill === "function") {
+      window.bills = [];
+      window.billCounter = 0;
+      const container = document.getElementById("bills-container");
+      if (container) container.innerHTML = "";
+      s12.bills.forEach((bill) => {
+        window.billCounter += 1;
+        const local = {
+          id: `bill_${window.billCounter}`,
+          customer_number: bill.customer_number || "",
+          sanctioned_load: bill.sanctioned_load || 0,
+          billing_month: bill.billing_month || "",
+          bill_amount: bill.bill_amount || 0,
+          current_units: bill.current_units || 0,
+          phase_type: bill.phase_type || "Single Phase",
+          monthly_consumption: Array.isArray(bill.monthly_consumption) ? bill.monthly_consumption : Array(12).fill(0),
+          total_annual_consumption: bill.total_annual_consumption || 0,
+        };
+        window.bills.push(local);
+        renderBill(local);
+      });
+      if (typeof updateSummary === "function") updateSummary();
+      const emptyState = document.getElementById("bills-empty-state");
+      if (emptyState) emptyState.style.display = window.bills.length > 0 ? "none" : "block";
+    }
+
+    if (s11.solar_data) {
+      window.fetchedSolarData = s11.solar_data;
+    }
+
+    if (typeof syncMapToInputs === "function") syncMapToInputs();
+    if (typeof updateLiveHeader === "function") updateLiveHeader();
+  } catch (e) {
+    console.warn("Failed to load project", e);
+  }
+}
+
+function buildStage11Payload() {
+  const val = (id) => document.getElementById(id)?.value || "";
+  return {
+    designer_name: val("designer_name"),
+    project_type: val("project_type"),
+    subsidy_amount: val("subsidy_amount"),
+    num_floors: val("num_floors"),
+    structure_type: val("structure_type"),
+    terrace_type: val("terrace_type"),
+    tilt_angle: val("tilt_angle"),
+    latitude: val("latitude"),
+    longitude: val("longitude"),
+    solar_data: window.fetchedSolarData || null
+  };
+}
+
+function buildStage12Payload() {
+  return {
+    total_annual_units: (window.bills || []).reduce((sum, b) => sum + (parseFloat(b.total_annual_consumption) || 0), 0),
+    bills: window.bills || []
+  };
+}
+
+window.saveStage1ToMongo = async function () {
+  const projectName = (document.getElementById("site_name")?.value || "").trim();
+  const projectNumber = getSelectedProjectNumber();
+  if (!projectName || !projectNumber) return;
+
+  const payload = {
+    project_name: projectName,
+    project_number: projectNumber,
+    stage11: buildStage11Payload(),
+    stage12: buildStage12Payload()
+  };
+
+  try {
+    const res = await fetch("/projects/upsert-stage1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      window.currentProjectNumber = projectNumber;
+      await loadProjectNumbers();
+      const selector = document.getElementById("project_number_selector");
+      if (selector) selector.value = projectNumber;
+    }
+  } catch (e) {
+    console.warn("Stage 1 autosave failed", e);
+  }
+};
+
+window.scheduleStage1Save = function () {
+  if (window.stage1SaveTimer) clearTimeout(window.stage1SaveTimer);
+  window.stage1SaveTimer = setTimeout(() => {
+    window.saveStage1ToMongo();
+  }, 500);
+};
 
 // ==================================================================
 //  STAGE 1 SUB-PAGE NAVIGATION WITH VALIDATION
 // ==================================================================
 
 // Enhanced Stage 1 Sub-Page Navigation with Strict Validation
-window.showS1Page = function (pageNum) {
+window.showS1Page = function (pageNum, force) {
   // Get current active page
   const currentPage = getCurrentS1Page();
+  const allowDirectJump = force === true;
 
   // STRICT VALIDATION: Can't skip pages - must go sequentially
-  if (pageNum > currentPage + 1) {
+  if (!allowDirectJump && pageNum > currentPage + 1) {
     alert(
       "Please complete the current step first."
     );
@@ -315,6 +486,9 @@ function validatePage4() {
   if (typeof markStepAsComplete === "function") {
     markStepAsComplete(4);
   }
+  if (typeof setShadowCompletion === "function") {
+    setShadowCompletion(true);
+  }
 
   clearFieldHighlights();
   return true;
@@ -367,12 +541,20 @@ window.switchStage = function (stageNum) {
   if (stageNum > 1) {
     const currentStage = getCurrentActiveStage();
     if (currentStage === 1) {
-      // Validate that Stage 1 is complete
-      if (!validateStage1Complete()) {
-        alert(
-          "Complete Stage 1 before proceeding."
-        );
-        return;
+      // Allow entering Stage 2 after Step 1.3 (Shadow moved to 2.1 in UI flow)
+      if (stageNum === 2) {
+        if (!validatePage1() || !validatePage2() || !validatePage3()) {
+          alert("Complete Stage 1.1 to 1.3 before proceeding to Stage 2.");
+          return;
+        }
+      } else {
+        // For later stages, full Stage 1 (including Shadow) is still required
+        if (!validateStage1Complete()) {
+          alert(
+            "Complete Stage 1 before proceeding."
+          );
+          return;
+        }
       }
     }
   }
@@ -397,10 +579,12 @@ window.switchStage = function (stageNum) {
     .querySelectorAll(".nav-item:not(.sub-nav)")
     .forEach((btn) => btn.classList.remove("active"));
 
-  const navButtons = document.querySelectorAll(".nav-item:not(.sub-nav)");
-  if (navButtons[stageNum - 1]) {
-    navButtons[stageNum - 1].classList.add("active");
-  }
+  const mainNavButtons = document.querySelectorAll(".nav-item[data-stage-main]");
+  mainNavButtons.forEach((btn) => {
+    if (parseInt(btn.getAttribute("data-stage-main"), 10) === stageNum) {
+      btn.classList.add("active");
+    }
+  });
 
   // Show/Hide Stage 1 sub-navigation
   const subNavButtons = document.querySelectorAll(".nav-item.sub-nav");
@@ -437,6 +621,46 @@ window.switchStage = function (stageNum) {
   }
   if (stageNum === 5 && typeof refreshStage5UI === "function") {
     setTimeout(() => refreshStage5UI(), 100);
+  }
+};
+
+// Step 1.3 -> Stage 2 handoff (without forcing Shadow first)
+window.proceedToStage2FromStep13 = function () {
+  if (!validatePage1() || !validatePage2() || !validatePage3()) {
+    alert("Complete Step 1.1 to 1.3 before proceeding.");
+    return;
+  }
+
+  try {
+    if (typeof calculateShadowTable === "function") calculateShadowTable();
+    if (typeof updateLiveHeader === "function") updateLiveHeader();
+
+    const data = getStage1Data();
+    if (!data) {
+      alert("Unable to generate Stage 1 data. Check console.");
+      return;
+    }
+
+    window.projectData = window.projectData || {};
+    window.projectData.stage1 = data;
+    window.projectData.design = data.design;
+    window.projectData.site = data.site;
+    window.projectData.consumption = data.consumption;
+    window.projectData.parameters = data.parameters;
+
+    if (typeof markStepAsComplete === "function") {
+      markStepAsComplete(1);
+      markStepAsComplete(2);
+      markStepAsComplete(3);
+    }
+    if (typeof setStageCompletion === "function") {
+      setStageCompletion(1, true);
+    }
+
+    switchStage(2);
+  } catch (err) {
+    alert(`Stage handoff failed: ${err.message}`);
+    console.error(err);
   }
 };
 
@@ -481,11 +705,11 @@ function validateStage1Complete() {
 
 // ==================================================================
 //  STAGE COMPLETION (MAIN NAV)
+//  Uses data-stage-main so completion is stable even if UI order changes.
 // ==================================================================
 
 function setStageCompletion(stageNum, isComplete) {
-  const items = document.querySelectorAll(".nav-item:not(.sub-nav):not(.special)");
-  const item = items[stageNum - 1];
+  const item = document.querySelector(`.nav-item[data-stage-main="${stageNum}"]`);
   if (!item) return;
 
   const complete = Boolean(isComplete);
@@ -506,6 +730,26 @@ window.setStageCompletion = setStageCompletion;
 window.markStageAsComplete = function (stageNum) {
   setStageCompletion(stageNum, true);
 };
+
+function setShadowCompletion(isComplete) {
+  const item = document.getElementById("nav-shadow-stage");
+  if (!item) return;
+
+  const complete = Boolean(isComplete);
+  item.classList.toggle("completed", complete);
+
+  const existingCheck = item.querySelector(".stage-complete-check");
+  if (complete && !existingCheck) {
+    const check = document.createElement("i");
+    check.className = "fas fa-check stage-complete-check";
+    item.appendChild(check);
+  }
+  if (!complete && existingCheck) {
+    existingCheck.remove();
+  }
+}
+
+window.setShadowCompletion = setShadowCompletion;
 
 
 // ==================================================================
@@ -578,6 +822,9 @@ window.resetAllStages = function () {
     btn.classList.remove("completed");
     btn.querySelectorAll(".stage-complete-check").forEach((c) => c.remove());
   });
+  if (typeof setShadowCompletion === "function") {
+    setShadowCompletion(false);
+  }
 
   // Reset Stage 2 next button
   const nextBtn = document.getElementById("btn-next-stage3");
@@ -685,17 +932,29 @@ window.saveAndProceedToStage2 = function () {
       setStageCompletion(1, true);
     }
 
-    switchStage(2);
+    // If Stage 2 is already completed, Shadow acts as 2.1 and proceeds to Cable Sizing (Stage 4).
+    const stage2Completed = !!window.projectData?.stage2?.canProceedToStage3;
+    switchStage(stage2Completed ? 4 : 2);
 
     setTimeout(() => {
-      const stage2 = document.getElementById("stage-2");
-      if (stage2 && !stage2.classList.contains("active")) {
-        stage2.classList.add("active");
-        stage2.style.setProperty("display", "flex", "important");
-      }
-
-      if (typeof refreshStage2UI === "function") {
-        refreshStage2UI();
+      if (stage2Completed) {
+        const stage4 = document.getElementById("stage-4");
+        if (stage4 && !stage4.classList.contains("active")) {
+          stage4.classList.add("active");
+          stage4.style.setProperty("display", "flex", "important");
+        }
+        if (typeof refreshStage4UI === "function") {
+          refreshStage4UI();
+        }
+      } else {
+        const stage2 = document.getElementById("stage-2");
+        if (stage2 && !stage2.classList.contains("active")) {
+          stage2.classList.add("active");
+          stage2.style.setProperty("display", "flex", "important");
+        }
+        if (typeof refreshStage2UI === "function") {
+          refreshStage2UI();
+        }
       }
     }, 100);
 
@@ -1138,6 +1397,25 @@ window.debugStages = function () {
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", function () {
+  loadProjectNumbers();
+  setTimeout(() => {
+    if (typeof window.handleProjectNumberSelection === "function") {
+      window.handleProjectNumberSelection();
+    }
+  }, 100);
+
+  const autosaveIds = [
+    "site_name", "project_number_input", "designer_name", "project_type",
+    "subsidy_amount", "num_floors", "structure_type", "terrace_type",
+    "tilt_angle", "latitude", "longitude"
+  ];
+  autosaveIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("change", () => window.scheduleStage1Save());
+    el.addEventListener("input", () => window.scheduleStage1Save());
+  });
+
   // Force hide all stages first
   document.querySelectorAll(".stage-view").forEach((stage) => {
     stage.classList.remove("active");

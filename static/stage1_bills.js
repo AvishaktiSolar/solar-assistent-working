@@ -71,41 +71,41 @@ function renderBill(bill) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
           <div class="form-group">
             <label style="font-size: 0.75rem; color: #64748b;">Consumer Number</label>
-            <input type="text" id="${bill.id}_customer_number" style="font-size: 0.9rem;" placeholder="Enter customer number"
+            <input type="text" id="${bill.id}_customer_number" style="font-size: 0.9rem;" placeholder="Enter customer number" value="${bill.customer_number || ""}"
               onchange="updateBillData('${bill.id}', 'customer_number', this.value)">
           </div>
           <div class="form-group">
             <label style="font-size: 0.75rem; color: #64748b;">Sanctioned Load (kW)</label>
-            <input type="number" id="${bill.id}_sanctioned_load" style="font-size: 0.9rem;" placeholder="5" step="0.01"
+            <input type="number" id="${bill.id}_sanctioned_load" style="font-size: 0.9rem;" placeholder="5" step="0.01" value="${bill.sanctioned_load || 0}"
               onchange="updateBillData('${bill.id}', 'sanctioned_load', parseFloat(this.value))">
           </div>
           <div class="form-group">
             <label style="font-size: 0.75rem; color: #64748b;">Billing Month</label>
-            <input type="month" id="${bill.id}_billing_month" style="font-size: 0.9rem;"
+            <input type="month" id="${bill.id}_billing_month" style="font-size: 0.9rem;" value="${bill.billing_month || ""}"
               onchange="updateBillData('${bill.id}', 'billing_month', this.value); autoUpdateMonthlyTable('${bill.id}')">
           </div>
           <div class="form-group">
             <label style="font-size: 0.75rem; color: #64748b;">Bill Amount (INR)</label>
-            <input type="number" id="${bill.id}_bill_amount" style="font-size: 0.9rem;" placeholder="5000" step="0.01"
+            <input type="number" id="${bill.id}_bill_amount" style="font-size: 0.9rem;" placeholder="5000" step="0.01" value="${bill.bill_amount || 0}"
               onchange="updateBillData('${bill.id}', 'bill_amount', parseFloat(this.value))">
           </div>
           <div class="form-group">
             <label style="font-size: 0.75rem; color: #64748b;">Current Units (kWh)</label>
-            <input type="number" id="${bill.id}_current_units" style="font-size: 0.9rem;" placeholder="500" step="0.01"
+            <input type="number" id="${bill.id}_current_units" style="font-size: 0.9rem;" placeholder="500" step="0.01" value="${bill.current_units || 0}"
               onchange="updateBillData('${bill.id}', 'current_units', parseFloat(this.value)); autoUpdateMonthlyTable('${bill.id}')">
           </div>
           <div class="form-group">
             <label style="font-size: 0.75rem; color: #64748b;">Phase Type</label>
             <select id="${bill.id}_phase_type" style="font-size: 0.9rem;" onchange="updateBillData('${bill.id}', 'phase_type', this.value)">
-              <option value="Single Phase">Single Phase</option>
-              <option value="Three Phase">Three Phase</option>
+              <option value="Single Phase" ${bill.phase_type === "Single Phase" ? "selected" : ""}>Single Phase</option>
+              <option value="Three Phase" ${bill.phase_type === "Three Phase" ? "selected" : ""}>Three Phase</option>
             </select>
           </div>
         </div>
 
         <div style="border-top: 1px dashed #cbd5e1; padding-top: 15px; background: #f0f9ff; padding: 15px; border-radius: 8px;">
           <label style="color: #0369a1; font-weight: 700; font-size: 0.85rem;">Total Annual Consumption (kWh)</label>
-          <input type="number" id="${bill.id}_total_annual_input" style="margin: 8px 0;" placeholder="Enter total annual kWh" step="0.01"
+          <input type="number" id="${bill.id}_total_annual_input" style="margin: 8px 0;" placeholder="Enter total annual kWh" step="0.01" value="${bill.total_annual_consumption || 0}"
             onchange="updateAnnualConsumptionDirectly('${bill.id}', parseFloat(this.value))">
           <small style="color: #64748b; font-size: 0.7rem;"><i class="fas fa-info-circle"></i> Manual entry here will override the monthly table.</small>
         </div>
@@ -117,7 +117,7 @@ function renderBill(bill) {
           ${months.map((month, idx) => `
             <div class="monthly-input-row">
               <span>${month}</span>
-              <input type="number" id="${bill.id}_month_${idx}" value="0" step="0.01"
+              <input type="number" id="${bill.id}_month_${idx}" value="${(Array.isArray(bill.monthly_consumption) ? bill.monthly_consumption[idx] : 0) || 0}" step="0.01"
                 onchange="updateMonthlyConsumption('${bill.id}', ${idx}, parseFloat(this.value))">
             </div>
           `).join("")}
@@ -125,7 +125,7 @@ function renderBill(bill) {
 
         <div class="monthly-total-bar">
           <strong style="font-size: 0.9rem; color: #475569;">Calculated Total:</strong>
-          <strong id="${bill.id}_total_annual" style="font-size: 0.9rem; color: #16a34a;">0.00 kWh</strong>
+          <strong id="${bill.id}_total_annual" style="font-size: 0.9rem; color: #16a34a;">${(bill.total_annual_consumption || 0).toFixed(2)} kWh</strong>
         </div>
       </div>
     </div>
@@ -160,6 +160,7 @@ function updateBillData(billId, field, value) {
   if (bill) {
     bill[field] = value;
     updateSummary();
+    if (typeof window.scheduleStage1Save === "function") window.scheduleStage1Save();
   }
 }
 
@@ -183,6 +184,7 @@ function updateMonthlyConsumption(billId, monthIndex, value) {
     if(directInput) directInput.value = bill.total_annual_consumption.toFixed(2);
 
     updateSummary();
+    if (typeof window.scheduleStage1Save === "function") window.scheduleStage1Save();
   }
 }
 
@@ -214,6 +216,7 @@ function updateAnnualConsumptionDirectly(billId, value) {
 
   // Update the main summary
   updateSummary();
+  if (typeof window.scheduleStage1Save === "function") window.scheduleStage1Save();
 }
 
 // Remove a bill from the UI and the 'bills' array
@@ -223,6 +226,7 @@ function removeBill(billId) {
   if(element) element.remove();
   
   updateSummary();
+  if (typeof window.scheduleStage1Save === "function") window.scheduleStage1Save();
 
   // Re-number the bill titles
   const billCards = document.querySelectorAll(".bill-card");
@@ -238,6 +242,7 @@ function removeBill(billId) {
       const emptyState = document.getElementById("bills-empty-state");
       if (emptyState) emptyState.style.display = "block";
   }
+  if (typeof window.scheduleStage1Save === "function") window.scheduleStage1Save();
 }
 
 // Update the summary card at the bottom

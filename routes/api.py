@@ -1,5 +1,7 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, current_app
 import requests
+from datetime import datetime
+from bson.objectid import ObjectId
 
 # Create a Blueprint named 'api'
 api_bp = Blueprint('api', __name__)
@@ -133,3 +135,93 @@ def get_data():
 
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@api_bp.route('/projects', methods=['GET'])
+def list_projects():
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    db = current_app.config.get('DB')
+    if db is None:
+        return jsonify({'error': 'Database unavailable'}), 503
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'User session missing'}), 400
+
+    docs = db.projects.find(
+        {'user_id': user_id},
+        {'project_number': 1, 'project_name': 1, 'updated_at': 1}
+    ).sort('updated_at', -1)
+
+    projects = []
+    for d in docs:
+        projects.append({
+            'id': str(d.get('_id')),
+            'project_number': d.get('project_number', ''),
+            'project_name': d.get('project_name', ''),
+            'updated_at': d.get('updated_at')
+        })
+    return jsonify(projects)
+
+
+@api_bp.route('/projects/<project_number>', methods=['GET'])
+def get_project(project_number):
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    db = current_app.config.get('DB')
+    if db is None:
+        return jsonify({'error': 'Database unavailable'}), 503
+
+    user_id = session.get('user_id')
+    project = db.projects.find_one({'user_id': user_id, 'project_number': project_number})
+    if not project:
+        return jsonify({'error': 'Project not found'}), 404
+
+    project['_id'] = str(project['_id'])
+    return jsonify(project)
+
+
+@api_bp.route('/projects/upsert-stage1', methods=['POST'])
+def upsert_stage1_project():
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    db = current_app.config.get('DB')
+    if db is None:
+        return jsonify({'error': 'Database unavailable'}), 503
+
+    payload = request.get_json() or {}
+    project_number = str(payload.get('project_number', '')).strip()
+    project_name = str(payload.get('project_name', '')).strip()
+    stage11 = payload.get('stage11', {})
+    stage12 = payload.get('stage12', {})
+
+    if not project_number:
+        return jsonify({'error': 'project_number is required'}), 400
+    if not project_name:
+        return jsonify({'error': 'project_name is required'}), 400
+
+    user_id = session.get('user_id')
+    update_doc = {
+        '$set': {
+            'user_id': user_id,
+            'username': session.get('username'),
+            'project_number': project_number,
+            'project_name': project_name,
+            'stage11': stage11,
+            'stage12': stage12,
+            'updated_at': datetime.utcnow().isoformat()
+        },
+        '$setOnInsert': {
+            'created_at': datetime.utcnow().isoformat()
+        }
+    }
+    db.projects.update_one(
+        {'user_id': user_id, 'project_number': project_number},
+        update_doc,
+        upsert=True
+    )
+    return jsonify({'ok': True, 'project_number': project_number})

@@ -28,6 +28,19 @@
             />
           </div>
 
+          <div class="mini-row">
+            <div class="form-group half-width">
+              <label>Project Number <span class="required">*</span></label>
+              <select id="project_number_selector" onchange="handleProjectNumberSelection()">
+                <option value="new" selected>New Project</option>
+              </select>
+            </div>
+            <div class="form-group half-width">
+              <label>New Project Number</label>
+              <input type="text" id="project_number_input" placeholder="e.g. PRJ-001" />
+            </div>
+          </div>
+
           <div class="form-group">
             <label>Design Prepared By</label>
             <input type="text" id="designer_name" value="Aniket Apraj" />

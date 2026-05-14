@@ -144,6 +144,7 @@ async function fetchSolarDataOnly() {
         <br><small style="color:#15803d;">💡 <strong>Tip:</strong> You can change inputs and click the button again to update.</small>
       </div>
     `;
+    if (typeof window.scheduleStage1Save === "function") window.scheduleStage1Save();
   } catch (err) {
     alert(`Error: ${err.message}`);
     msgContainer.innerHTML = `<div class="alert alert-danger" style="margin-top:10px;">Error: ${err.message}</div>`;
