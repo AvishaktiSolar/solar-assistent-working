@@ -10,10 +10,11 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" />
 
   <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage3_shadow_table.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='stage2_inverter.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='stage4_switchgear.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='stage3_cable.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='stage5_bom.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage5_switchgear.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage4_cable.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='stage6_bom.css') }}" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -246,13 +247,12 @@
 
     <div class="stage-container">
       <section id="stage-1" class="stage-view active">
-        {% include 'stage1/stage1_site.html' %} {% include
-        'stage1/stage1_bills.html' %} {% include 'stage1/stage1_panels.html' %}
-        {% include 'stage1/stage1_shadow.html' %}
+        {% include 'stage1/stage1_1_site_structure.html' %} {% include
+        'stage1/stage1_2_electricity_bills.html' %} {% include 'stage1/stage1_3_panel_selection.html' %}
+        {% include 'stage3_shadow_analysis.html' %}
       </section>
 
-      {% include 'stage2.html' %} {% include 'stage3.html' %} {% include
-      'stage4.html' %} {% include 'stage5.html' %}
+      {% include 'stage2.html' %} {% include 'stage4_cable.html' %} {% include 'stage5_switchgear.html' %} {% include 'stage6_bom.html' %}
     </div>
   </div>
 
@@ -296,12 +296,15 @@
   <script src="{{ url_for('static', filename='export.js') }}"></script>
   <script src="{{ url_for('static', filename='finance.js') }}"></script>
 
-  <!-- Stage Scripts (UI order): 2 Inverter -> 3 Cable -> 4 Switchgear -> 5 BOM -->
+  <!-- Stage Scripts (UI order): 2 Inverter -> 4 Cable -> 5 Switchgear -> 6 BOM -->
   <script src="{{ url_for('static', filename='stage2_inverter.js') }}"></script>
-  <script src="{{ url_for('static', filename='stage3_cable.js') }}"></script>
-  <script src="{{ url_for('static', filename='stage4_switchgear.js') }}"></script>
-  <script src="{{ url_for('static', filename='stage5_bom.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage4_cable.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage5_switchgear.js') }}"></script>
+  <script src="{{ url_for('static', filename='stage6_bom.js') }}"></script>
   <script src="{{ url_for('static', filename='indexScript.js') }}"></script>
 </body>
 
 </html>
+
+
+

@@ -41,7 +41,7 @@ function calculateFinancials(techData, totalAnnualUnits, bills) {
 
   // PRIORITY 1: STAGE 5 (Final Commercials)
   if (pData.stage5 && pData.stage5.grandTotal) {
-      // In stage5.js, grandTotal typically includes GST and deducts Subsidy.
+      // In stage6_bom.js, grandTotal typically includes GST and deducts Subsidy.
       // We treat it as the final check-writing amount.
       netCapex = parseFloat(pData.stage5.grandTotal);
       

@@ -276,9 +276,13 @@ function updateSummary() {
   // Update UI Elements
   const unitsElem = document.getElementById("total_annual_units");
   if(unitsElem) unitsElem.textContent = `${totalUnits.toLocaleString("en-IN", { maximumFractionDigits: 0 })} kWh`;
+  const unitsElemS1 = document.getElementById("s1_annual_units_display");
+  if(unitsElemS1) unitsElemS1.textContent = unitsElem.textContent;
   
   const costElem = document.getElementById("total_annual_cost");
   if(costElem) costElem.textContent = `₹${totalAnnualCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+  const costElemS1 = document.getElementById("s1_annual_cost_display");
+  if(costElemS1) costElemS1.textContent = costElem.textContent;
   
   const countElem = document.getElementById("bill_count");
   if(countElem) countElem.textContent = window.bills.length;
@@ -287,6 +291,8 @@ function updateSummary() {
   const avgCostElem = document.getElementById("avg_cost_per_unit");
   if (avgCostElem) {
     avgCostElem.textContent = `₹${avgCostPerUnit.toFixed(2)}`;
+  const avgCostElemS1 = document.getElementById("s1_avg_rate_display");
+  if (avgCostElemS1) avgCostElemS1.textContent = avgCostElem.textContent;
   }
 }
 

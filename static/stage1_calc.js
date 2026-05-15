@@ -381,7 +381,7 @@ function simulateEnergyYield(
     // Formula: Temp Derating = 1 - (Coeff * (T_cell - 25))
     const tempDerating = 1 - (Math.abs(coeffDecimal) * (tCell - 25));
 
-    // Use Stage 1.4 total site loss if available, else monthly shadow.
+    // Use Stage 3 total site loss if available, else monthly shadow.
     const stageSiteLoss = Number.isFinite(window.totalSiteLossPercent) ? window.totalSiteLossPercent : null;
     const currentMonthShadowPercent = stageSiteLoss !== null ? stageSiteLoss : (monthlyShadowLosses[i] || 0);
     const shadowDF = 1 - (currentMonthShadowPercent / 100);
@@ -634,7 +634,7 @@ function previewStage1Report() {
 }
 
 // Shadow Utils
-// Stage 1.4 shadow losses: calculateShadowTable()/getMonthlyShadowArray()
+// Stage 3 shadow losses: calculateShadowTable()/getMonthlyShadowArray()
 // feed monthlyShadowLosses used by calculateSolarPhysics().
 function getShadowScenarioBodies() {
   const bodies = document.querySelectorAll(".shadow-table-body");
@@ -651,6 +651,59 @@ function updateShadowScenarioLabels() {
     if (title) title.innerText = `System ${idx + 1}`;
     const removeBtn = scenario.querySelector(".shadow-scenario-remove");
     if (removeBtn) removeBtn.style.display = scenarios.length > 1 ? "inline-flex" : "none";
+  });
+  updateScenarioPanelInputMode();
+}
+
+function getEffectiveTotalPanelCount() {
+  let totalPanelCount = window.calculatedPanelCount || 0;
+  if (totalPanelCount === 0 && window.projectData && window.projectData.stage1) {
+    totalPanelCount = window.projectData.stage1.panelCount || 0;
+  }
+  if (totalPanelCount <= 0) totalPanelCount = 20;
+  return totalPanelCount;
+}
+
+function distributePanelCountAcrossScenarios(totalPanelCount, forceRebalance = false) {
+  const scenarios = Array.from(document.querySelectorAll(".shadow-scenario"));
+  const scenarioCount = scenarios.length;
+  if (scenarioCount === 0) return;
+
+  if (scenarioCount === 1) {
+    const onlyInput = scenarios[0].querySelector(".system-panel-input");
+    if (onlyInput) onlyInput.value = String(totalPanelCount);
+    return;
+  }
+
+  let currentSum = 0;
+  const inputs = scenarios.map((s) => s.querySelector(".system-panel-input")).filter(Boolean);
+  inputs.forEach((input) => {
+    currentSum += Math.max(0, parseInt(input.value, 10) || 0);
+  });
+
+  if (!forceRebalance && currentSum > 0) return;
+
+  const base = Math.floor(totalPanelCount / scenarioCount);
+  let rem = totalPanelCount - base * scenarioCount;
+  inputs.forEach((input) => {
+    const extra = rem > 0 ? 1 : 0;
+    if (rem > 0) rem--;
+    input.value = String(base + extra);
+  });
+}
+
+function updateScenarioPanelInputMode(forceRebalance = false) {
+  const scenarios = Array.from(document.querySelectorAll(".shadow-scenario"));
+  const totalPanelCount = getEffectiveTotalPanelCount();
+  distributePanelCountAcrossScenarios(totalPanelCount, forceRebalance);
+
+  scenarios.forEach((scenario) => {
+    const input = scenario.querySelector(".system-panel-input");
+    if (!input) return;
+    const singleMode = scenarios.length === 1;
+    input.readOnly = singleMode;
+    input.style.opacity = singleMode ? "0.85" : "1";
+    input.style.pointerEvents = singleMode ? "none" : "auto";
   });
 }
 
@@ -746,6 +799,15 @@ function getAverageOrientationLoss() {
   return count > 0 ? sum / count : 2;
 }
 
+function getScenarioOrientationLoss(scenario) {
+  if (!scenario) return 2;
+  const tilt = getStageTiltAngle();
+  const azEl = scenario.querySelector(".azimuth-input");
+  const az = azEl && azEl.value ? parseFloat(azEl.value) : 180;
+  const output = getOrientationOutputPercent(tilt, az);
+  return clampNumber(100 - output, 0, 100);
+}
+
 function addShadowScenario() {
   const container = document.getElementById("shadow_scenarios");
   const template = document.getElementById("shadow_scenario_template");
@@ -753,7 +815,9 @@ function addShadowScenario() {
   const clone = template.content.cloneNode(true);
   container.appendChild(clone);
   updateShadowScenarioLabels();
+  updateScenarioPanelInputMode(true);
   calculateShadowTable();
+  attachShadowInputValidation();
 }
 
 function removeShadowScenario(btn) {
@@ -764,36 +828,33 @@ function removeShadowScenario(btn) {
   if (scenarios.length <= 1) return;
   scenario.remove();
   updateShadowScenarioLabels();
+  updateScenarioPanelInputMode(true);
   calculateShadowTable();
 }
 
 window.addShadowScenario = addShadowScenario;
 window.removeShadowScenario = removeShadowScenario;
 window.toggleShadowScenario = toggleShadowScenario;
-// Stage 1.4 shadow losses: calculateShadowTable()/getMonthlyShadowArray()\r\n// feed monthlyShadowLosses used by calculateSolarPhysics().
+// Stage 3 shadow losses: calculateShadowTable()/getMonthlyShadowArray()\r\n// feed monthlyShadowLosses used by calculateSolarPhysics().
 function calculateShadowTable() {
   const bodies = getShadowScenarioBodies();
   if (!bodies || bodies.length === 0) return;
 
-  // 1. Get the System Size (Panel Count)
-  // Priority: 1. Live Header Calc  2. Saved Project Data
-  let totalPanelCount = window.calculatedPanelCount || 0;
-
-  if (totalPanelCount === 0 && window.projectData && window.projectData.stage1) {
-    totalPanelCount = window.projectData.stage1.panelCount || 0;
-  }
-
-  // CRITICAL FIX: Prevent Divide-by-Zero or "100% Loss" errors on initialization.
-  // If the system size is unknown (0), we assume a standard size (e.g., 20 panels)
-  // so the user can enter shadow data without seeing "Infinity%" or "NaN".
-  if (totalPanelCount <= 0) {
-    totalPanelCount = 20;
-  }
+  const totalPanelCount = getEffectiveTotalPanelCount();
+  updateScenarioPanelInputMode();
+  const singleSystemMode = bodies.length === 1;
 
   const combinedMonthlySums = new Array(12).fill(0);
-  const scenarioCount = bodies.length;
+  let weightedPanelsInUse = 0;
+  const systemTotalSiteLosses = [];
 
   bodies.forEach(body => {
+    const scenario = body.closest(".shadow-scenario");
+    const panelInput = scenario ? scenario.querySelector(".system-panel-input") : null;
+    const scenarioPanelsRaw = panelInput ? parseInt(panelInput.value, 10) || 0 : totalPanelCount;
+    const scenarioPanels = Math.max(0, scenarioPanelsRaw);
+    const panelDenominator = singleSystemMode ? totalPanelCount : scenarioPanels;
+
     const rows = body.querySelectorAll("tr");
     let totalAnnualSum = 0;
 
@@ -806,8 +867,9 @@ function calculateShadowTable() {
         // Logic: User enters "Number of Shaded Panels" (e.g., 5 panels shaded)
         const shadedPanels = parseFloat(input.value) || 0;
 
-        // Calculate Loss Fraction: Shaded / Total (e.g., 5 / 60 = 0.083)
-        const hourlyLossDecimal = shadedPanels / totalPanelCount;
+        // Single system: divide by total panels.
+        // Multi-system: divide by assigned panels for that system only.
+        const hourlyLossDecimal = panelDenominator > 0 ? (shadedPanels / panelDenominator) : 0;
         rowSumPercent += hourlyLossDecimal;
         count++;
       });
@@ -824,13 +886,14 @@ function calculateShadowTable() {
       row.dataset.monthlyAvg = displayPercent;
       totalAnnualSum += displayPercent;
       if (idx < combinedMonthlySums.length) {
-        combinedMonthlySums[idx] += displayPercent;
+        combinedMonthlySums[idx] += displayPercent * scenarioPanels;
       }
     });
 
-        // Annual Average Display (per System)
+    weightedPanelsInUse += scenarioPanels;
+
+    // Annual Average Display (per System)
     const annualAvg = (totalAnnualSum / 12).toFixed(2);
-    const scenario = body.closest(".shadow-scenario");
     const totalDisplay = scenario
       ? scenario.querySelector(".annual-shadow-avg")
       : document.getElementById("annual_shadow_avg");
@@ -838,10 +901,30 @@ function calculateShadowTable() {
 
     const headerAvg = scenario ? scenario.querySelector(".system-avg-shadow strong") : null;
     if (headerAvg) headerAvg.innerText = annualAvg + "%";
+
+    const scenarioShadowLoss = parseFloat(annualAvg) || 0;
+    const scenarioOrientationLoss = getScenarioOrientationLoss(scenario);
+    const scenarioShadowDF = 1 - (scenarioShadowLoss / 100);
+    const scenarioOrientationDF = 1 - (scenarioOrientationLoss / 100);
+    const scenarioFixedDF = 1 - (7 / 100);
+    const scenarioSiteDF = scenarioShadowDF * scenarioOrientationDF * scenarioFixedDF;
+    const scenarioTotalSiteLoss = (1 - scenarioSiteDF) * 100;
+    systemTotalSiteLosses.push(scenarioTotalSiteLoss);
+
+    if (scenario) {
+      const shadowText = scenario.querySelector(".system-shadow-loss-text");
+      const orientationText = scenario.querySelector(".system-orientation-loss-text");
+      const fixedText = scenario.querySelector(".system-fixed-loss-text");
+      const totalText = scenario.querySelector(".system-total-loss-text");
+      if (shadowText) shadowText.innerText = `Shadow ${scenarioShadowLoss.toFixed(2)}%`;
+      if (orientationText) orientationText.innerText = `Orientation ${scenarioOrientationLoss.toFixed(2)}%`;
+      if (fixedText) fixedText.innerText = "Fixed 7.00%";
+      if (totalText) totalText.innerText = `Total ${scenarioTotalSiteLoss.toFixed(2)}%`;
+    }
   });
 
-  // Combined Average Display (across Systems)
-  const combinedMonthly = combinedMonthlySums.map(v => (scenarioCount > 0 ? v / scenarioCount : 0));
+  const denominatorPanels = weightedPanelsInUse > 0 ? weightedPanelsInUse : totalPanelCount;
+  const combinedMonthly = combinedMonthlySums.map(v => (denominatorPanels > 0 ? v / denominatorPanels : 0));
   window.shadowMonthlyAverage = combinedMonthly;
 
   const combinedAnnualAvg = combinedMonthly.reduce((sum, v) => sum + v, 0) / 12;
@@ -854,13 +937,10 @@ function calculateShadowTable() {
   
   // NEW: Calculate Total Site Loss using Multiplicative Derating Factors
   // Site DF = (1 - Shadow%) × (1 - Orientation%) × (1 - 7%)
-  const shadowDF = 1 - (combinedAnnualAvg / 100);
-  const orientationDF = 1 - (orientationAvg / 100);
-  const fixedOtherDF = 1 - (7 / 100); // 0.93
-  const siteDFTotal = shadowDF * orientationDF * fixedOtherDF;
-  
-  // Convert back to loss percentage for display
-  const totalSiteLossPercent = (1 - siteDFTotal) * 100;
+  const totalSiteLossPercent = systemTotalSiteLosses.length > 0
+    ? (systemTotalSiteLosses.reduce((sum, v) => sum + v, 0) / systemTotalSiteLosses.length)
+    : ((1 - ((1 - (combinedAnnualAvg / 100)) * (1 - (orientationAvg / 100)) * (1 - (7 / 100)))) * 100);
+  const siteDFTotal = 1 - (totalSiteLossPercent / 100);
   const totalSiteLossDisplay = document.getElementById("combined_total_site_loss");
   if (totalSiteLossDisplay) {
     totalSiteLossDisplay.innerText = totalSiteLossPercent.toFixed(2) + "%";
@@ -869,6 +949,23 @@ function calculateShadowTable() {
   // Store for reference
   window.totalSiteLossPercent = totalSiteLossPercent;
   window.totalSiteDF = siteDFTotal;
+
+  const panelBalanceDisplay = document.getElementById("shadow_panel_balance");
+  if (panelBalanceDisplay) {
+    panelBalanceDisplay.innerText = `${weightedPanelsInUse} / ${totalPanelCount}`;
+    panelBalanceDisplay.style.color = weightedPanelsInUse === totalPanelCount ? "#15803d" : "#b45309";
+  }
+  const panelBalanceNote = document.getElementById("shadow_panel_balance_note");
+  if (panelBalanceNote) {
+    if (bodies.length === 1) {
+      panelBalanceNote.innerText = "Single system uses full panel count";
+    } else if (weightedPanelsInUse === totalPanelCount) {
+      panelBalanceNote.innerText = "Allocation balanced across systems";
+    } else {
+      panelBalanceNote.innerText = "Adjust system panel inputs to match total panel count";
+    }
+  }
+  
 }
 
 function getMonthlyShadowArray() {
@@ -876,6 +973,168 @@ function getMonthlyShadowArray() {
     ? window.shadowMonthlyAverage
     : new Array(12).fill(0);
 }
+
+// ===================================================================
+// SHADOW INPUT VALIDATION (Stage 3 Constraint Based on Stage 2)
+// ===================================================================
+// Get Stage 2 system type: returns "optimizer" or "string"
+function getStage2SystemType() {
+  return window.currentSystemType || "string";
+}
+
+// Check if Stage 2 has been configured with an inverter
+function isStage2ConfiguredWithInverter() {
+  const inverterSelector = document.getElementById("inverter_selector");
+  if (inverterSelector && inverterSelector.value) return true;
+  return window.projectData?.stage2?.inverterModel ? true : false;
+}
+
+// Update the shadow input constraint badge based on Stage 2 settings
+function updateShadowInputConstraintBadge() {
+  const badge = document.getElementById("shadow-input-mode-badge");
+  const badgeText = document.getElementById("shadow-input-mode-text");
+  const constraintNote = document.getElementById("shadow-constraint-text");
+  
+  if (!badge || !badgeText) return;
+  
+  const systemType = getStage2SystemType();
+  const isConfigured = isStage2ConfiguredWithInverter();
+  
+  if (!isConfigured) {
+    // Stage 2 not configured yet
+    badge.style.background = "#e0e7ff";
+    badge.style.color = "#3730a3";
+    badgeText.innerHTML = '<i class="fas fa-info-circle" style="margin-right: 6px;"></i><span>Input values: All integers (no decimals)</span>';
+    if (constraintNote) {
+      constraintNote.innerHTML = '<i class="fas fa-clock"></i> Configure Stage 2 Inverter to apply additional constraints';
+    }
+  } else if (systemType === "optimizer") {
+    // SolarEdge with Optimizer: all integers (same as GoodWe)
+    badge.style.background = "#dcfce7";
+    badge.style.color = "#15803d";
+    badgeText.innerHTML = '<i class="fas fa-microchip" style="margin-right: 6px;"></i><span>SolarEdge Optimizer: All integers allowed</span>';
+    if (constraintNote) {
+      constraintNote.innerHTML = '<i class="fas fa-check-circle"></i> SolarEdge Optimizer: Any whole number allowed (0, 1, 2, 3...)';
+    }
+  } else {
+    // GoodWe String Inverter: All integers
+    badge.style.background = "#fef3c7";
+    badge.style.color = "#92400e";
+    badgeText.innerHTML = '<i class="fas fa-wave-square" style="margin-right: 6px;"></i><span>GoodWe String: All integers allowed</span>';
+    if (constraintNote) {
+      constraintNote.innerHTML = '<i class="fas fa-check-circle"></i> GoodWe String Inverter: Any whole number allowed (0, 1, 2, 3...)';
+    }
+  }
+}
+
+// Validate and correct shadow cell input based on Stage 2 settings
+function validateShadowCellInput(input) {
+  if (!input || input.tagName !== "INPUT") return;
+  
+  let value = input.value;
+  if (value === "" || value === null) return;
+  
+  // Parse as number and remove decimals
+  let numValue = parseInt(value, 10);
+  if (isNaN(numValue)) numValue = 0;
+  if (numValue < 0) numValue = 0;
+
+  const scenarios = document.querySelectorAll(".shadow-scenario");
+  const singleSystemMode = !scenarios || scenarios.length <= 1;
+  const totalPanelCount = getEffectiveTotalPanelCount();
+  const scenario = input.closest(".shadow-scenario");
+  const panelInput = scenario ? scenario.querySelector(".system-panel-input") : null;
+  const assignedPanels = panelInput ? Math.max(0, parseInt(panelInput.value, 10) || 0) : totalPanelCount;
+  const maxAllowed = singleSystemMode ? totalPanelCount : assignedPanels;
+  if (numValue > maxAllowed) numValue = maxAllowed;
+  
+  // For both GoodWe and SolarEdge in Shadow step: keep integer-only, allow odd/even values.
+  
+  input.value = String(numValue);
+}
+
+// Setup input event listeners for all shadow cells
+function attachShadowInputValidation() {
+  const shadowCells = document.querySelectorAll(".shadow-cell");
+  
+  shadowCells.forEach(input => {
+    if (input.dataset.shadowValidationBound === "1") return;
+    input.dataset.shadowValidationBound = "1";
+
+    // Apply color on initial load if cell has value
+    if (input.value && parseInt(input.value) > 0) {
+      input.style.backgroundColor = "#d1fae5";
+      input.style.fontWeight = "600";
+    }
+    
+    input.addEventListener("input", function(e) {
+      validateShadowCellInput(this);
+      // Change color based on whether cell has value
+      if (this.value && parseInt(this.value) > 0) {
+        this.style.backgroundColor = "#d1fae5";
+        this.style.fontWeight = "600";
+      } else {
+        this.style.backgroundColor = "";
+        this.style.fontWeight = "";
+      }
+      // Trigger shadow table recalculation
+      if (typeof calculateShadowTable === "function") {
+        setTimeout(() => calculateShadowTable(), 50);
+      }
+    });
+    
+    input.addEventListener("change", function(e) {
+      validateShadowCellInput(this);
+      // Change color based on whether cell has value
+      if (this.value && parseInt(this.value) > 0) {
+        this.style.backgroundColor = "#d1fae5";
+        this.style.fontWeight = "600";
+      } else {
+        this.style.backgroundColor = "";
+        this.style.fontWeight = "";
+      }
+      if (typeof calculateShadowTable === "function") {
+        calculateShadowTable();
+      }
+    });
+    
+    input.addEventListener("blur", function(e) {
+      validateShadowCellInput(this);
+      // Change color based on whether cell has value
+      if (this.value && parseInt(this.value) > 0) {
+        this.style.backgroundColor = "#d1fae5";
+        this.style.fontWeight = "600";
+      } else {
+        this.style.backgroundColor = "";
+        this.style.fontWeight = "";
+      }
+      if (typeof calculateShadowTable === "function") {
+        calculateShadowTable();
+      }
+    });
+    
+    // Prevent manual decimal entry
+    input.addEventListener("keypress", function(e) {
+      // Allow only digits and control keys
+      if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Escape', 'Enter'].includes(e.key)) {
+        e.preventDefault();
+      }
+    });
+  });
+}
+
+// Initialize shadow validation when page loads
+function initShadowValidation() {
+  updateShadowInputConstraintBadge();
+  attachShadowInputValidation();
+}
+
+// Export functions for external use
+window.updateShadowInputConstraintBadge = updateShadowInputConstraintBadge;
+window.getStage2SystemType = getStage2SystemType;
+window.isStage2ConfiguredWithInverter = isStage2ConfiguredWithInverter;
+window.validateShadowCellInput = validateShadowCellInput;
+window.initShadowValidation = initShadowValidation;
 
 // --- HELPER TO COLOR WIZARD STEPS GREEN ---
 function markStepAsComplete(stepNumber) {
@@ -901,7 +1160,10 @@ function markStepAsComplete(stepNumber) {
 
 // Event Listeners
 document.addEventListener("input", function (e) {
-  if (e.target.classList.contains("shadow-cell") || e.target.classList.contains("azimuth-input")) {
+  if (e.target.classList.contains("shadow-cell") || e.target.classList.contains("azimuth-input") || e.target.classList.contains("system-panel-input")) {
+    if (e.target.classList.contains("system-panel-input") && typeof attachShadowInputValidation === "function") {
+      attachShadowInputValidation();
+    }
     calculateShadowTable();
     if (window.fetchedSolarData) {
       calculateSolarPhysics(getAnnualUnitsFromBills(), window.fetchedSolarData);
@@ -914,11 +1176,42 @@ document.addEventListener("input", function (e) {
   }
 });
 
+// Handle Enter key navigation for shadow cells
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && e.target.classList.contains("shadow-cell")) {
+    e.preventDefault();
+    const row = e.target.closest("tr");
+    const inputs = Array.from(row.querySelectorAll(".shadow-cell"));
+    const currentIndex = inputs.indexOf(e.target);
+    
+    if (currentIndex < inputs.length - 1) {
+      // Move to next cell in the same row
+      inputs[currentIndex + 1].focus();
+      inputs[currentIndex + 1].select();
+    } else {
+      // Move to first cell in next row
+      const nextRow = row.nextElementSibling;
+      if (nextRow) {
+        const nextInputs = nextRow.querySelectorAll(".shadow-cell");
+        if (nextInputs.length > 0) {
+          nextInputs[0].focus();
+          nextInputs[0].select();
+        }
+      }
+    }
+  }
+});
+
 document.addEventListener("DOMContentLoaded", function () {
   setupHeaderInputListener();
   updateShadowScenarioLabels();
   calculateShadowTable();
   updateLiveHeader();
+  
+  // Initialize shadow input validation with Stage 2 constraints
+  if (typeof initShadowValidation === "function") {
+    initShadowValidation();
+  }
 });
 
 // =======================================================
@@ -1001,4 +1294,12 @@ function propagateLiveUpdates(panelCount) {
 
 
 
+
+    const scenarios = document.querySelectorAll(".shadow-scenario");
+    const singleSystemMode = !scenarios || scenarios.length <= 1;
+    const totalPanelCount = getEffectiveTotalPanelCount();
+    const scenario = input.closest(".shadow-scenario");
+    const panelInput = scenario ? scenario.querySelector(".system-panel-input") : null;
+    const assignedPanels = panelInput ? Math.max(0, parseInt(panelInput.value, 10) || 0) : totalPanelCount;
+    input.max = String(singleSystemMode ? totalPanelCount : assignedPanels);
 

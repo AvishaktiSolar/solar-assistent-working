@@ -1,5 +1,5 @@
 // ==================================================================
-//  stage3.js - Electrical BoQ (Hybrid: Fixed + Dynamic + Editable)
+//  stage5_switchgear.js - Electrical BoQ (Hybrid: Fixed + Dynamic + Editable)
 // ==================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -812,3 +812,4 @@ window.saveStage3 = function() {
     // Proceed
     if (typeof switchStage === 'function') switchStage(5);
 };
+

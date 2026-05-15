@@ -1,5 +1,5 @@
 // ==================================================================
-//  stage4.js - Engineering Validation & Civil Calculator
+//  stage4_cable.js - Engineering Validation & Civil Calculator
 //  UPDATED: Enhanced cable sizing with full formula verification
 //  Formulas per IEC 60364 / Indian Electrical Code
 // ==================================================================
@@ -1254,6 +1254,7 @@ window.saveStage4 = function() {
     }
     if (typeof switchStage === 'function') switchStage(3);
 };
+
 
 
 

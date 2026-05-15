@@ -245,7 +245,7 @@ window.showS1Page = function (pageNum, force) {
   if (target) {
     target.classList.add("active-step");
     target.style.setProperty("display", "flex", "important");
-    // Force calculation when entering Shadow Page (Step 4)
+    // Force calculation when entering Shadow Page (Stage 3)
     // TARGET STEP 4 (SHADOW PAGE)
     if (pageNum === 4) {
       // 1. Force Shadow Table Pre-calculation (Existing logic)
@@ -438,7 +438,7 @@ function validatePage3() {
   return true;
 }
 
-// VALIDATION FOR PAGE 4: Shadow Analysis (before final save)
+// VALIDATION FOR PAGE 3: Shadow Analysis (before final save)
 function validatePage4() {
   const errors = [];
 
@@ -1460,3 +1460,4 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+

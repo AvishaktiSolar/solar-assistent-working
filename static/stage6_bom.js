@@ -1,5 +1,5 @@
 // ==================================================================
-//  stage5.js - Final Commercial Aggregator & BoQ Engine (Fixed)
+//  stage6_bom.js - Final Commercial Aggregator & BoQ Engine (Fixed)
 // ==================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -752,3 +752,4 @@ window.calcAnchor = function() {
 
   if (typeof calcStage5 === "function") calcStage5();
 };
+

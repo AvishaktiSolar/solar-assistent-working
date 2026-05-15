@@ -2238,7 +2238,7 @@ textarea:focus-visible {
   }
 } */
 
-/* Shadow scenarios (Stage 1.4) */
+/* Shadow scenarios (Stage 3) */
 .shadow-scenario {
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -2389,3 +2389,4 @@ textarea:focus-visible {
 .orientation-loss-output strong {
   color: #0f172a;
 }
+

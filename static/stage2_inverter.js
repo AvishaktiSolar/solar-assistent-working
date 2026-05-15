@@ -435,6 +435,11 @@ function setSystemType(type) {
   if (modeB)      modeB.style.display      = isOpt ? "block" : "none";
   if (indicator)  indicator.innerText      = isOpt ? "SolarEdge Optimizer Mode" : "GoodWe String Inverter Mode";
 
+  // Update shadow input constraints badge on Stage 1
+  if (typeof window.updateShadowInputConstraintBadge === "function") {
+    window.updateShadowInputConstraintBadge();
+  }
+
   updateManualModeUI();
   calculateStage2();
 
@@ -493,6 +498,11 @@ function calculateStage2() {
       globalData.performance?.monthlyTable || globalData.stage1?.monthlyTable || globalData.monthlyTable || [],
   };
   if (!s1.systemSizeKwp) return;
+  
+  // Update shadow input constraints badge on Stage 1 when Stage 2 changes
+  if (typeof window.updateShadowInputConstraintBadge === "function") {
+    window.updateShadowInputConstraintBadge();
+  }
   
   // Auto-refresh canvas if panel count changed in manual optimizer mode
   refreshInteractiveCanvasIfEnabled();

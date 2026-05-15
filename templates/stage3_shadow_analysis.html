@@ -1,0 +1,249 @@
+﻿<div id="s1-page-4" class="wizard-step center-content">
+  <div class="full-page-card" style="max-width: 1400px">
+    
+    <div class="card-header compact-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h3>
+        <i class="fas fa-cloud-sun"></i> Step 3: Detailed Shadow Analysis
+      </h3>
+      <div id="shadow-input-mode-badge" class="badge" style="padding: 8px 14px; font-size: 0.85rem; background: #dbeafe; color: #1e40af; border-radius: 20px; font-weight: 600;">
+        <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+        <span id="shadow-input-mode-text">Input values: All integers</span>
+      </div>
+    </div>
+
+    <div class="card-body scrollable-y">
+      
+      <div class="shadow-summary-bar">
+        <div class="shadow-summary-card">
+          <div class="shadow-summary-icon">
+            <i class="fas fa-cloud-sun"></i>
+          </div>
+          <div class="shadow-summary-label">Avg Shadow Loss</div>
+          <div class="shadow-summary-value">
+            <span id="combined_shadow_avg">0%</span>
+          </div>
+        </div>
+        <div class="shadow-summary-card">
+          <div class="shadow-summary-icon">
+            <svg class="orientation-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path d="M12 4.5 L14.2 12 L12 19.5 L9.8 12 Z" fill="currentColor" />
+              <circle cx="12" cy="12" r="1.8" fill="#fff" />
+            </svg>
+          </div>
+          <div class="shadow-summary-label">Avg Orientation Loss</div>
+          <div class="shadow-summary-value">
+            <span id="combined_orientation_avg">2%</span>
+          </div>
+        </div>
+        <div class="shadow-summary-card" style="background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); border-left: 4px solid #ea580c;">
+          <div class="shadow-summary-icon">
+            <i class="fas fa-calculator" style="color: #ea580c;"></i>
+          </div>
+          <div class="shadow-summary-label" style="color: #9a3412; font-weight: 600;">Total Site Loss</div>
+          <div class="shadow-summary-value" style="color: #ea580c; font-size: 1.5rem; font-weight: 700;">
+            <span id="combined_total_site_loss">9.00%</span>
+            <small style="display: block; font-size: 0.7rem; color: #b45309; margin-top: 4px;">Shadow + Orient + 7%</small>
+          </div>
+        </div>
+        <div class="shadow-summary-card" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-left: 4px solid #334155;">
+          <div class="shadow-summary-icon">
+            <i class="fas fa-th-large" style="color: #334155;"></i>
+          </div>
+          <div class="shadow-summary-label" style="color: #334155; font-weight: 600;">Panel Allocation</div>
+          <div class="shadow-summary-value" style="color: #0f172a; font-size: 1rem; font-weight: 700;">
+            <span id="shadow_panel_balance">0 / 0</span>
+            <small id="shadow_panel_balance_note" style="display: block; font-size: 0.7rem; color: #475569; margin-top: 4px;">Single system uses full panel count</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center justify-content-between mb-2">
+  <div style="font-weight: 600; color: #1f2937;">
+    <i class="fas fa-layer-group"></i> Shadow Systems (Averaged)
+  </div>
+  <button type="button" class="btn btn-sm btn-outline-primary" onclick="addShadowScenario()">
+    <i class="fas fa-plus"></i> Add System
+  </button>
+</div>
+
+<div id="shadow_scenarios">
+  <div class="shadow-scenario" data-scenario="1" style="margin-bottom: 18px;">
+      <div class="shadow-scenario-header">
+      <div class="shadow-scenario-title" style="font-weight: 600;">System 1</div>
+      <div class="shadow-scenario-actions">
+        <div style="display: inline-flex; gap: 15px; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <label style="margin: 0;">Panels</label>
+            <input type="number" class="system-panel-input" value="0" min="0" step="1" style="width: 75px;" />
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <label style="margin: 0;">Azimuth (°)</label>
+            <input type="number" class="azimuth-input" value="180" step="1" min="0" max="360" style="width: 75px;" />
+          </div>
+        </div>
+        <span class="orientation-loss-output">Loss: <strong>0%</strong></span>
+        <span class="system-avg-shadow">Avg Shadow: <strong>0%</strong></span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleShadowScenario(this)">
+          <i class="fas fa-chevron-up"></i> Collapse
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger shadow-scenario-remove" onclick="removeShadowScenario(this)" style="display: none;">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+    <div class="shadow-scenario-body">
+    <div class="table-responsive">
+      <table
+        class="table table-bordered table-sm text-center shadow-table"
+        id="shadow_analysis_table"
+      >
+        <thead class="thead-light">
+          <tr>
+            <th style="width: 100px">Month</th>
+            <th>9:00 AM</th>
+            <th>10:00 AM</th>
+            <th>11:00 AM</th>
+            <th>12:00 PM</th>
+            <th>1:00 PM</th>
+            <th>2:00 PM</th>
+            <th>3:00 PM</th>
+            <th style="background: #eff6ff; width: 100px">Avg Shadow Loss %</th>
+          </tr>
+        </thead>
+        <tbody id="shadow_table_body" class="shadow-table-body">
+          <tr data-month="0"><td><strong>Jan</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="1"><td><strong>Feb</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="2"><td><strong>Mar</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="3"><td><strong>Apr</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="4"><td><strong>May</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="5"><td><strong>Jun</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="6"><td><strong>Jul</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="7"><td><strong>Aug</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="8"><td><strong>Sep</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="9"><td><strong>Oct</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="10"><td><strong>Nov</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="11"><td><strong>Dec</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+        </tbody>
+        <tfoot>
+          <tr style="background: #e2e8f0">
+            <td colspan="8" class="text-right">
+              <strong>Annual Average Shadow Loss:</strong>
+            </td>
+            <td
+              id="annual_shadow_avg"
+              class="annual-shadow-avg"
+              style="font-weight: bold; color: #dc2626"
+            >
+              0%
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="system-total-loss-bar" style="margin-top:10px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:0.9rem;">
+      <strong>System Total:</strong>
+      <span class="system-shadow-loss-text">Shadow 0.00%</span> |
+      <span class="system-orientation-loss-text">Orientation 0.00%</span> |
+      <span class="system-fixed-loss-text">Fixed 7.00%</span> |
+      <span class="system-total-loss-text" style="color:#dc2626; font-weight:700;">Total 0.00%</span>
+    </div>
+  </div>
+  </div>
+</div>
+
+<template id="shadow_scenario_template">
+  <div class="shadow-scenario" data-scenario="0" style="margin-bottom: 18px;">
+    <div class="shadow-scenario-header">
+      <div class="shadow-scenario-title" style="font-weight: 600;">System</div>
+      <div class="shadow-scenario-actions">
+        <div style="display: inline-flex; gap: 15px; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <label style="margin: 0;">Panels</label>
+            <input type="number" class="system-panel-input" value="0" min="0" step="1" style="width: 75px;" />
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <label style="margin: 0;">Azimuth (°)</label>
+            <input type="number" class="azimuth-input" value="180" step="1" min="0" max="360" style="width: 75px;" />
+          </div>
+        </div>
+        <span class="orientation-loss-output">Loss: <strong>0%</strong></span>
+        <span class="system-avg-shadow">Avg Shadow: <strong>0%</strong></span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleShadowScenario(this)">
+          <i class="fas fa-chevron-up"></i> Collapse
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger shadow-scenario-remove" onclick="removeShadowScenario(this)">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+    <div class="shadow-scenario-body">
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm text-center shadow-table">
+        <thead class="thead-light">
+          <tr>
+            <th style="width: 100px">Month</th>
+            <th>9:00 AM</th>
+            <th>10:00 AM</th>
+            <th>11:00 AM</th>
+            <th>12:00 PM</th>
+            <th>1:00 PM</th>
+            <th>2:00 PM</th>
+            <th>3:00 PM</th>
+            <th style="background: #eff6ff; width: 100px">Avg Shadow Loss %</th>
+          </tr>
+        </thead>
+        <tbody class="shadow-table-body">
+          <tr data-month="0"><td><strong>Jan</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="1"><td><strong>Feb</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="2"><td><strong>Mar</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="3"><td><strong>Apr</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="4"><td><strong>May</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="5"><td><strong>Jun</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="6"><td><strong>Jul</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="7"><td><strong>Aug</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="8"><td><strong>Sep</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="9"><td><strong>Oct</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="10"><td><strong>Nov</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+          <tr data-month="11"><td><strong>Dec</strong></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td><input type="number" class="shadow-cell" value="0" min="0" step="1" /></td><td class="row-avg font-weight-bold">0%</td></tr>
+        </tbody>
+        <tfoot>
+          <tr style="background: #e2e8f0">
+            <td colspan="8" class="text-right">
+              <strong>Annual Average Shadow Loss:</strong>
+            </td>
+            <td class="annual-shadow-avg" style="font-weight: bold; color: #dc2626">
+              0%
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="system-total-loss-bar" style="margin-top:10px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:0.9rem;">
+      <strong>System Total:</strong>
+      <span class="system-shadow-loss-text">Shadow 0.00%</span> |
+      <span class="system-orientation-loss-text">Orientation 0.00%</span> |
+      <span class="system-fixed-loss-text">Fixed 7.00%</span> |
+      <span class="system-total-loss-text" style="color:#dc2626; font-weight:700;">Total 0.00%</span>
+    </div>
+  </div>
+  </div>
+</template>
+      
+      </div> 
+      <div class="wizard-footer">
+      <button type="button" class="btn btn-secondary" onclick="switchStage(2)">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-success"
+        onclick="saveAndProceedToStage2()"
+      >
+        Save & Next Stage <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+
+  </div>
+</div>

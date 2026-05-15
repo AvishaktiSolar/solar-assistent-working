@@ -1,0 +1,217 @@
+/* ============================================
+   SHADOW TABLE INPUT STYLING
+   ============================================ */
+
+/* Shadow table cell inputs */
+.shadow-cell {
+  width: 100%;
+  padding: 8px 6px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 14px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  appearance: none;
+  -moz-appearance: textfield;
+}
+
+.shadow-cell::-webkit-outer-spin-button,
+.shadow-cell::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.shadow-cell:hover {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
+}
+
+.shadow-cell:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+  background: #f0f9ff;
+}
+
+.shadow-cell:invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Validation states */
+.shadow-cell.valid {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.shadow-cell.invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.shadow-cell.warning {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+/* Shadow input mode badge */
+#shadow-input-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shadow table responsive wrapper */
+.table-responsive {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.shadow-table {
+  margin-bottom: 0;
+  background: white;
+}
+
+.shadow-table thead {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.shadow-table thead th {
+  padding: 12px 8px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #334155;
+  border-bottom: 2px solid #cbd5e1;
+  white-space: nowrap;
+}
+
+.shadow-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.2s ease;
+}
+
+.shadow-table tbody tr:hover {
+  background-color: #f0f9ff;
+}
+
+.shadow-table tbody td {
+  padding: 10px 8px;
+  vertical-align: middle;
+  border: none;
+}
+
+.shadow-table tbody td:first-child {
+  background: linear-gradient(to right, #f1f5f9, transparent);
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 70px;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+}
+
+.shadow-table tbody .row-avg {
+  background: linear-gradient(to left, #dbeafe, transparent);
+  font-weight: 700;
+  color: #0284c7;
+  text-align: center;
+  min-width: 90px;
+  position: sticky;
+  right: 0;
+  z-index: 5;
+}
+
+.shadow-table tfoot {
+  background: #f8fafc;
+  font-weight: 700;
+}
+
+.shadow-table tfoot tr {
+  border-top: 2px solid #cbd5e1;
+}
+
+.shadow-table tfoot td {
+  padding: 12px 8px;
+  color: #0f172a;
+}
+
+/* Annual shadow average display */
+.annual-shadow-avg {
+  color: #dc2626;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Constraint message styling */
+.shadow-constraint-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.shadow-constraint-message.even-only {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.shadow-constraint-message.all-allowed {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde047;
+}
+
+.shadow-constraint-message i {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Responsive for small screens */
+@media (max-width: 768px) {
+  .shadow-cell {
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+
+  .shadow-table thead th {
+    padding: 8px 4px;
+    font-size: 10px;
+  }
+
+  .shadow-table tbody td {
+    padding: 6px 4px;
+  }
+
+  #shadow-input-mode-badge {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}
