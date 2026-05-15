@@ -21,17 +21,29 @@ app.secret_key = os.environ.get('SECRET_KEY', 'avishakti_secure_key')
 # --- MongoDB Configuration ---
 MONGO_URI = os.environ.get('MONGO_URI')
 
-db = None
-try:
-    if not MONGO_URI:
-        raise ValueError("MONGO_URI is missing. Set it in your environment or .env file.")
-    client = MongoClient(MONGO_URI)
-    db = client['avishakti_solar']
-    app.config['DB'] = db
-    print("Connected to MongoDB Atlas successfully!")
-except Exception as e:
-    app.config['DB'] = None
-    print(f"MongoDB connection failed: {e}")
+def init_mongo_connection(flask_app):
+    """Initialize and validate a MongoDB connection.
+    Returns True if connected, False otherwise.
+    """
+    try:
+        if not MONGO_URI:
+            raise ValueError("MONGO_URI is missing. Set it in your environment or .env file.")
+
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        # Force connection now so startup/runtime failures are explicit.
+        client.admin.command('ping')
+
+        flask_app.config['MONGO_CLIENT'] = client
+        flask_app.config['DB'] = client['avishakti_solar']
+        print("Connected to MongoDB Atlas successfully!")
+        return True
+    except Exception as e:
+        flask_app.config['MONGO_CLIENT'] = None
+        flask_app.config['DB'] = None
+        print(f"MongoDB connection failed: {e}")
+        return False
+
+init_mongo_connection(app)
 
 # ============================================
 # SESSION CONFIGURATION - UPDATED TO FIX AUTO-LOGOUT
@@ -47,6 +59,10 @@ app.register_blueprint(procurement_bp)
 # --- Global Route Protection ---
 @app.before_request
 def require_login():
+    # If DB dropped during runtime/startup, try reconnecting automatically.
+    if app.config.get('DB') is None:
+        init_mongo_connection(app)
+
     # List of endpoints that don't require login 
     allowed_endpoints = [
         'auth.login',      # Allow login page
