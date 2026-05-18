@@ -3,4 +3,5 @@ requests
 gunicorn
 Werkzeug
 pymongo
+dnspython
 python-dotenv
