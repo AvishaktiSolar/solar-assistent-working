@@ -18,28 +18,28 @@ load_dotenv()
 # Set Secret Key
 app.secret_key = os.environ.get('SECRET_KEY', 'avishakti_secure_key')
 
-# --- MongoDB Configuration ---
-MONGO_URI = os.environ.get('MONGO_URI')
-
 def init_mongo_connection(flask_app):
     """Initialize and validate a MongoDB connection.
     Returns True if connected, False otherwise.
     """
     try:
-        if not MONGO_URI:
+        mongo_uri = os.environ.get('MONGO_URI')
+        if not mongo_uri:
             raise ValueError("MONGO_URI is missing. Set it in your environment or .env file.")
 
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
         # Force connection now so startup/runtime failures are explicit.
         client.admin.command('ping')
 
         flask_app.config['MONGO_CLIENT'] = client
         flask_app.config['DB'] = client['avishakti_solar']
+        flask_app.config['DB_ERROR'] = None
         print("Connected to MongoDB Atlas successfully!")
         return True
     except Exception as e:
         flask_app.config['MONGO_CLIENT'] = None
         flask_app.config['DB'] = None
+        flask_app.config['DB_ERROR'] = str(e)
         print(f"MongoDB connection failed: {e}")
         return False
 
@@ -111,7 +111,9 @@ def ping():
     return jsonify({
         'status': 'alive', 
         'timestamp': datetime.now().isoformat(),
-        'logged_in': session.get('logged_in', False)
+        'logged_in': session.get('logged_in', False),
+        'db_connected': app.config.get('DB') is not None,
+        'db_error': app.config.get('DB_ERROR')
     })
 
 # --- Error Handling ---
