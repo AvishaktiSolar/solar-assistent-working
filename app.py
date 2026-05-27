@@ -69,7 +69,8 @@ def require_login():
         'auth.logout',     # Allow logout
         'static',          # Allow static files (CSS, JS, images)
         'api.get_data',    # Allow API data
-        'api.ping'         # Allow keep-alive ping
+        'api.ping',        # Backward-compatible if moved under api blueprint
+        'ping'             # Keep-alive route defined on app
     ]
     
     # Allow static files (CSS, JS, images, etc.)

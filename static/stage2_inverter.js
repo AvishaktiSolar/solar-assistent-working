@@ -10,6 +10,7 @@ let multiInverterDesign = [];
 let currentSystemType = "string";
 let hasAutoSelected = false;
 let manualModeEnabled = false;
+let mergeInverterStringsEnabled = false;
 let manualLayoutState = null;
 let manualLayoutSeq = 1;
 let optimizerCatalog = [];
@@ -18,8 +19,44 @@ window.multiInverterDesign = multiInverterDesign;
 window.currentSystemType = currentSystemType;
 window.hasAutoSelected = hasAutoSelected;
 window.manualModeEnabled = manualModeEnabled;
+window.mergeInverterStringsEnabled = mergeInverterStringsEnabled;
 window.manualLayoutState = manualLayoutState;
 window.optimizerCatalog = optimizerCatalog;
+
+function syncMergeInverterStringsUI() {
+  const chk = document.getElementById("merge_inverters_for_strings");
+  if (chk) chk.checked = !!mergeInverterStringsEnabled;
+}
+
+function getEffectiveAssignedInverter(invertersToUse, selectedId) {
+  if (!Array.isArray(invertersToUse) || invertersToUse.length === 0) return null;
+  if (mergeInverterStringsEnabled) return invertersToUse[0];
+  return invertersToUse.find(u => u.id.toString() === (selectedId || "").toString()) || invertersToUse[0];
+}
+
+function toggleMergeInverterStrings(enabled) {
+  mergeInverterStringsEnabled = !!enabled;
+  window.mergeInverterStringsEnabled = mergeInverterStringsEnabled;
+  
+  // When toggling global merge on, merge first two inverters together
+  // When toggling off, clear all per-inverter merge settings
+  if (mergeInverterStringsEnabled && multiInverterDesign.length > 1) {
+    multiInverterDesign[0].mergeWith = multiInverterDesign[1].id;
+  } else if (!mergeInverterStringsEnabled) {
+    multiInverterDesign.forEach(item => {
+      item.mergeWith = null;
+    });
+  }
+  
+  syncMergeInverterStringsUI();
+  if (manualModeEnabled) {
+    updateManualStringBuilder();
+    renderManualVisualDiagram();
+  }
+  renderInverterSplitControls();
+  calculateStage2();
+}
+window.toggleMergeInverterStrings = toggleMergeInverterStrings;
 
 function getAcKw(specs) {
   if (!specs) return 0;
@@ -76,6 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
       calculateStage2();
     });
   }
+  syncMergeInverterStringsUI();
 });
   document.addEventListener('change', function(e) {
     if (e.target.id === 'inverter_selector' || e.target.id === 'optimizer_selector') {
@@ -215,6 +253,7 @@ window.addInverterToDesign = function () {
     assignedPanels: suggestedPanels,
     manualOverride: false,
     manualTrackers: [],
+    mergeWith: null,  // Track which inverter this one merges with
   });
   window.multiInverterDesign = multiInverterDesign;
   renderInverterSplitControls();
@@ -234,7 +273,7 @@ function renderInverterSplitControls() {
   const remainColor = remaining === 0 ? "#16a34a" : remaining < 0 ? "#dc2626" : "#d97706";
 
   container.innerHTML = `
-    <div style="padding:8px 12px; background:#f1f5f9; border-radius:6px; margin-bottom:12px; font-size:0.75rem; border-left:3px solid ${remainColor};">
+    <div style="padding:8px 12px; background:#f1f5f9; border-radius:6px; margin-bottom:16px; font-size:0.75rem; border-left:3px solid ${remainColor};">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
         <span><strong style="color:${remainColor};">${totalAssigned}/${totalPanels}</strong> <span style="color:${remainColor};">${remaining === 0 ? "✓ Complete" : remaining > 0 ? remaining + " left" : Math.abs(remaining) + " over"}</span></span>
         <button onclick="recalculateInverterPanels()" style="padding:3px 8px; font-size:0.7rem; background:#e0f2fe; border:1px solid #0ea5e9; color:#0c4a6e; border-radius:4px; cursor:pointer; font-weight:600;">Recalculate</button>
@@ -249,26 +288,58 @@ function renderInverterSplitControls() {
           item.assignedPanels > 0
             ? ((item.assignedPanels * (window.projectData?.stage1?.panelWattage || 0)) / 1000).toFixed(2)
             : 0;
+        
+        // Check if this inverter is merged with the next one
+        const isMergedWithNext = item.mergeWith === (multiInverterDesign[idx + 1]?.id || null);
+        // Check if this inverter is merged from the previous one
+        const isMergedFromPrev = multiInverterDesign[idx - 1]?.mergeWith === item.id;
+        // Determine spacing: less space when merged, more space when single
+        const marginBottom = isMergedWithNext ? "2px" : (multiInverterDesign.length === 1 ? "24px" : "14px");
+        const marginTop = isMergedFromPrev ? "0px" : "0px";
+        
         return `
-        <div style="border:1px solid #e2e8f0; border-radius:6px; margin-bottom:8px; padding:10px; background:white; display:flex; justify-content:space-between; align-items:center; gap:12px;">
-          <div style="flex:1;">
-            <div style="font-weight:600; font-size:0.85rem; margin-bottom:4px;">${item.qty}× ${item.inverter.name}</div>
-            <div style="font-size:0.7rem; color:#64748b; margin-bottom:6px;">
-              AC: ${(acKw * item.qty).toFixed(1)}kW | Max DC: ${(maxDcKw * item.qty).toFixed(1)}kWp
+        <div style="border:1px solid #e2e8f0; border-radius:6px; margin-bottom:${marginBottom}; margin-top:${marginTop}; padding:12px; background:white; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px; display:flex; align-items:center; gap:10px; color:#1e293b;">
+                <span style="background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:4px; font-size:0.8rem; font-weight:700;">System ${idx + 1}</span>
+                <span style="font-size:0.85rem;">${item.qty}× ${item.inverter.name}</span>
+              </div>
+              <div style="font-size:0.7rem; color:#64748b; margin-bottom:8px; line-height:1.4;">
+                AC: ${(acKw * item.qty).toFixed(1)}kW | Max DC: ${(maxDcKw * item.qty).toFixed(1)}kWp
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <input type="number" value="${item.assignedPanels}" min="0"
+                       onchange="updateAssignedPanels(${item.id}, this.value)"
+                       style="width:60px; padding:4px 6px; border:1px solid #cbd5e1; border-radius:4px; font-weight:700; font-size:0.8rem;">
+                <span style="font-size:0.75rem; color:#64748b;">${panelKwp} kWp</span>
+              </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <input type="number" value="${item.assignedPanels}" min="0"
-                     onchange="updateAssignedPanels(${item.id}, this.value)"
-                     style="width:60px; padding:4px 6px; border:1px solid #cbd5e1; border-radius:4px; font-weight:700; font-size:0.8rem;">
-              <span style="font-size:0.75rem; color:#64748b;">${panelKwp} kWp</span>
+            <button onclick="removeInverterFromDesign(${item.id})" style="background:none;border:none;cursor:pointer;color:#ef4444;padding:4px;">
+              <i class="fas fa-trash" style="font-size:1rem;"></i>
+            </button>
+          </div>
+          ${multiInverterDesign.length > 1 ? `
+          <div style="border-top:1px solid #e2e8f0; padding-top:8px;">
+            <label style="font-size:0.7rem; color:#1e293b; font-weight:600; display:block; margin-bottom:4px;">
+              <i class="fas fa-link" style="color:#0ea5e9;"></i> Merge with Inverter
+            </label>
+            <select onchange="setMergeInverter(${item.id}, this.value)" style="width:100%; padding:4px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.75rem; background:white;">
+              <option value="">No Merge (Separate System)</option>
+              ${multiInverterDesign
+                .map((inv, invIdx) => inv.id !== item.id ? `<option value="${inv.id}" ${item.mergeWith === inv.id ? "selected" : ""}>Merge with System ${invIdx + 1}</option>` : "")
+                .filter(opt => opt)
+                .join("")}
+            </select>
+            <div style="font-size:0.65rem; color:#64748b; margin-top:3px;">
+              ${item.mergeWith ? "✓ This system merges with another" : "⚙️ Separate system - independent strings"}
             </div>
           </div>
-          <button onclick="removeInverterFromDesign(${item.id})" style="background:none;border:none;cursor:pointer;color:#ef4444;padding:4px;align-self:flex-start;">
-            <i class="fas fa-trash" style="font-size:1rem;"></i>
-          </button>
+          ` : ""}
         </div>`;
       })
-      .join("")}`;
+      })
+      .join("")}`;  
 }
 
 window.updateAssignedPanels = function (id, val) {
@@ -279,8 +350,32 @@ window.updateAssignedPanels = function (id, val) {
 };
 
 window.removeInverterFromDesign = function (id) {
+  // Remove merge references to the deleted inverter
+  multiInverterDesign.forEach(item => {
+    if (item.mergeWith === id) {
+      item.mergeWith = null;
+    }
+  });
   multiInverterDesign = multiInverterDesign.filter(i => i.id !== id);
   window.multiInverterDesign = multiInverterDesign;
+  renderInverterSplitControls();
+  calculateStage2();
+};
+
+window.setMergeInverter = function (sourceId, targetId) {
+  const sourceItem = multiInverterDesign.find(i => i.id === sourceId);
+  if (!sourceItem) return;
+  
+  sourceItem.mergeWith = targetId ? parseInt(targetId) : null;
+  
+  // If merging, the global merge flag should reflect this
+  const hasMergedInverters = multiInverterDesign.some(item => item.mergeWith !== null && item.mergeWith !== undefined);
+  if (hasMergedInverters !== mergeInverterStringsEnabled) {
+    mergeInverterStringsEnabled = hasMergedInverters;
+    window.mergeInverterStringsEnabled = mergeInverterStringsEnabled;
+    syncMergeInverterStringsUI();
+  }
+  
   renderInverterSplitControls();
   calculateStage2();
 };
@@ -2165,9 +2260,9 @@ function injectCanvasCss() {
   document.head.appendChild(el);
 }
 
-// ══════════════════════════════════════════════════════════════════
-// MAIN ENTRY
-// ══════════════════════════════════════════════════════════════════
+// ==================================================================
+// MAIN ENTRY - FIXED INTERACTIVE CLICK & DRAG ENGINE
+// ==================================================================
 function generateInteractiveGrid(_r, _c) {
   const container = document.getElementById('diagram_container');
   if (!container) return;
@@ -2183,7 +2278,7 @@ function generateInteractiveGrid(_r, _c) {
   interactiveCanvasState.completedStrings = [];
   interactiveCanvasState.panelToInverter  = ownership.map;
   interactiveCanvasState.inverterSlices   = ownership.slices;
-  interactiveCanvasState.cols             = 0;  // force recalc
+  interactiveCanvasState.cols              = 0;  // force recalc
   interactiveCanvasState.activeRatio      = interactiveCanvasState.activeRatio || 2;
 
   container.innerHTML = `
@@ -2269,10 +2364,10 @@ function generateInteractiveGrid(_r, _c) {
   _renderInverterSliceLegend();
   _ec4Refresh();
 
-  // Attach drag listeners to the persistent wrapper, not the replaceable SVG
+  // Attach drag listeners to the persistent wrapper
   const gridWrap = document.getElementById('ec4-grid-wrap');
   if (gridWrap && !gridWrap._dragBound) {
-    gridWrap._dragBound = true;  // prevent duplicate bindings on re-init
+    gridWrap._dragBound = true;
     let _isDragging = false;
 
     function _svgCoord(e) {
@@ -2282,60 +2377,95 @@ function generateInteractiveGrid(_r, _c) {
       const touch = e.touches ? e.touches[0] : e;
       const scaleX = svgEl.viewBox.baseVal.width / rect.width;
       const scaleY = svgEl.viewBox.baseVal.height / rect.height;
-      return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+      return { 
+        x: (touch.clientX - rect.left) * scaleX, 
+        y: (touch.clientY - rect.top) * scaleY 
+      };
     }
 
     function _panelFromSvgPoint(px, py) {
       const CELL_W = interactiveCanvasState.CELL;
       const CELL_H = interactiveCanvasState.CELL_H || CELL_W;
-      const cols   = interactiveCanvasState.cols;
-      const GAP_X  = 4, GAP_Y = 5;
-      const c = Math.floor((px - GAP_X / 2) / CELL_W);
-      const r = Math.floor((py - GAP_Y / 2) / CELL_H);
+      const cols   = interactiveCanvasState._vCols || interactiveCanvasState.cols;
+      const vGrid  = interactiveCanvasState._vGrid;
+      const GAP_X  = 10, GAP_Y = 10;
+
+      const c = Math.floor((px - GAP_X) / CELL_W);
+      const r = Math.floor((py - GAP_Y) / CELL_H);
       if (c < 0 || c >= cols || r < 0) return -1;
-      const id = r * cols + c;
-      return id < interactiveCanvasState.totalPanels ? id : -1;
+
+      const cellIdx = r * cols + c;
+      if (!vGrid || cellIdx >= vGrid.length) return -1;
+
+      const cell = vGrid[cellIdx];
+      if (!cell || cell.spacer || cell.panelId === null) return -1;
+      return cell.panelId;
     }
 
     function _tryAddDrag(px, py) {
-      const id = _panelFromSvgPoint(px, py);
-      if (id < 0) return;
-      if (interactiveCanvasState.completedStrings.some(s => s.panels.includes(id))) return;
-      if (interactiveCanvasState.currentString.some(p => p.panelId === id)) return;
-      if (!_sameOwnerAsCurrent(id)) return;
-      interactiveCanvasState.currentString.push({ panelId: id });
-      _ec4BuildGrid();
-      _ec4UpdateHealthBar();
-      _ec4Refresh();
+      const CELL_W = interactiveCanvasState.CELL;
+      const CELL_H = interactiveCanvasState.CELL_H || CELL_W;
+      const cols   = interactiveCanvasState._vCols || interactiveCanvasState.cols;
+      const vGrid  = interactiveCanvasState._vGrid;
+      const GAP_X  = 10, GAP_Y = 10;
+
+      const c = Math.floor((px - GAP_X) / CELL_W);
+      const r = Math.floor((py - GAP_Y) / CELL_H);
+      if (c < 0 || c >= cols || r < 0) return;
+
+      const cellIdx = r * cols + c;
+      if (!vGrid || cellIdx >= vGrid.length) return;
+
+      const cell = vGrid[cellIdx];
+      if (!cell || cell.spacer || cell.panelId === null) return;
+
+      const panelId = cell.panelId;
+      const isAlreadyInProg = interactiveCanvasState.currentString.some(p => p.panelId === panelId);
+      const isDone = interactiveCanvasState.completedStrings.some(s => s.panels.includes(panelId));
+
+      // Append to the string path if the mouse enters an unassigned active node
+      if (!isAlreadyInProg && !isDone) {
+        handlePanelLink('', cellIdx, -1);
+      }
     }
 
     gridWrap.addEventListener('mousedown', e => {
+      // Allow context buttons to function normally
+      if (e.target.closest('button, select, a')) return;
       _isDragging = true;
       const coord = _svgCoord(e);
       if (coord) _tryAddDrag(coord.x, coord.y);
       e.preventDefault();
     });
+
     gridWrap.addEventListener('mousemove', e => {
       if (!_isDragging) return;
       const coord = _svgCoord(e);
       if (coord) _tryAddDrag(coord.x, coord.y);
     });
-    gridWrap.addEventListener('mouseup',    () => { _isDragging = false; });
-    gridWrap.addEventListener('mouseleave', () => { _isDragging = false; });
+
+    window.addEventListener('mouseup', () => { 
+      _isDragging = false; 
+    });
 
     gridWrap.addEventListener('touchstart', e => {
+      if (e.target.closest('button, select, a')) return;
       _isDragging = true;
       const coord = _svgCoord(e);
       if (coord) _tryAddDrag(coord.x, coord.y);
       e.preventDefault();
     }, { passive: false });
+
     gridWrap.addEventListener('touchmove', e => {
       if (!_isDragging) return;
       const coord = _svgCoord(e);
       if (coord) _tryAddDrag(coord.x, coord.y);
       e.preventDefault();
     }, { passive: false });
-    gridWrap.addEventListener('touchend', () => { _isDragging = false; });
+
+    window.addEventListener('touchend', () => { 
+      _isDragging = false; 
+    });
   }
 }
 
@@ -2503,151 +2633,221 @@ if (csLen >= 2) {
   </svg>`;
 }
 
-// Portrait panel renderer override.
-// This second declaration intentionally overrides the earlier _ec4BuildGrid.
+// ══════════════════════════════════════════════════════════════════
+// VIRTUAL GRID — maps a "cell index" (including spacers) to a real
+// panel id, or null for spacer cells.
+// Each inverter slice is row-aligned: it always starts at col 0.
+// ══════════════════════════════════════════════════════════════════
+function _buildVirtualGrid(cols) {
+  const slices = interactiveCanvasState.inverterSlices || [];
+  const total  = interactiveCanvasState.totalPanels;
+
+  if (!slices.length) {
+    // No multi-inverter — simple linear mapping
+    const cells = [];
+    for (let i = 0; i < total; i++) cells.push({ panelId: i, spacer: false, sliceIdx: 0 });
+    return cells;
+  }
+
+  const cells = [];
+
+  slices.forEach((slice, sIdx) => {
+    // If cells exist and we are not at col 0, pad to next row
+    if (cells.length > 0 && cells.length % cols !== 0) {
+      const remainder = cols - (cells.length % cols);
+      for (let p = 0; p < remainder; p++) {
+        cells.push({ panelId: null, spacer: true, spacerColor: slice.color, sliceIdx: sIdx });
+      }
+    }
+
+    // Now push the real panels for this slice
+    for (let id = slice.start; id <= slice.end; id++) {
+      cells.push({ panelId: id, spacer: false, sliceIdx: sIdx, owner: slice });
+    }
+  });
+
+  return cells;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MAIN GRID BUILD — uses virtual grid for row-aligned slices
+// ══════════════════════════════════════════════════════════════════
 function _ec4BuildGrid() {
   const wrap = document.getElementById('ec4-grid-wrap');
   if (!wrap) return;
 
-  const total = interactiveCanvasState.totalPanels;
-  const wrapW = wrap.clientWidth || 800;
-  
-  // 1. DYNAMIC GRID SCALING
+  const total  = interactiveCanvasState.totalPanels;
+  const wrapW  = wrap.clientWidth || 800;
+  const slices = interactiveCanvasState.inverterSlices || [];
+
   const TARGET_PANEL_W = 38;
-  const cols = Math.max(8, Math.min(22, Math.floor(wrapW / (TARGET_PANEL_W + 6))));
+  const cols   = Math.max(8, Math.min(22, Math.floor(wrapW / (TARGET_PANEL_W + 6))));
   const PANEL_W = Math.floor((wrapW - 20) / cols) - 6;
   const PANEL_H = Math.round(PANEL_W * 1.65);
-  const GAP = 5;
-  const CELL_W = PANEL_W + GAP;
-  const CELL_H = PANEL_H + GAP;
-  const rows = Math.ceil(total / cols);
+  const GAP     = 5;
+  const CELL_W  = PANEL_W + GAP;
+  const CELL_H  = PANEL_H + GAP;
 
-  interactiveCanvasState.cols = cols;
-  interactiveCanvasState.CELL = CELL_W;
+  interactiveCanvasState.cols   = cols;
+  interactiveCanvasState.CELL   = CELL_W;
   interactiveCanvasState.CELL_H = CELL_H;
 
-  const svgW = wrapW;
-  const svgH = rows * CELL_H + 40; // Extra space for labels
+  // Build virtual grid (with row-alignment spacers)
+  const vGrid = _buildVirtualGrid(cols);
+  const vRows = Math.ceil(vGrid.length / cols);
 
-  // 2. DATA PREP
+  // Reverse map: panelId → cell index in vGrid
+  const panelToCellIdx = new Array(total).fill(-1);
+  vGrid.forEach((cell, ci) => {
+    if (!cell.spacer && cell.panelId !== null) panelToCellIdx[cell.panelId] = ci;
+  });
+
+  // Store on state so handlePanelLink can use it
+  interactiveCanvasState._vGrid        = vGrid;
+  interactiveCanvasState._panelToCell  = panelToCellIdx;
+  interactiveCanvasState._vCols        = cols;
+
+  const svgW = wrapW;
+  const svgH = vRows * CELL_H + 20;
+
+  // Position helper using cell index
+  const getPos = (cellIdx) => ({
+    x: (cellIdx % cols) * CELL_W + 10,
+    y: Math.floor(cellIdx / cols) * CELL_H + 10
+  });
+
+  // Build pStrIdx lookup: panelId → completed string index
   const pStrIdx = new Array(total).fill(-1);
   interactiveCanvasState.completedStrings.forEach((str, si) => {
-    str.panels.forEach(pid => pStrIdx[pid] = si);
+    str.panels.forEach(pid => { pStrIdx[pid] = si; });
   });
 
-  const cs = interactiveCanvasState.currentString.map(p => p.panelId);
-  const ratio = interactiveCanvasState.activeRatio;
-  const slices = interactiveCanvasState.inverterSlices || [];
-  
+  const cs     = interactiveCanvasState.currentString.map(p => p.panelId);
+  const ratio  = interactiveCanvasState.activeRatio;
+  const csLen  = cs.length;
+  const currentOwner = csLen > 0 ? _ownerForPanel(cs[0]) : null;
+  const health       = csLen > 0 ? _checkHealth(csLen, ratio, currentOwner?.id) : null;
+  const statusColor  = health ? _SC[health.status] : null;
+
   let parts = [];
 
-  // Helper for coordinates
-  const getPos = (id) => ({
-    x: (id % cols) * CELL_W + 10,
-    y: Math.floor(id / cols) * CELL_H + 10
-  });
-
-  // 3. RENDER INVERTER SECTION SEPARATORS AND LABELS
-  slices.forEach((slice, idx) => {
-    const startRow = Math.floor(slice.start / cols);
-    const endRow = Math.floor(slice.end / cols);
-    const startY = startRow * CELL_H + 5;
-    const endY = (endRow + 1) * CELL_H + 5;
-    
-    // Vertical separator line between inverter sections
-    if (idx > 0) {
-      const prevSlice = slices[idx - 1];
-      if (Math.floor(prevSlice.end / cols) === startRow) {
-        // Same row - draw vertical line
-        const lineX = Math.floor(slice.start % cols) * CELL_W + 5;
-        parts.push(`<line x1="${lineX}" y1="${startY}" x2="${lineX}" y2="${endY}" stroke="${slice.color}" stroke-width="3" opacity="0.3" stroke-dasharray="5 5"/>`);
-      }
-    }
-    
-    // Inverter label header
-    const labelY = startY - 15;
-    parts.push(`<text x="15" y="${labelY}" font-size="11" font-weight="900" fill="${slice.color}" opacity="0.8">
-      INV ${slice.idx + 1}: ${slice.count}p
-    </text>`);
-  });
-
-  // 4. RENDER CONNECTIONS FIRST (Underneath panels)
+  // ── CONNECTIONS (drawn under panels) ──────────────────────────────
   [...interactiveCanvasState.completedStrings, { panels: cs, isProg: true, ratio }].forEach((str, si) => {
     if (!str.panels || str.panels.length < 2) return;
     const isProg = str.isProg;
-    const color = isProg ? '#3b82f6' : _PAL[si % _PAL.length];
-    
+    const color  = isProg ? '#3b82f6' : _PAL[si % _PAL.length];
+
     if (str.ratio === 2) {
-      // Bridging Logic for 2:1
       for (let i = 0; i < str.panels.length; i += 2) {
-        if (!str.panels[i+1]) break;
-        const p1 = getPos(str.panels[i]);
-        const p2 = getPos(str.panels[i+1]);
+        if (str.panels[i + 1] === undefined) break;
+        const ci1 = panelToCellIdx[str.panels[i]];
+        const ci2 = panelToCellIdx[str.panels[i + 1]];
+        if (ci1 < 0 || ci2 < 0) continue;
+        const p1 = getPos(ci1), p2 = getPos(ci2);
         const midX = (p1.x + p2.x + PANEL_W) / 2;
         const midY = (p1.y + p2.y + PANEL_H) / 2 - 15;
-        
-        parts.push(`<path d="M ${p1.x + PANEL_W/2} ${p1.y + PANEL_H/2} Q ${midX} ${midY} ${p2.x + PANEL_W/2} ${p2.y + PANEL_H/2}" 
-          fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" opacity="0.8" class="opt-bridge-2to1"/>`);
+        parts.push(`<path d="M ${p1.x + PANEL_W/2} ${p1.y + PANEL_H/2} Q ${midX} ${midY} ${p2.x + PANEL_W/2} ${p2.y + PANEL_H/2}"
+          fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" opacity="0.8"/>`);
       }
     } else {
-      // 1:1 Serial path
-      const pts = str.panels.map(id => {
-        const p = getPos(id);
-        return `${p.x + PANEL_W/2},${p.y + PANEL_H/2}`;
-      }).join(' ');
-      parts.push(`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="4 3" opacity="0.6"/>`);
+      const pts = str.panels
+        .map(pid => {
+          const ci = panelToCellIdx[pid];
+          if (ci < 0) return null;
+          const p = getPos(ci);
+          return `${p.x + PANEL_W/2},${p.y + PANEL_H/2}`;
+        })
+        .filter(Boolean)
+        .join(' ');
+      if (pts) parts.push(`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="4 3" opacity="0.6"/>`);
     }
   });
 
-  // 5. RENDER INDIVIDUAL PANELS
-  const csLen = interactiveCanvasState.currentString.length;
-  const currentOwner = csLen > 0 ? _ownerForPanel(cs[0]) : null;
-  const health = csLen > 0 ? _checkHealth(csLen, ratio, currentOwner?.id) : null;
-  const statusColor = health ? _SC[health.status] : null;
+  // ── CELLS (spacers + panels) ───────────────────────────────────────
+  vGrid.forEach((cell, cellIdx) => {
+    const { x, y } = getPos(cellIdx);
 
-  for (let id = 0; id < total; id++) {
-    const { x, y } = getPos(id);
-    const si = pStrIdx[id];
-    const isProg = cs.includes(id);
-    const owner = _ownerForPanel(id);
+    if (cell.spacer) {
+      // Spacer cell: dim hatched rectangle showing the gap zone
+      const sc = cell.spacerColor || '#334155';
+      parts.push(`
+        <rect x="${x}" y="${y}" width="${PANEL_W}" height="${PANEL_H}" rx="3"
+          fill="${sc}08" stroke="${sc}30" stroke-width="1" stroke-dasharray="3 3"/>
+      `);
+      return;
+    }
+
+    const id          = cell.panelId;
+    const owner       = cell.owner || _ownerForPanel(id);
+    const si          = pStrIdx[id];
+    const isProg      = cs.includes(id);
+    const borderColor = owner?.color || '#475569';
 
     let fill = '#1e293b', stroke = '#475569', sw = 1;
     let label = '';
-    let borderColor = owner?.color || '#475569';
 
     if (isProg) {
-      // Use status-based colors for panels in the current string
-      if (statusColor) {
-        fill = statusColor.fill;
-        stroke = statusColor.stroke;
-      } else {
-        fill = '#3b82f633'; 
-        stroke = '#3b82f6';
-      }
-      sw = 2;
-      label = cs.indexOf(id) + 1;
+      fill   = statusColor ? statusColor.fill   : '#3b82f633';
+      stroke = statusColor ? statusColor.stroke : '#3b82f6';
+      sw     = 2;
+      label  = cs.indexOf(id) + 1;
     } else if (si !== -1) {
       const color = _PAL[si % _PAL.length];
       fill = color + '22'; stroke = color; sw = 2;
-      label = `S${si+1}`;
+      label = `S${si + 1}`;
     }
 
-    // Advanced Panel SVG with inverter color indicator
     parts.push(`
-      <g data-id="${id}" onclick="handlePanelLink('', ${Math.floor(id/cols)}, ${id%cols})" style="cursor:pointer">
-        <rect x="${x}" y="${y}" width="${PANEL_W}" height="${PANEL_H}" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" class="ec4-panel-rect"/>
-        <!-- Inverter owner color bar -->
-        <rect x="${x}" y="${y}" width="3" height="${PANEL_H}" rx="3" fill="${borderColor}" opacity="0.9"/>
-        <!-- Corner dot showing inverter assignment -->
+      <g data-id="${id}"
+         onclick="handlePanelLink('', ${cellIdx}, -1)"
+         style="cursor:pointer">
+        <rect x="${x}" y="${y}" width="${PANEL_W}" height="${PANEL_H}" rx="3"
+          fill="${fill}" stroke="${stroke}" stroke-width="${sw}" class="ec4-panel-rect"/>
+        <rect x="${x}" y="${y}" width="3" height="${PANEL_H}" rx="2"
+          fill="${borderColor}" opacity="0.9"/>
         <circle cx="${x + PANEL_W - 6}" cy="${y + 6}" r="3" fill="${borderColor}"/>
-        <!-- Grid dividers -->
         <line x1="${x+2}" y1="${y + PANEL_H*0.3}" x2="${x+PANEL_W-2}" y2="${y + PANEL_H*0.3}" class="panel-grid-line"/>
         <line x1="${x+2}" y1="${y + PANEL_H*0.6}" x2="${x+PANEL_W-2}" y2="${y + PANEL_H*0.6}" class="panel-grid-line"/>
-        <!-- Panel number label -->
-        <text x="${x + PANEL_W/2}" y="${y + PANEL_H/2 + 5}" text-anchor="middle" fill="${stroke}" font-size="10" font-weight="900" style="pointer-events:none">${label}</text>
+        <text x="${x + PANEL_W/2}" y="${y + PANEL_H/2 + 5}" text-anchor="middle"
+          fill="${stroke}" font-size="10" font-weight="900"
+          style="pointer-events:none">${label}</text>
       </g>
     `);
-  }
+  });
+
+  // ── ROW SEPARATOR LINES between inverter zones ─────────────────────
+  // Draw a full-width colored line in the GAP row between each slice
+  slices.forEach((slice, sIdx) => {
+    if (sIdx === 0) return; // no separator before first slice
+    // Find the cell index of the first panel of this slice
+    const firstCellIdx = panelToCellIdx[slice.start];
+    if (firstCellIdx < 0) return;
+    const firstCellRow = Math.floor(firstCellIdx / cols);
+    // The gap row is immediately above — between row (firstCellRow-1) and firstCellRow
+    const lineY = firstCellRow * CELL_H + 10 - GAP / 2;
+    const sc    = slice.color;
+
+    // Wide glow
+    parts.push(`<line x1="6" y1="${lineY}" x2="${svgW - 6}" y2="${lineY}"
+      stroke="${sc}" stroke-width="10" opacity="0.18"
+      stroke-linecap="round" style="pointer-events:none;"/>`);
+    // Sharp separator
+    parts.push(`<line x1="6" y1="${lineY}" x2="${svgW - 6}" y2="${lineY}"
+      stroke="${sc}" stroke-width="2.5" opacity="0.9"
+      stroke-linecap="round" style="pointer-events:none;"/>`);
+  });
+
+  // ── INV PILL LABELS (bottom-left of first panel of each slice) ─────
+  slices.forEach((slice) => {
+    const ci = panelToCellIdx[slice.start];
+    if (ci < 0) return;
+    const { x, y } = getPos(ci);
+    parts.push(`<rect x="${x + 2}" y="${y + PANEL_H - 15}" width="30" height="13" rx="3"
+      fill="${slice.color}" opacity="0.95" style="pointer-events:none;"/>`);
+    parts.push(`<text x="${x + 17}" y="${y + PANEL_H - 5}" text-anchor="middle"
+      font-size="8" font-weight="700" fill="#ffffff"
+      style="pointer-events:none;user-select:none;">INV${slice.idx}</text>`);
+  });
 
   wrap.innerHTML = `
     <svg viewBox="0 0 ${svgW} ${svgH}" width="100%" height="${svgH}" xmlns="http://www.w3.org/2000/svg">
@@ -2923,20 +3123,31 @@ function setCanvasRatio(ratio) {
 // ══════════════════════════════════════════════════════════════════
 // PANEL CLICK  (old signature kept)
 // ══════════════════════════════════════════════════════════════════
-function handlePanelLink(_pidStr, row, col) {
-  const cols    = interactiveCanvasState.cols;
-  if (!cols || cols === 0) return;  // Guard: grid not initialized
-  const panelId = row * cols + col;
-  const total   = interactiveCanvasState.totalPanels;
-  if (panelId >= total || panelId < 0) return;
+function handlePanelLink(_pidStr, cellIdxOrRow, col) {
+  // New path: col === -1 means cellIdx was passed directly
+  let panelId;
+  if (col === -1) {
+    const cellIdx = cellIdxOrRow;
+    const vGrid   = interactiveCanvasState._vGrid;
+    if (!vGrid || cellIdx < 0 || cellIdx >= vGrid.length) return;
+    const cell = vGrid[cellIdx];
+    if (!cell || cell.spacer || cell.panelId === null) return;
+    panelId = cell.panelId;
+  } else {
+    // Legacy path (slider manual mode still uses row/col)
+    const cols = interactiveCanvasState.cols;
+    if (!cols || cols === 0) return;
+    panelId = cellIdxOrRow * cols + col;
+  }
 
-  // Block already-completed panels
+  const total = interactiveCanvasState.totalPanels;
+  if (panelId < 0 || panelId >= total) return;
+
   const isDone = interactiveCanvasState.completedStrings.some(s => s.panels.includes(panelId));
   if (isDone) return;
 
-  // Click in-progress panel ? remove it and everything after
   const inIdx = interactiveCanvasState.currentString.findIndex(p => p.panelId === panelId);
-  if (inIdx != -1) {
+  if (inIdx !== -1) {
     interactiveCanvasState.currentString = interactiveCanvasState.currentString.slice(0, inIdx);
     _ec4BuildGrid(); _ec4UpdateHealthBar(); _ec4Refresh();
     return;
@@ -2952,7 +3163,6 @@ function handlePanelLink(_pidStr, row, col) {
   _ec4UpdateHealthBar();
   _ec4Refresh();
 }
-
 
 // ══════════════════════════════════════════════════════════════════
 // UNDO
@@ -3355,8 +3565,7 @@ function renderManualVisualDiagram() {
   let validCount = 0;
 
   const stringMeta = strings.map((str, idx) => {
-    const assignedInv =
-      invertersToUse.find(u => u.id.toString() === str.assignedInverterId?.toString()) || invertersToUse[0];
+    const assignedInv = getEffectiveAssignedInverter(invertersToUse, str.assignedInverterId);
     const invSpecs = assignedInv?.inverter?.specifications || {};
 
     if (isOpt) {
@@ -3418,7 +3627,7 @@ function renderManualVisualDiagram() {
       ? `${m.assignedInv.inverter.name.split(" ")[0]} | S${i + 1}`
       : `S${i + 1}`;
     const invSelect =
-      invertersToUse.length > 1
+      invertersToUse.length > 1 && !mergeInverterStringsEnabled
         ? `
       <select class="manual-string-inv" data-uid="${str.uid}" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.75rem;">
         ${buildInvOptions(str.assignedInverterId)}
@@ -3598,6 +3807,7 @@ function renderManualVisualDiagram() {
 
   document.querySelectorAll(".manual-string-inv").forEach(sel => {
     sel.onchange = () => {
+      if (mergeInverterStringsEnabled) return;
       const uid = parseInt(sel.getAttribute("data-uid"));
       const target = manualLayoutState.strings.find(s => s.uid === uid);
       if (!target) return;
@@ -3636,8 +3846,7 @@ function applyManualLayoutToDesign(forceManualConfirm = false) {
   let totalPanels = 0;
 
   (manualLayoutState?.strings || []).forEach((str, idx) => {
-    const assignedInv =
-      invertersToUse.find(u => u.id.toString() === str.assignedInverterId?.toString()) || invertersToUse[0];
+    const assignedInv = getEffectiveAssignedInverter(invertersToUse, str.assignedInverterId);
     const vmpBase = s1.panelVmp || 41.5;
     const vocColdBase = calculateVocCold(s1);
 
@@ -3782,31 +3991,55 @@ function renderVisualStringDiagram(trackers) {
 
   if (section) section.classList.remove("hidden");
 
-  let html = `<div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:24px; display:flex; flex-direction:column; gap:16px;">`;
-  trackers.forEach(t => {
-    const strings = t.stringQty || (t.formation ? Number(t.formation.split("*")[0]) || 1 : 1);
-    const panels  = t.panelsPerString || (t.formation ? Number(t.formation.split("*")[1]) || 0 : 0);
-    for (let s = 1; s <= strings; s++) {
-      const label = t.assignedInverterName
-        ? `${t.assignedInverterName.split(" ")[0]}|MPPT${t.id}-S${s}`
-        : `MPPT${t.id}-S${s}`;
-      const badge = t.type
-        ? `<span style="font-size:0.7rem; color:#ea580c; background:#fff7ed; padding:2px 6px; border-radius:4px; border:1px solid #fdba74;">${t.type}</span>`
-        : "";
-      html += `
-        <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px;">
-          <div style="min-width:180px; font-weight:600; color:#3b82f6; font-size:0.8rem;">${label} ${badge}</div>
-          <div style="display:flex; gap:4px; flex:1; flex-wrap:wrap;">
-            ${Array(Math.min(panels, 20))
-              .fill(0)
-              .map(() => `<div style="width:16px; height:24px; background:#3b82f6; border-radius:2px;"></div>`)
-              .join("")}
-            ${panels > 20 ? `<span style="margin-left:4px; color:#6b7280; font-size:0.8rem; align-self:center;">+${panels - 20}</span>` : ""}
-            <span style="margin-left:8px; color:#6b7280; font-size:0.875rem; align-self:center;">${panels} mod.</span>
-          </div>
-          <div style="padding:6px 12px; background:#eff6ff; border:1px solid #3b82f6; border-radius:4px; font-size:0.75rem; color:#3b82f6; font-weight:500;">DC OUT</div>
-        </div>`;
+  const grouped = {};
+  (trackers || []).forEach(t => {
+    const key = mergeInverterStringsEnabled
+      ? "merged"
+      : (t.assignedInverterId || t.assignedInverterName || "default");
+    if (!grouped[key]) {
+      grouped[key] = {
+        name: mergeInverterStringsEnabled ? "Merged Inverter Pool" : (t.assignedInverterName || "Inverter"),
+        trackers: [],
+      };
     }
+    grouped[key].trackers.push(t);
+  });
+
+  let html = `<div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:24px; display:flex; flex-direction:column; gap:18px;">`;
+  Object.values(grouped).forEach((group, gIdx) => {
+    html += `
+      <div style="padding-bottom:10px; border-bottom:${gIdx < Object.keys(grouped).length - 1 ? "2px dashed #cbd5e1" : "none"};">
+        <div style="font-weight:800; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+          <span style="width:10px; height:10px; border-radius:50%; background:#2563eb;"></span>
+          ${group.name}
+        </div>
+    `;
+    group.trackers.forEach(t => {
+      const strings = t.stringQty || (t.formation ? Number(t.formation.split("*")[0]) || 1 : 1);
+      const panels = t.panelsPerString || (t.formation ? Number(t.formation.split("*")[1]) || 0 : 0);
+      for (let s = 1; s <= strings; s++) {
+        const label = mergeInverterStringsEnabled
+          ? `S${t.id}-${s}`
+          : (t.assignedInverterName ? `${t.assignedInverterName.split(" ")[0]}|MPPT${t.id}-S${s}` : `MPPT${t.id}-S${s}`);
+        const badge = t.type
+          ? `<span style="font-size:0.7rem; color:#ea580c; background:#fff7ed; padding:2px 6px; border-radius:4px; border:1px solid #fdba74;">${t.type}</span>`
+          : "";
+        html += `
+          <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:10px;">
+            <div style="min-width:180px; font-weight:600; color:#3b82f6; font-size:0.8rem;">${label} ${badge}</div>
+            <div style="display:flex; gap:4px; flex:1; flex-wrap:wrap;">
+              ${Array(Math.min(panels, 20))
+                .fill(0)
+                .map(() => `<div style="width:16px; height:24px; background:#3b82f6; border-radius:2px;"></div>`)
+                .join("")}
+              ${panels > 20 ? `<span style="margin-left:4px; color:#6b7280; font-size:0.8rem; align-self:center;">+${panels - 20}</span>` : ""}
+              <span style="margin-left:8px; color:#6b7280; font-size:0.875rem; align-self:center;">${panels} mod.</span>
+            </div>
+            <div style="padding:6px 12px; background:#eff6ff; border:1px solid #3b82f6; border-radius:4px; font-size:0.75rem; color:#3b82f6; font-weight:500;">DC OUT</div>
+          </div>`;
+      }
+    });
+    html += `</div>`;
   });
   html += `</div>`;
   container.innerHTML = html;
@@ -3840,6 +4073,7 @@ function applyDesignOption(option, inverter, invCount, s1) {
     totalAcKw,
     dcAcRatio,
     bom: option.bom || [],
+    mergeInverterStringsEnabled,
     multiInverterDesign: multiInverterDesign.length > 0 ? [...multiInverterDesign] : null,
   };
 
@@ -3854,6 +4088,7 @@ function applyDesignOption(option, inverter, invCount, s1) {
     dcAcRatio,
     trackers: option.trackers || [],
     bom: option.bom || [],
+    mergeInverterStringsEnabled,
     isValid: option.valid,
     canProceedToStage3,
     manualOverrideConfirmed: isManualConfirmed,
@@ -4156,57 +4391,39 @@ function updateManualStringBuilder() {
   const invertersToUse = resolveManualInverters();
   const invOptions = buildInvOptions("default");
 
-  let html =
-    '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin-top:20px;">';
-  for (let i = 1; i <= stringCount; i++) {
-    html += `
-      <div style="background:linear-gradient(145deg,#ffffff,#f1f5f9); padding:20px; border-radius:16px; border:1px solid #e2e8f0;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:32px; height:32px; background:#3b82f6; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white;"><i class="fas fa-bolt" style="font-size:0.9rem;"></i></div>
-            <span style="font-weight:800; color:#1e293b; font-size:1rem;">${isOpt ? "String" : "MPPT"} ${i}</span>
-          </div>
-          <div id="manual_str${i}_status" style="font-size:0.65rem; font-weight:700; color:#10b981; background:#f0fdf4; padding:2px 8px; border-radius:20px; border:1px solid #dcfce7;">STANDBY</div>
-        </div>
-        <div style="margin-bottom:12px;">
-          <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Assign to Inverter Unit</label>
-          <select id="manual_str${i}_inv_id" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:white; font-size:0.85rem; font-weight:600; color:#334155;">${invOptions}</select>
-        </div>
-        ${
-          isOpt
-            ? `
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <div>
-            <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Optimizers</label>
-            <input type="number" id="manual_str${i}_opts" min="1" max="60" value="14" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; color:#0f172a;" />
-          </div>
-          <div>
-            <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Ratio</label>
-            <select id="manual_str${i}_ratio" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:white; font-weight:700; color:#0f172a;">
-              <option value="2">2:1 Ratio</option>
-              <option value="1">1:1 Ratio</option>
-            </select>
+  let html = '<div style="display:flex; flex-direction:column; gap:24px; margin-top:20px;">';
+  
+  // Add system header if multiple inverters (multi-system mode)
+  if (invertersToUse.length > 1) {
+    html += invertersToUse.map((inv, invIdx) => `
+      <div style="border:2px solid #cbd5e1; border-radius:12px; padding:16px; background:#f9fafb;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:2px dashed #e2e8f0;">
+          <div style="background:#e0f2fe; color:#0369a1; padding:6px 12px; border-radius:6px; font-weight:700; font-size:0.85rem;">System ${invIdx + 1}</div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:0.85rem; color:#1e293b;">${inv.qty}× ${inv.inverter.name}</div>
+            <div style="font-size:0.7rem; color:#64748b;">AC: ${(getAcKw(inv.inverter.specifications || {}) * inv.qty).toFixed(1)}kW</div>
           </div>
         </div>
-        `
-            : `
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <div>
-            <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Parallel Strings</label>
-            <input type="number" id="manual_str${i}_qty" min="1" max="10" value="1" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; color:#0f172a;" />
-          </div>
-          <div>
-            <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Panels / String</label>
-            <input type="number" id="manual_str${i}_panels" min="2" max="60" value="12" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; color:#0f172a;" />
-          </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px;">
+          ${(() => {
+            let stringsHtml = '';
+            for (let i = 1; i <= stringCount; i++) {
+              stringsHtml += buildStringCard(i, isOpt, mergeInverterStringsEnabled, invOptions);
+            }
+            return stringsHtml;
+          })()}
         </div>
-        `
-        }
-        <div id="manual_str${i}_preview_box" style="padding:10px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">
-          <span id="manual_str${i}_preview" style="font-size:0.85rem; font-weight:700; color:#334155;">-</span>
-        </div>
-      </div>`;
+      </div>
+    `).join('');
+  } else {
+    // Single inverter mode - use original layout
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px;">';
+    for (let i = 1; i <= stringCount; i++) {
+      html += buildStringCard(i, isOpt, mergeInverterStringsEnabled, invOptions);
+    }
+    html += '</div>';
   }
+  
   html += "</div>";
   container.innerHTML = html;
   document.querySelectorAll(".manual-string-input").forEach(input => {
@@ -4214,6 +4431,60 @@ function updateManualStringBuilder() {
     input.addEventListener("change", updateManualPreview);
   });
   updateManualPreview();
+}
+
+function buildStringCard(i, isOpt, mergeEnabled, invOptions) {
+  return `
+    <div style="background:linear-gradient(145deg,#ffffff,#f1f5f9); padding:20px; border-radius:16px; border:1px solid #e2e8f0;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:32px; height:32px; background:#3b82f6; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white;"><i class="fas fa-bolt" style="font-size:0.9rem;"></i></div>
+          <span style="font-weight:800; color:#1e293b; font-size:1rem;">${isOpt ? "String" : "MPPT"} ${i}</span>
+        </div>
+        <div id="manual_str${i}_status" style="font-size:0.65rem; font-weight:700; color:#10b981; background:#f0fdf4; padding:2px 8px; border-radius:20px; border:1px solid #dcfce7;">STANDBY</div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">${mergeEnabled ? "String Pool" : "Assign to Inverter Unit"}</label>
+        ${
+          mergeEnabled
+            ? `<div style="padding:10px; border:1px solid #bfdbfe; border-radius:10px; background:#eff6ff; font-size:0.82rem; font-weight:700; color:#1d4ed8;">Merged inverter pool (combined allocation)</div>`
+            : `<select id="manual_str${i}_inv_id" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:white; font-size:0.85rem; font-weight:600; color:#334155;">${invOptions}</select>`
+        }
+      </div>
+      ${
+        isOpt
+          ? `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Optimizers</label>
+          <input type="number" id="manual_str${i}_opts" min="1" max="60" value="14" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; color:#0f172a;" />
+        </div>
+        <div>
+          <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Ratio</label>
+          <select id="manual_str${i}_ratio" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:white; font-weight:700; color:#0f172a;">
+            <option value="2">2:1 Ratio</option>
+            <option value="1">1:1 Ratio</option>
+          </select>
+        </div>
+      </div>
+      `
+          : `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Parallel Strings</label>
+          <input type="number" id="manual_str${i}_qty" min="1" max="10" value="1" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; color:#0f172a;" />
+        </div>
+        <div>
+          <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Panels / String</label>
+          <input type="number" id="manual_str${i}_panels" min="2" max="60" value="12" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; color:#0f172a;" />
+        </div>
+      </div>
+      `
+      }
+      <div id="manual_str${i}_preview_box" style="padding:10px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">
+        <span id="manual_str${i}_preview" style="font-size:0.85rem; font-weight:700; color:#334155;">-</span>
+      </div>
+    </div>`;
 }
 
 function updateManualPreview() {
@@ -4232,7 +4503,7 @@ function updateManualPreview() {
     const prevBox = document.getElementById(`manual_str${i}_preview_box`);
     const prev = document.getElementById(`manual_str${i}_preview`);
     const selInvId = document.getElementById(`manual_str${i}_inv_id`)?.value;
-    const assignedInv = invertersToUse.find(u => u.id.toString() === selInvId) || invertersToUse[0];
+    const assignedInv = getEffectiveAssignedInverter(invertersToUse, selInvId);
     const invSpecs = assignedInv?.inverter?.specifications || {};
 
     if (!assignedInv) {
@@ -4334,7 +4605,7 @@ function applyManualOverride() {
 
   for (let i = 1; i <= stringCount; i++) {
     const selInvId = document.getElementById(`manual_str${i}_inv_id`)?.value;
-    const assignedInv = invertersToUse.find(u => u.id.toString() === selInvId) || invertersToUse[0];
+    const assignedInv = getEffectiveAssignedInverter(invertersToUse, selInvId);
 
     if (currentSystemType === "optimizer") {
       const ratio = parseInt(document.getElementById(`manual_str${i}_ratio`)?.value || 2);

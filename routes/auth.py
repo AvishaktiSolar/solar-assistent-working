@@ -11,6 +11,7 @@ def login():
         password = request.form.get('password')
 
         db = current_app.config.get('DB')
+        print("LOGIN DB =", db)
         if db is None:
             error = "Database unavailable. Please try again later."
             return render_template('login.html', error=error)
