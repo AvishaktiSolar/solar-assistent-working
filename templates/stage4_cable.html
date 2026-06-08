@@ -1,45 +1,42 @@
 ﻿<section id="stage-4" class="stage-view">
-    
+
+    <div id="s4_hidden_data" style="display: none;">
+        <input id="s4_inv_model">
+        <input id="s4_inv_cap">
+        <input id="s4_tot_power">
+        <input id="s4_dc_capacity">
+        <input id="s4_inv_current">
+        <input id="s4_phase">
+        <input id="s4_req_it">
+        <input id="s4_panel_count">
+        <input id="s4_panel_wattage">
+        <input id="s4_cable_r">
+        <input id="s4_cable_ccc">
+        <input id="s4_mcb_rating">
+        <input id="s4_derated_ccc">
+        <input id="s4_adf">
+        <input id="s4_cable_r_m">
+        <input id="s4_floor_height" value="4.27">
+        <input id="s4_vert_calc">
+        <input id="s4_len_auto">
+    </div>
+
     <div class="dashboard-grid" style="display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%;">
-        
         <div class="card full-height-card s4-card">
             <div class="card-header compact-header">
                 <i class="fas fa-bolt"></i> Cable Sizing
             </div>
+            
             <div class="card-body scrollable-y">
-                
                 <div class="s4-layout">
+                    
                     <div class="s4-main">
-                        <div class="s4-panel">
+
+                        <div class="s4-panel s4-panel-full">
                             <div class="s4-panel-header">
-                                <span><i class="fas fa-server"></i> Circuit Demand</span>
-                                <span class="s4-subtle">Ib = P / (v3 × V × cosf)</span>
+                                <span><i class="fas fa-sliders-h"></i> System Parameters</span>
                             </div>
-                            <div class="s4-panel-body s4-grid-4">
-                                <div class="eng-kv">
-                                    <span class="eng-label">Model</span>
-                                    <input class="eng-input" id="s4_inv_model" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Capacity (kW)</span>
-                                    <input class="eng-input" id="s4_inv_cap" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Total Power</span>
-                                    <input class="eng-input" id="s4_tot_power" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">DC Capacity (W)</span>
-                                    <input class="eng-input" id="s4_dc_capacity" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Imax Total (A)</span>
-                                    <input class="eng-input" id="s4_inv_current" readonly style="font-weight:800;">
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Phase</span>
-                                    <input class="eng-input" id="s4_phase" readonly>
-                                </div>
+                            <div class="s4-panel-body s4-grid-2">
                                 <div class="eng-kv">
                                     <span class="eng-label">System Voltage (V)</span>
                                     <input class="eng-input" type="number" id="s4_voltage" value="415" step="1" onchange="calculateEngineering()">
@@ -48,35 +45,28 @@
                                     <span class="eng-label">Power Factor (cosf)</span>
                                     <input class="eng-input" type="number" id="s4_pf" value="0.99" step="0.01" min="0.1" max="1" onchange="calculateEngineering()">
                                 </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Required It (A)</span>
-                                    <input class="eng-input" id="s4_req_it" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">No. of Panels</span>
-                                    <input class="eng-input" id="s4_panel_count" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Panel Wattage (W)</span>
-                                    <input class="eng-input" id="s4_panel_wattage" readonly>
-                                </div>
-                            </div>
-                            <div class="s4-panel-foot">
-                                <span class="s4-foot-label">Safety Current (1.25x)</span>
-                                <div class="s4-foot-val">
-                                    <input id="s4_safety_current" readonly>
-                                    <span>A</span>
+                                <div class="eng-kv s4-span-2">
+                                    <span class="eng-label">Inverters on Site (From Stage 2)</span>
+                                    <div id="s4_inverter_list" style="background: #f8fafc; border: 1px solid #94a3b8; border-radius: 4px; padding: 10px; max-height: 80px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.85rem; color: #0f172a;">
+                                        Loading inverters...
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="s4-panel">
+                        <div class="s4-panel s4-panel-full">
                             <div class="s4-panel-header">
-                                <span><i class="fas fa-bezier-curve"></i> Cable Sizing</span>
-                                <span class="s4-subtle" id="cable_guide_msg">(Adjust to fix Voltage Drop)</span>
+                                <span><i class="fas fa-bezier-curve"></i> Cable & Protection Configuration</span>
+                                <span class="s4-subtle" id="cable_guide_msg"></span>
                             </div>
-                            <div class="s4-panel-body s4-grid-3">
-                                <div class="s4-span-3 s4-clue-box" id="s4_clue_box" style="display:none;"></div>
+                            <div class="s4-panel-body s4-grid-4">
+                                <div class="eng-kv s4-span-4" style="padding-bottom: 5px;">
+                                    <label class="eng-input" style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer; border: none; padding: 0; background: transparent;">
+                                        <input type="checkbox" id="s4_auto_coord_chk" checked onchange="calculateEngineering()">
+                                        Auto Coordinate Selection (Cable + MCB)
+                                    </label>
+                                </div>
+
                                 <div class="eng-kv">
                                     <span class="eng-label">Cable Make</span>
                                     <select id="sel_ac_cable_make_s4" class="eng-input s4-select" onchange="handleCableMakeChangeS4()">
@@ -84,166 +74,114 @@
                                     </select>
                                 </div>
 
-                                <div class="eng-kv s4-span-2" id="box_cable_select">
+                                <div class="eng-kv" id="box_cable_select">
                                     <span class="eng-label s4-strong">
                                         <i class="fas fa-hand-pointer" id="icon_cable_fix" style="display:none; color:red; margin-right:5px;"></i> Select Cable Size
                                     </span>
-                                    <select id="sel_ac_cable_s4" class="eng-input s4-select" onchange="calculateEngineering()">
+                                    <select id="sel_ac_cable_s4" class="eng-input s4-select" onchange="handleManualSelection('cable')">
                                         <option value="">Loading...</option>
                                     </select>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Selection Mode</span>
-                                    <label class="eng-input" style="display:flex; align-items:center; gap:8px; font-weight:600;">
-                                        <input type="checkbox" id="s4_auto_coord_chk" checked onchange="calculateEngineering()">
-                                        Auto Coordinate (Cable + MCB)
-                                    </label>
-                                </div>
-                                
-                                <div class="eng-kv">
-                                    <span class="eng-label">Resistance</span>
-                                    <input class="eng-input" id="s4_cable_r" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Cable CCC</span>
-                                    <input class="eng-input" id="s4_cable_ccc" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Select AC MCB/MCCB</span>
-                                    <select id="sel_ac_mcb_s4" class="eng-input s4-select" onchange="calculateEngineering()">
-                                        <option value="">Loading...</option>
-                                    </select>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">MCB Rating (A)</span>
-                                    <input class="eng-input" id="s4_mcb_rating" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Derated CCC</span>
-                                    <input class="eng-input" id="s4_derated_ccc" readonly>
                                 </div>
 
                                 <div class="eng-kv">
                                     <span class="eng-label">Temp Factor (Ca)</span>
                                     <select class="eng-input s4-select" id="s4_temp_factor" onchange="calculateEngineering()">
-                                        <option value="1.14">25°C (1.14)</option>
-                                        <option value="1.10">30°C (1.10)</option>
-                                        <option value="1.04" selected>35°C (1.04)</option>
-                                        <option value="1.00" >40°C (1.00)</option>
-                                        <option value="0.95">45°C (0.95)</option>
-                                        <option value="0.90">50°C (0.90)</option>
+                                        <option value="1.00">30°C (1.00)</option>
+                                        <option value="0.94">35°C (0.94)</option>
+                                        <option value="0.87" selected>40°C (0.87)</option>
+                                        <option value="0.82">45°C (0.82)</option>
+                                        <option value="0.76">50°C (0.76)</option>
+                                        <option value="0.71">55°C (0.71)</option>
                                     </select>
                                 </div>
+
                                 <div class="eng-kv">
                                     <span class="eng-label">Group Factor (Cg)</span>
                                     <select class="eng-input s4-select" id="s4_group_factor" onchange="calculateEngineering()">
                                         <option value="1.00">1 Cable (1.00)</option>
-                                        <option value="0.84">2 Cables (0.84)</option>
-                                        <option value="0.80">3 Cables (0.80)</option>
-                                        <option value="0.75" selected>6 Cables (0.75)</option>
-                                        <option value="0.73">9 Cables (0.73)</option>
+                                        <option value="0.80">2 Cables (0.80)</option>
+                                        <option value="0.70" selected>3 Cables (0.70)</option>
+                                        <option value="0.65">4 Cables (0.65)</option>
+                                        <option value="0.60">6 Cables (0.60)</option>
                                     </select>
                                 </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Applicable Derating Factor</span>
-                                    <input class="eng-input" id="s4_adf" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">R (Ohm/m)</span>
-                                    <input class="eng-input" id="s4_cable_r_m" readonly>
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Floor Height (m)</span>
-                                    <input class="eng-input" type="number" id="s4_floor_height" value="4.27" readonly>
-                                </div>
 
-                                <div class="s4-route">
+                                <div class="eng-kv s4-span-4">
+                                    <span class="eng-label">Select AC MCB/MCCB</span>
+                                    <select id="sel_ac_mcb_s4" class="eng-input s4-select" onchange="handleManualSelection('mcb')">
+                                        <option value="">Loading...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="s4-panel s4-panel-half">
+                            <div class="s4-panel-header">
+                                <span><i class="fas fa-route"></i> Routing & Distance</span>
+                            </div>
+                            <div class="s4-panel-body">
+                                <div class="eng-kv" style="margin-bottom: 5px;">
+                                    <label class="s4-len-override-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size: 0.8rem;">
+                                        <input type="checkbox" id="s4_auto_len_chk" checked onchange="calculateEngineering()">
+                                        Auto Calculate Length
+                                    </label>
+                                </div>
+                                <div class="s4-grid-2">
                                     <div class="eng-kv">
                                         <span class="eng-label">Floors</span>
                                         <input class="eng-input" type="number" id="s4_floors_disp" min="0" step="1" onchange="calculateEngineering()">
                                     </div>
                                     <div class="eng-kv">
-                                        <span class="eng-label s4-accent">Vert. Calc</span>
-                                        <input class="eng-input s4-accent-input" id="s4_vert_calc" readonly>
-                                    </div>
-                                    <div class="eng-kv">
-                                        <span class="eng-label s4-warn">Dist. to Meter</span>
+                                        <span class="eng-label">Dist. to Meter (m)</span>
                                         <input class="eng-input" type="number" id="len_horizontal" value="0" onchange="calculateEngineering()">
                                     </div>
-                                    <div class="eng-kv">
-                                        <span class="eng-label">Total Length</span>
-                                        <input class="eng-input s4-total" type="number" id="s4_len_total" min="0" step="0.1" onchange="calculateEngineering()">
-                                    </div>
                                 </div>
-
-                                <div class="s4-len-override">
-                                    <label class="s4-len-override-label">
-                                        <input type="checkbox" id="s4_auto_len_chk" checked onchange="calculateEngineering()">
-                                        Auto length = (Floors x 4.27) + Distance
-                                    </label>
-                                    <input class="eng-input" id="s4_len_auto" readonly placeholder="Auto length (m)">
-                                </div>
-
-                                <div class="s4-sc">
-                                    <div class="s4-sc-title">Short Circuit Check</div>
-                                    <div class="s4-sc-grid">
-                                        <div class="eng-kv">
-                                            <span class="eng-label">Isc (A)</span>
-                                            <input class="eng-input" type="number" id="s4_isc" value="6000" step="100" min="1000" onchange="calculateEngineering()">
-                                        </div>
-                                        <div class="eng-kv">
-                                            <span class="eng-label">Trip Time (s)</span>
-                                            <input class="eng-input" type="number" id="s4_trip_time" value="0.2" step="0.01" min="0.01" onchange="calculateEngineering()">
-                                        </div>
-                                        <div class="eng-kv">
-                                            <span class="eng-label">k Factor</span>
-                                            <input class="eng-input" type="number" id="s4_k_factor" value="115" step="1" min="50" onchange="calculateEngineering()">
-                                        </div>
-                                        <div class="eng-kv">
-                                            <span class="eng-label">Min Area (sqmm)</span>
-                                            <input class="eng-input" id="s4_min_area" readonly>
-                                        </div>
-                                    </div>
+                                <div class="eng-kv" style="margin-top: 10px;">
+                                    <span class="eng-label">Total Length (m)</span>
+                                    <input class="eng-input s4-total" type="number" id="s4_len_total" min="0" step="0.1" onchange="calculateEngineering()">
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <aside class="s4-side">
+                    </div> <aside class="s4-side">
                         <div class="s4-panel s4-panel-dark">
                             <div class="s4-panel-body">
+                                
+                                <div class="s4-metric">
+                                    <div class="s4-metric-label" style="color: #fbbf24;">Target Safety Current</div>
+                                    <input id="s4_safety_current" readonly value="0.00 A" style="color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);">
+                                </div>
+
                                 <div class="s4-metric">
                                     <div class="s4-metric-label">Voltage Drop</div>
                                     <input id="s4_vdrop_pct" readonly value="0.00 %">
                                 </div>
+                                
                                 <div class="s4-metric">
                                     <div class="s4-metric-label">Power Loss</div>
                                     <input id="s4_ploss_pct" readonly value="0.00 %">
                                 </div>
-                                <div class="s4-metric">
-                                    <div class="s4-metric-label">Voltage Drop (V)</div>
-                                    <input id="s4_vdrop_v" readonly value="0.0 V">
-                                </div>
 
-                                <div class="status-container">
-                                    <div id="status_ploss" class="status-pill status-warn">Power...</div>
-                                    <div id="status_vdrop" class="status-pill status-warn">V-Drop...</div>
-                                    <div id="status_ccc" class="status-pill status-warn">CCC...</div>
-                                    <div id="status_mcb" class="status-pill status-warn">MCB...</div>
-                                    <div id="status_sc" class="status-pill status-warn">Short Circuit...</div>
+                                <div class="status-container" style="margin-top: 10px;">
+                                    <div id="status_ploss" class="status-pill status-warn">Power</div>
+                                    <div id="status_vdrop" class="status-pill status-warn">V-Drop</div>
+                                    <div id="status_ccc" class="status-pill status-warn">CCC</div>
+                                    <div id="status_mcb" class="status-pill status-warn">MCB</div>
                                 </div>
                             </div>
                         </div>
                     </aside>
-                </div>
 
-                <div class="calc-footer s4-footer">
-                    <button class="btn btn-secondary" onclick="switchStage(1); showS1Page(4, true);"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button class="btn btn-success" onclick="saveStage4()">Save & Next Switchgear <i class="fas fa-arrow-right"></i></button>
+                </div> <div class="calc-footer s4-footer">
+                    <button class="btn btn-secondary" onclick="switchStage(1); showS1Page(4, true);">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-success" onclick="saveStage4()">
+                        Save & Next Switchgear <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
 
             </div>
         </div>
-
     </div>
 </section>

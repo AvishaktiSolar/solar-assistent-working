@@ -246,6 +246,7 @@ function removeBill(billId) {
 }
 
 // Update the summary card at the bottom
+// Update the summary card at the bottom AND sync with global header
 function updateSummary() {
   const totalUnits = window.bills.reduce(
     (sum, bill) => sum + (bill.total_annual_consumption || 0),
@@ -257,6 +258,7 @@ function updateSummary() {
   let totalBillUnits = 0;
 
   window.bills.forEach((bill) => {
+    // FIX: Using bill_amount consistently
     if (bill.bill_amount > 0 && bill.current_units > 0) {
       totalBillAmounts += bill.bill_amount;
       totalBillUnits += bill.current_units;
@@ -273,26 +275,36 @@ function updateSummary() {
   const avgCostPerUnit =
     totalBillUnits > 0 ? totalBillAmounts / totalBillUnits : 0;
 
-  // Update UI Elements
+  // Update UI Elements locally
   const unitsElem = document.getElementById("total_annual_units");
   if(unitsElem) unitsElem.textContent = `${totalUnits.toLocaleString("en-IN", { maximumFractionDigits: 0 })} kWh`;
   const unitsElemS1 = document.getElementById("s1_annual_units_display");
-  if(unitsElemS1) unitsElemS1.textContent = unitsElem.textContent;
+  if(unitsElemS1) unitsElemS1.textContent = unitsElem ? unitsElem.textContent : "";
   
   const costElem = document.getElementById("total_annual_cost");
   if(costElem) costElem.textContent = `₹${totalAnnualCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const costElemS1 = document.getElementById("s1_annual_cost_display");
-  if(costElemS1) costElemS1.textContent = costElem.textContent;
+  if(costElemS1) costElemS1.textContent = costElem ? costElem.textContent : "";
   
   const countElem = document.getElementById("bill_count");
   if(countElem) countElem.textContent = window.bills.length;
 
-  // Update the "Avg Cost / Unit" field
   const avgCostElem = document.getElementById("avg_cost_per_unit");
   if (avgCostElem) {
     avgCostElem.textContent = `₹${avgCostPerUnit.toFixed(2)}`;
-  const avgCostElemS1 = document.getElementById("s1_avg_rate_display");
-  if (avgCostElemS1) avgCostElemS1.textContent = avgCostElem.textContent;
+    const avgCostElemS1 = document.getElementById("s1_avg_rate_display");
+    if (avgCostElemS1) avgCostElemS1.textContent = avgCostElem.textContent;
+  }
+
+  // --- NEW: CRITICAL REAL-TIME SYNC ---
+  // Force the top nav bar and physics engine to recalculate instantly based on new bill data
+  if (typeof scheduleHeaderUpdate === "function") {
+    scheduleHeaderUpdate(); 
+  }
+  
+  // If the user has a target percentage set, re-run the panel layout math
+  if (typeof propagateLiveUpdates === "function" && window.calculatedPanelCount > 0) {
+    propagateLiveUpdates(window.calculatedPanelCount);
   }
 }
 

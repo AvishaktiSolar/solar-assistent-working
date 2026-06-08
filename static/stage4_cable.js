@@ -32,27 +32,10 @@
  *    MCB Rating: I_b ≤ I_n ≤ (I_t × Correction Factors)
  *    Standard Rule: Select next standard MCB size ≥ (I_b × 1.25)
  *    ELCB/RCCB: Rating ≥ I_n, Sensitivity 30mA (life safety) or 100mA (fire)
- * 
- * 6. SHORT CIRCUIT (Safety Check - Fault Current)
- *    Minimum Area: A = √(I_sc² × t) / k
- *    Where: I_sc = Fault Current (13.5 kA typical), t = Trip time (0.1s)
- *           k = Material constant (Copper: 115, Aluminum: 76)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     loadACCablesS4();
-    const s4Sel = document.getElementById('sel_ac_cable_s4');
-    if (s4Sel) {
-        s4Sel.addEventListener('change', () => {
-            syncStage4CableToStage3();
-        });
-    }
-    const s4McbSel = document.getElementById('sel_ac_mcb_s4');
-    if (s4McbSel) {
-        s4McbSel.addEventListener('change', () => {
-            syncStage4McbToStage3();
-        });
-    }
     const autoChk = document.getElementById('s4_auto_coord_chk');
     if (autoChk) {
         const saved = window.projectData?.stage4?.autoCoordination;
@@ -60,7 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Dependency chain: any core input change recalculates engineering instantly.
-    ['s4_voltage', 's4_pf', 's4_floors_disp', 'len_horizontal', 's4_len_total', 's4_phase', 's4_tot_power'].forEach(id => {
+    [
+        's4_voltage', 's4_pf', 's4_floors_disp', 'len_horizontal', 's4_len_total', 's4_phase', 's4_tot_power'
+    ].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', () => calculateEngineering());
     });
@@ -156,46 +141,7 @@ function isMcbOrMccb(item) {
     return sub.includes('MCB') || sub.includes('MCCB') || name.includes(' MCB') || name.includes(' MCCB');
 }
 
-function setClueBox(clues, recommendation) {
-    const clueBox = document.getElementById('s4_clue_box');
-    if (!clueBox) return;
 
-    if (!Array.isArray(clues) || clues.length === 0) {
-        clueBox.style.display = 'none';
-        clueBox.innerHTML = '';
-        return;
-    }
-
-    const listHtml = clues.map(c => `<li>${c}</li>`).join('');
-    const canApply = recommendation && recommendation.cableIndex > 0 && recommendation.mcbIndex > 0;
-    const actionsHtml = canApply
-        ? `<div class="s4-clue-actions"><button type="button" class="s4-clue-btn" id="btn_s4_apply_suggestion">Apply Suggested Pair</button></div>`
-        : '';
-
-    clueBox.innerHTML = `
-        <div class="s4-clue-title">Correction Clues</div>
-        <ul class="s4-clue-list">${listHtml}</ul>
-        ${actionsHtml}
-    `;
-    clueBox.style.display = 'block';
-
-    if (canApply) {
-        const btn = document.getElementById('btn_s4_apply_suggestion');
-        if (btn) {
-            btn.onclick = () => {
-                const cableSel = document.getElementById('sel_ac_cable_s4');
-                const mcbSel = document.getElementById('sel_ac_mcb_s4');
-                if (!cableSel || !mcbSel) return;
-
-                cableSel.selectedIndex = recommendation.cableIndex;
-                mcbSel.selectedIndex = recommendation.mcbIndex;
-                syncStage4CableToStage3();
-                syncStage4McbToStage3();
-                calculateEngineering();
-            };
-        }
-    }
-}
 
 function getSelectedS4CableDetails() {
     const sel = document.getElementById('sel_ac_cable_s4');
@@ -217,6 +163,45 @@ function getSelectedS4CableDetails() {
     const size = sizeFromSpec || inferredSize || '';
     const rate = safeNum(item?.rate, 0);
     return { name, size, rate };
+}
+
+function selectS4CableItem(cableItem) {
+    const makeSel = document.getElementById('sel_ac_cable_make_s4');
+    const cableSel = document.getElementById('sel_ac_cable_s4');
+    if (!cableItem || !cableSel) return false;
+
+    const cableName = cableItem?.name || '';
+    const make = getCableMake(cableItem);
+    if (makeSel && makeSel.value !== make) {
+        makeSel.value = make;
+        buildCableSizeDropdown(make, cableName);
+    }
+
+    const idx = findCableOptionIndex(cableSel, cableName);
+    if (idx <= 0) return false;
+    cableSel.selectedIndex = idx;
+    return true;
+}
+
+function selectS4McbItem(mcbItem) {
+    const mcbSel = document.getElementById('sel_ac_mcb_s4');
+    if (!mcbItem || !mcbSel) return false;
+
+    const idx = findProtectionOptionIndex(mcbSel, mcbItem?.name || '');
+    if (idx <= 0) return false;
+    mcbSel.selectedIndex = idx;
+    return true;
+}
+
+function applyS4Recommendation(recommendation) {
+    if (!recommendation) return false;
+    const cableOk = selectS4CableItem(recommendation.cableItem);
+    const mcbOk = selectS4McbItem(recommendation.mcbItem);
+    if (!cableOk || !mcbOk) return false;
+
+    syncStage4CableToStage3();
+    syncStage4McbToStage3();
+    return true;
 }
 
 function parseSqmm(name) {
@@ -266,6 +251,10 @@ function dcPower(panelCount, panelWattage) {
 function requiredMcbCurrent(iMax) {
     return safeNum(iMax, 0) * 1.25;
 }
+
+
+
+
 
 function validateEngineeringInputs(powerKw, cableLength, phaseRaw, voltage, pf) {
     const alerts = [];
@@ -318,44 +307,76 @@ function getResolvedMultiInverters() {
 }
 
 function getSiteImax(totalCapKw, voltage, pf, phase) {
-    const s2 = window.projectData?.strings || {};
     const multi = getResolvedMultiInverters();
-    const invCount = parseInt(s2.inverterCount, 10) || 1;
+    let sumImax = 0;
+    let sumKw = 0;
+    let breakdown = [];
 
-    // Primary: engineering formula from core dependencies (kW, V, phase, PF).
-    const byFormula = calcIb(totalCapKw, voltage, pf, phase);
-    if (byFormula > 0) {
-        return { iMax: byFormula, source: 'formula' };
-    }
-
-    // Fallback: source current from materials.json specs (output_current/imax).
+    // 1. Multiple Inverters Logic (Matches Excel INV 1, INV 2, etc.)
     if (Array.isArray(multi) && multi.length > 0) {
-        let sumImax = 0;
-        let hasAtLeastOneSpecCurrent = false;
-
-        multi.forEach(unit => {
+        multi.forEach((unit, idx) => {
             const qty = safeNum(unit?.qty, 1);
-            // Source inverter electrical specs from materials.json catalog first.
+            
+            // Source inverter electrical specs from materials database
             const materialInv = resolveInverterFromMaterials(unit);
             const specs = materialInv?.specifications || unit?.inverter?.specifications || {};
-            const outI = safeNum(specs.output_current, 0) || safeNum(specs.imax, 0);
-            if (outI > 0) {
-                hasAtLeastOneSpecCurrent = true;
-                sumImax += outI * qty;
+            
+            const acKw = safeNum(specs.ac_power_kw, 0);
+            let outI = safeNum(specs.output_current, 0) || safeNum(specs.imax, 0);
+            
+            // Fallback: If spec sheet doesn't have Imax, calculate it via engineering formula
+            if (outI <= 0 && acKw > 0) {
+                outI = calcIb(acKw, voltage, pf, phase);
             }
+
+            sumImax += (outI * qty);
+            sumKw += (acKw * qty);
+            
+            breakdown.push({
+                label: `INV ${idx + 1}`,
+                name: unit?.inverter?.name || materialInv?.name || 'Generic Inverter',
+                qty: qty,
+                kw: acKw,
+                imax: outI
+            });
         });
-
-        if (sumImax > 0) return { iMax: sumImax, source: hasAtLeastOneSpecCurrent ? 'specs-multi' : 'specs-missing' };
+        
+        return { 
+            iMax: sumImax, 
+            totalKw: sumKw, 
+            breakdown: breakdown, 
+            source: 'specs-multi' 
+        };
     }
 
+    // 2. Single Inverter Fallback (If no multi-inverters were added)
+    const s2 = window.projectData?.strings || {};
+    const invCount = parseInt(s2.inverterCount, 10) || 1;
     const model = s2.inverterModel || window.projectData?.stage2?.inverterModel;
-    const inv = matchInverterByName(model);
-    const outI = safeNum(inv?.specifications?.output_current, 0) || safeNum(inv?.specifications?.imax, 0);
-    if (outI > 0) {
-        return { iMax: outI * invCount, source: 'specs-single' };
+    const materialInv = matchInverterByName(model);
+    
+    let singleAcKw = totalCapKw / invCount;
+    let outI = safeNum(materialInv?.specifications?.output_current, 0) || safeNum(materialInv?.specifications?.imax, 0);
+    
+    // Fallback formula if spec missing
+    if (outI <= 0) {
+        outI = calcIb(singleAcKw, voltage, pf, phase);
     }
 
-    return { iMax: 0, source: 'missing' };
+    const fallbackImax = outI * invCount;
+    
+    return { 
+        iMax: fallbackImax > 0 ? fallbackImax : calcIb(totalCapKw, voltage, pf, phase), 
+        totalKw: totalCapKw, 
+        breakdown: [{ 
+            label: 'INV 1', 
+            name: model || 'Primary Inverter', 
+            qty: invCount, 
+            kw: singleAcKw, 
+            imax: outI 
+        }],
+        source: outI > 0 ? 'specs-single' : 'formula' 
+    };
 }
 
 function getCableProps(item) {
@@ -443,6 +464,8 @@ function buildCableSizeDropdown(selectedMake = '', selectedCableName = '') {
 
 window.handleCableMakeChangeS4 = function() {
     const makeSel = document.getElementById('sel_ac_cable_make_s4');
+    const autoChk = document.getElementById('s4_auto_coord_chk');
+    if (autoChk) autoChk.checked = false;
     const selectedMake = makeSel?.value || '';
     buildCableSizeDropdown(selectedMake, '');
     calculateEngineering();
@@ -455,14 +478,13 @@ function evaluateCable(item, ctx) {
     const pLossPct = ctx.pInvW > 0 ? (((ctx.ib * ctx.ib) * (rKm / 1000) * ctx.totalLen) / ctx.pInvW) * 100 : 0;
     const deratedCCC = ccc * ctx.tf * ctx.gf * ctx.ifac;
     const vdropOk = vDropPct <= ctx.maxVdrop;
-    const plossOk = pLossPct <= ctx.maxPloss;
-    const cccOk = deratedCCC >= ctx.safetyCurrent;
-    const mcbOk = ctx.mcb <= 0 || (ctx.mcb >= ctx.mcbMin && ctx.mcb <= deratedCCC);
+    const plossOk = pLossPct < ctx.maxPloss;
+    const cccOk = deratedCCC > ctx.safetyCurrent;
+    const mcbSelectionOk = ctx.mcb <= 0 || (ctx.mcb >= ctx.mcbMin && ctx.mcb < ccc);
+    const finalProtectionOk = ctx.mcb <= 0 || ctx.mcb < deratedCCC;
+    const mcbOk = mcbSelectionOk && finalProtectionOk;
 
-    const sq = parseSqmm(item?.name);
-    const scOk = ctx.minArea > 0 && sq > 0 ? (sq >= ctx.minArea) : true;
-
-    return { vDropPct, pLossPct, deratedCCC, vdropOk, plossOk, cccOk, mcbOk, scOk };
+    return { vDropPct, pLossPct, deratedCCC, vdropOk, plossOk, cccOk, mcbOk, mcbSelectionOk, finalProtectionOk, ccc };
 }
 
 function getCoordinatedRecommendation() {
@@ -485,11 +507,6 @@ function getCoordinatedRecommendation() {
     const tf = safeNum(document.getElementById('s4_temp_factor')?.value, 1);
     const gf = safeNum(document.getElementById('s4_group_factor')?.value, 1);
 
-    const isc = safeNum(document.getElementById('s4_isc')?.value, 0);
-    const tripTime = safeNum(document.getElementById('s4_trip_time')?.value, 0);
-    const kFactor = safeNum(document.getElementById('s4_k_factor')?.value, 0);
-    const minArea = (kFactor > 0 && tripTime > 0) ? (isc * Math.sqrt(tripTime)) / kFactor : 0;
-
     const mcbCandidates = [];
     for (let i = 1; i < mcbSel.options.length; i++) {
         const raw = mcbSel.options[i].value;
@@ -504,17 +521,15 @@ function getCoordinatedRecommendation() {
     }
     mcbCandidates.sort((a, b) => a.rating - b.rating);
 
-    const cableCandidates = [];
-    for (let i = 1; i < cableSel.options.length; i++) {
-        const raw = cableSel.options[i].value;
-        if (!raw) continue;
-        try {
-            const item = JSON.parse(raw);
-            cableCandidates.push({ index: i, item, sq: parseSqmm(item?.name) });
-        } catch {
-            continue;
-        }
-    }
+    const catalog = Array.isArray(s4CableCatalog) && s4CableCatalog.length > 0
+        ? s4CableCatalog
+        : Array.from(cableSel.options)
+            .slice(1)
+            .map(opt => {
+                try { return JSON.parse(opt.value); } catch { return null; }
+            })
+            .filter(Boolean);
+    const cableCandidates = catalog.map(item => ({ item, sq: parseSqmm(item?.name) }));
     cableCandidates.sort((a, b) => {
         const as = a.sq || Number.MAX_SAFE_INTEGER;
         const bs = b.sq || Number.MAX_SAFE_INTEGER;
@@ -534,21 +549,21 @@ function getCoordinatedRecommendation() {
         ifac: 1,
         safetyCurrent: iFinal,
         mcb: 0,
-        mcbMin: iFinal,
-        minArea,
+        mcbMin: iFinal
     };
 
     for (const cable of cableCandidates) {
         const ev = evaluateCable(cable.item, baseCtx);
-        if (!(ev.cccOk && ev.vdropOk && ev.plossOk && ev.scOk)) continue;
+        if (!(ev.cccOk && ev.vdropOk && ev.plossOk)) continue;
 
-        const coordinatedMcb = mcbCandidates.find(m => m.rating >= iFinal && m.rating < getCableProps(cable.item).ccc);
+        const coordinatedMcb = mcbCandidates.find(m => m.rating >= iFinal && m.rating < ev.ccc && m.rating < ev.deratedCCC);
         if (!coordinatedMcb) continue;
 
         return {
-            cableIndex: cable.index,
+            cableIndex: findCableOptionIndex(cableSel, cable.item?.name || ''),
             cableItem: cable.item,
-            cableName: cableSel.options[cable.index]?.text || cable.item?.name || '',
+            cableName: getCableSizeText(cable.item),
+            cableMake: getCableMake(cable.item),
             mcbIndex: coordinatedMcb.index,
             mcbItem: coordinatedMcb.item,
             mcbName: mcbSel.options[coordinatedMcb.index]?.text || coordinatedMcb.item?.name || '',
@@ -710,13 +725,10 @@ function refreshStage4UI() {
     const s3 = window.projectData?.stage3 || {};
 
     if (s1 && s2) {
-        // Electrical Data
+        // 1. Gather initial electrical properties
         const invModel = s2.inverterModel || stage2.inverterModel || 'Standard Inv';
         const multi = getResolvedMultiInverters();
-        const totalInvUnits = Array.isArray(multi)
-            ? multi.reduce((sum, unit) => sum + safeNum(unit?.qty, 0), 0)
-            : 0;
-
+        
         const totalCapFromMulti = Array.isArray(multi)
             ? multi.reduce((sum, unit) => {
                 const specs = unit?.inverter?.specifications || {};
@@ -731,23 +743,10 @@ function refreshStage4UI() {
                 0
             );
 
-        const invCount = totalInvUnits > 0
-            ? totalInvUnits
-            : (parseInt(s2.inverterCount, 10) || parseInt(stage2.inverterCount, 10) || 1);
         const phaseFromBills = inferPhaseFromBills(s1.consumption);
         const phase = normalizePhase(phaseFromBills || s1.phase || s2.phase || s2.inverterPhase);
 
-        let capPerInv = invCount > 0 ? (totalCapKw / invCount) : 0;
-        if (Array.isArray(multi) && multi.length > 0) {
-            let maxKw = 0;
-            multi.forEach(unit => {
-                const specs = unit?.inverter?.specifications || {};
-                const acKw = safeNum(specs.ac_power_kw, 0);
-                if (acKw > maxKw) maxKw = acKw;
-            });
-            if (maxKw > 0) capPerInv = maxKw;
-        }
-
+        // 2. Safely initialize Voltage and Power Factor if empty
         const vInput = document.getElementById('s4_voltage');
         if (vInput && (!vInput.value || safeNum(vInput.value, 0) <= 0)) {
             vInput.value = phase === '1-Phase' ? 230 : 415;
@@ -759,51 +758,61 @@ function refreshStage4UI() {
 
         const voltage = safeNum(document.getElementById('s4_voltage')?.value, phase === '1-Phase' ? 230 : 415);
         const pf = safeNum(document.getElementById('s4_pf')?.value, 0.99);
-        const iMax = getSiteImax(totalCapKw, voltage, pf, phase).iMax;
-        const panelCount = safeNum(
-            s1.panelCount
-            ?? stage2.panelCount
-            ?? window.projectData?.design?.panelCount,
-            0
-        );
-        const panelWattage = safeNum(
-            s1.panelWattage
-            ?? stage2.panelWattage
-            ?? window.projectData?.design?.panelWattage,
-            0
-        );
-        const generatedDcKwp = (panelCount * panelWattage) / 1000;
-        const modelLabel = Array.isArray(multi) && multi.length > 0
-            ? `Multi Inverter (${invCount} units)`
-            : invModel;
-        const capacityLabelKw = Array.isArray(multi) && multi.length > 0 ? totalCapKw : capPerInv;
+        
+        // 3. Process the Inverter Data exactly like the Excel Sheet
+        const siteData = getSiteImax(totalCapKw, voltage, pf, phase);
+        const iMax = siteData.iMax;
+        const actualTotalKw = siteData.totalKw > 0 ? siteData.totalKw : totalCapKw;
 
-        document.getElementById('s4_inv_model').value = modelLabel;
-        document.getElementById('s4_inv_cap').value = capacityLabelKw.toFixed(2);
-        document.getElementById('s4_inv_current').value = iMax.toFixed(2);
-        document.getElementById('s4_tot_power').value = totalCapKw.toFixed(2);
-        document.getElementById('s4_safety_current').value = (iMax * 1.25).toFixed(2);
-        document.getElementById('s4_phase').value = phase;
-        document.getElementById('s4_panel_count').value = panelCount;
-        document.getElementById('s4_panel_wattage').value = panelWattage;
-        const dcCapEl = document.getElementById('s4_dc_capacity');
-        if (dcCapEl) dcCapEl.value = (panelCount * panelWattage).toFixed(0);
+        // 4. Build the Visual List of Inverters (INV 1, INV 2, etc.) in the UI
+        const listContainer = document.getElementById('s4_inverter_list');
+        if (listContainer) {
+            let html = '';
+            if (siteData.breakdown && siteData.breakdown.length > 0) {
+                siteData.breakdown.forEach(inv => {
+                    html += `
+                    <div style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px dashed #cbd5e1;">
+                        <span><b>${inv.label}:</b> ${inv.name} ${inv.qty > 1 ? `(x${inv.qty})` : ''}</span>
+                        <span style="color:#0284c7; font-weight:600;">${(inv.kw * inv.qty).toFixed(2)} kW | ${(inv.imax * inv.qty).toFixed(2)} A</span>
+                    </div>`;
+                });
+            } else {
+                html = '<div>No inverters mapped.</div>';
+            }
+            listContainer.innerHTML = html;
+        }
+
+        // 5. Calculate DC Panel Details
+        const panelCount = safeNum(s1.panelCount ?? stage2.panelCount ?? window.projectData?.design?.panelCount, 0);
+        const panelWattage = safeNum(s1.panelWattage ?? stage2.panelWattage ?? window.projectData?.design?.panelWattage, 0);
+        const generatedDcKwp = (panelCount * panelWattage) / 1000;
+
+        // 6. Update all UI elements (Visible and Hidden Data Store fields)
+        const updateVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        
+        updateVal('s4_inv_model', Array.isArray(multi) && multi.length > 0 ? 'Multi Inverter' : invModel);
+        updateVal('s4_inv_cap', actualTotalKw.toFixed(2));
+        updateVal('s4_tot_power', actualTotalKw.toFixed(2));
+        updateVal('s4_inv_current', iMax.toFixed(2));
+        updateVal('s4_safety_current', (iMax * 1.25).toFixed(2)); // Excel Safety Factor mapping
+        updateVal('s4_phase', phase);
+        updateVal('s4_panel_count', panelCount);
+        updateVal('s4_panel_wattage', panelWattage);
+        updateVal('s4_dc_capacity', (panelCount * panelWattage).toFixed(0));
+
+        // 7. Persist global project data
         if (!window.projectData.stage4) window.projectData.stage4 = {};
         window.projectData.stage4.panelCountUsed = panelCount;
         window.projectData.stage4.panelWattageUsed = panelWattage;
         window.projectData.stage4.generatedDcKwp = Number.isFinite(generatedDcKwp) ? generatedDcKwp.toFixed(2) : '0.00';
-        window.projectData.stage4.inverterAcTotalKw = Number.isFinite(totalCapKw) ? totalCapKw.toFixed(2) : '0.00';
+        window.projectData.stage4.inverterAcTotalKw = Number.isFinite(actualTotalKw) ? actualTotalKw.toFixed(2) : '0.00';
 
-        // Lengths
+        // 8. Lengths & Distances
         const floors = safeNum(
-            s1.site?.location?.floors
-            ?? window.projectData?.site?.location?.floors
-            ?? s1.location?.floors
-            ?? s1.floors
-            ?? s1.numFloors,
+            s1.site?.location?.floors ?? window.projectData?.site?.location?.floors ?? s1.location?.floors ?? s1.floors ?? s1.numFloors,
             1
         );
-        document.getElementById('s4_floors_disp').value = floors;
+        updateVal('s4_floors_disp', floors);
 
         // Populate meter distance from Stage 1 if available
         const lenInput = document.getElementById('len_horizontal');
@@ -811,26 +820,28 @@ function refreshStage4UI() {
             lenInput.value = s1.meterDistance;
         }
 
-        // Sync Cable Selection
+        // 9. Sync Dropdowns (Cable & MCB)
         const sel = document.getElementById('sel_ac_cable_s4');
-        if (sel.selectedIndex <= 0 && s3.ac && s3.ac.cable) {
+        if (sel && sel.selectedIndex <= 0 && s3.ac && s3.ac.cable) {
             syncDropdown(s3.ac.cable.item);
         }
 
-        // Sync MCB
         const mcbSel = document.getElementById('sel_ac_mcb_s4');
         if (mcbSel && mcbSel.selectedIndex <= 0 && s3.ac?.mcb?.item) {
             syncMcbDropdown(s3.ac.mcb.item);
         }
+        
         let mcbVal = null;
         if (mcbSel?.value) {
             try { mcbVal = JSON.parse(mcbSel.value); } catch { mcbVal = null; }
         }
-        document.getElementById('s4_mcb_rating').value = parseProtectionRating(mcbVal || s3.ac?.mcb?.item || 0);
+        updateVal('s4_mcb_rating', parseProtectionRating(mcbVal || s3.ac?.mcb?.item || 0));
 
-        // Run Calcs
+        // 10. Execute the core math and validations
         calculateEngineering();
-        calcCivilBlocks();
+        if (typeof calcCivilBlocks === 'function') {
+            calcCivilBlocks();
+        }
     }
 }
 
@@ -923,29 +934,51 @@ function syncStage4McbToStage3() {
 // ==================================================
 //  PART A: ELECTRICAL CALCULATION (With Visual Validation)
 // ==================================================
-window.calculateEngineering = function() {
+
+// Added manual trigger logic so alerts show up when users click the dropdowns
+window.handleManualSelection = function(type = '') {
+    const activeId = document.activeElement?.id || '';
+    if (type === 'cable' || activeId === 'sel_ac_cable_s4') {
+        syncStage4CableToStage3();
+    }
+    if (type === 'mcb' || activeId === 'sel_ac_mcb_s4') {
+        syncStage4McbToStage3();
+    }
+    calculateEngineering(true);
+};
+
+window.calculateEngineering = function(isManualChange = false) {
+    // 1. Manual Override Logic
+    // If the user manually changes a dropdown, turn off auto-coordination so alerts can show
+    const autoChk = document.getElementById('s4_auto_coord_chk');
+    if (isManualChange && autoChk && autoChk.checked) {
+        autoChk.checked = false; 
+    }
+    const autoCoord = autoChk?.checked !== false;
+
     const panelCount = safeNum(document.getElementById('s4_panel_count')?.value, 0);
     const panelWattage = safeNum(document.getElementById('s4_panel_wattage')?.value, 0);
     const dcCapacity = dcPower(panelCount, panelWattage);
     const dcEl = document.getElementById('s4_dc_capacity');
     if (dcEl) dcEl.value = dcCapacity.toFixed(0);
 
-    // 1. Length Calculation: L = (F * H) + R
+    // 2. Length Calculation: L = (F * H) + R
     const floors = safeNum(document.getElementById('s4_floors_disp')?.value, 1);
     const floorH = safeNum(document.getElementById('s4_floor_height')?.value, 4.27);
     const vert = floors * floorH;
-    document.getElementById('s4_vert_calc').value = vert.toFixed(2);
+    const vertEl = document.getElementById('s4_vert_calc');
+    if (vertEl) vertEl.value = vert.toFixed(2);
 
     const horiz = safeNum(document.getElementById('len_horizontal')?.value, 20);
     const autoLen = vert + horiz;
     const autoLenInput = document.getElementById('s4_len_auto');
     if (autoLenInput) autoLenInput.value = autoLen.toFixed(2);
 
-    const autoChk = document.getElementById('s4_auto_len_chk');
+    const autoLenChk = document.getElementById('s4_auto_len_chk');
     const lenTotalEl = document.getElementById('s4_len_total');
     let totalLen = safeNum(lenTotalEl?.value, autoLen);
 
-    if (autoChk?.checked) {
+    if (autoLenChk?.checked) {
         totalLen = autoLen;
         if (lenTotalEl) {
             lenTotalEl.value = totalLen.toFixed(2);
@@ -957,34 +990,37 @@ window.calculateEngineering = function() {
         totalLen = safeNum(lenTotalEl.value, autoLen);
     }
 
-    // 2. Circuit Demand
+    // 3. Circuit Demand
     const phase = normalizePhase(document.getElementById('s4_phase')?.value);
     const voltage = safeNum(document.getElementById('s4_voltage')?.value, phase === '1-Phase' ? 230 : 415);
     const pf = safeNum(document.getElementById('s4_pf')?.value, 0.99);
     const totalPowerKw = safeNum(document.getElementById('s4_tot_power')?.value, 0);
+    
     const iInfo = getSiteImax(totalPowerKw, voltage, pf, phase);
     const ib = iInfo.iMax;
-    document.getElementById('s4_inv_current').value = ib.toFixed(2);
+    const invCurrentEl = document.getElementById('s4_inv_current');
+    if (invCurrentEl) invCurrentEl.value = ib.toFixed(2);
+    
     const iFinal = requiredMcbCurrent(ib);
-    document.getElementById('s4_safety_current').value = iFinal.toFixed(2);
-    const autoCoord = document.getElementById('s4_auto_coord_chk')?.checked !== false;
+    const safetyEl = document.getElementById('s4_safety_current');
+    if (safetyEl) safetyEl.value = iFinal.toFixed(2) + ' A';
+
     if (!window.projectData) window.projectData = {};
     if (!window.projectData.stage4) window.projectData.stage4 = {};
     window.projectData.stage4.autoCoordination = autoCoord;
 
-    // 3. Auto coordination loop (Cable -> MCB -> check MCB < Cable CCC)
+    // 4. Auto coordination loop
     const recommendation = getCoordinatedRecommendation();
     s4LastRecommendation = recommendation;
     const sel = document.getElementById('sel_ac_cable_s4');
     const mcbSel = document.getElementById('sel_ac_mcb_s4');
-    if (autoCoord && recommendation && !s4SelectionLock) {
+    
+    if (autoCoord && recommendation && !s4SelectionLock && !isManualChange) {
         let changed = false;
-        if (sel && recommendation.cableIndex > 0 && sel.selectedIndex !== recommendation.cableIndex) {
-            sel.selectedIndex = recommendation.cableIndex;
+        if (sel && recommendation.cableItem && selectS4CableItem(recommendation.cableItem)) {
             changed = true;
         }
-        if (mcbSel && recommendation.mcbIndex > 0 && mcbSel.selectedIndex !== recommendation.mcbIndex) {
-            mcbSel.selectedIndex = recommendation.mcbIndex;
+        if (mcbSel && recommendation.mcbItem && selectS4McbItem(recommendation.mcbItem)) {
             changed = true;
         }
         if (changed) {
@@ -995,10 +1031,11 @@ window.calculateEngineering = function() {
         }
     }
 
-    // 4. Final selected cable data
+    // 5. Final selected cable data
     let rKm = 2.44;
     let ccc = 70;
     let cableItem = null;
+    const hasCableSelected = !!sel?.value;
     if (sel?.value) {
         try {
             cableItem = JSON.parse(sel.value);
@@ -1010,52 +1047,70 @@ window.calculateEngineering = function() {
         }
     }
     syncStage4CableToStage3();
-    if (!window.projectData) window.projectData = {};
-    if (!window.projectData.stage4) window.projectData.stage4 = {};
     window.projectData.stage4.totalLength = totalLen.toFixed(2);
-    document.getElementById('s4_cable_r').value = rKm;
-    document.getElementById('s4_cable_ccc').value = ccc;
+    
+    const rEl = document.getElementById('s4_cable_r');
+    if (rEl) rEl.value = rKm;
+    const cccEl = document.getElementById('s4_cable_ccc');
+    if (cccEl) cccEl.value = ccc;
 
-    // 5. Ampacity (Thermal)
+    // 6. Ampacity (Thermal)
     const tf = safeNum(document.getElementById('s4_temp_factor')?.value, 1);
     const gf = safeNum(document.getElementById('s4_group_factor')?.value, 1);
     const adf = tf * gf;
     const deratedCCC = ccc * adf;
     const reqIt = adf > 0 ? (ib / adf) : 0;
-    document.getElementById('s4_derated_ccc').value = deratedCCC.toFixed(2);
-    document.getElementById('s4_req_it').value = reqIt.toFixed(2);
+    
+    const dcccEl = document.getElementById('s4_derated_ccc');
+    if (dcccEl) dcccEl.value = deratedCCC.toFixed(2);
+    const reqItEl = document.getElementById('s4_req_it');
+    if (reqItEl) reqItEl.value = reqIt.toFixed(2);
     const adfEl = document.getElementById('s4_adf');
     if (adfEl) adfEl.value = adf.toFixed(3);
     const rMEl = document.getElementById('s4_cable_r_m');
     if (rMEl) rMEl.value = (rKm / 1000).toFixed(6);
 
-    // 6. Power loss (Excel formula)
+    // 7. Voltage Drop
+    const phaseFactors = getPhaseFactors(phase);
+    const vdropFactor = phaseFactors.vdropFactor;
+    const vDropVolt = (vdropFactor * ib * totalLen * rKm) / 1000;
+    const vDropPct = voltage > 0 ? (vDropVolt / voltage) * 100 : 0;
+    
+    const vdVoltEl = document.getElementById('s4_vdrop_v');
+    if (vdVoltEl) vdVoltEl.value = vDropVolt.toFixed(2) + ' V';
+    const vdPctEl = document.getElementById('s4_vdrop_pct');
+    if (vdPctEl) vdPctEl.value = vDropPct.toFixed(2) + ' %';
+
+    // 8. Power loss
     const rOhmPerM = rKm / 1000;
     const invPowerW = totalPowerKw * 1000;
     const pLossPct = invPowerW > 0 ? (((ib * ib) * rOhmPerM * totalLen) / invPowerW) * 100 : 0;
-    document.getElementById('s4_ploss_pct').value = pLossPct.toFixed(2) + ' %';
-    document.getElementById('s4_vdrop_v').value = '-';
-    document.getElementById('s4_vdrop_pct').value = '-';
+    const pLossEl = document.getElementById('s4_ploss_pct');
+    if (pLossEl) pLossEl.value = pLossPct.toFixed(2) + ' %';
 
-    // 7. MCB Validation
+    // 10. MCB Validation
     let mcbItem = null;
+    const hasMcbSelected = !!mcbSel?.value;
     if (mcbSel?.value) {
         try { mcbItem = JSON.parse(mcbSel.value); } catch { mcbItem = null; }
     }
     const mcb = parseProtectionRating(mcbItem || document.getElementById('s4_mcb_rating')?.value);
-    document.getElementById('s4_mcb_rating').value = mcb > 0 ? mcb : '';
+    const mcbRatingEl = document.getElementById('s4_mcb_rating');
+    if (mcbRatingEl) mcbRatingEl.value = mcb > 0 ? mcb : '';
     syncStage4McbToStage3();
 
-    // 8. Short Circuit Check
-    const isc = safeNum(document.getElementById('s4_isc')?.value, 0);
-    const tripTime = safeNum(document.getElementById('s4_trip_time')?.value, 0);
-    const kFactor = safeNum(document.getElementById('s4_k_factor')?.value, 0);
-    const minArea = (kFactor > 0 && tripTime > 0) ? (isc * Math.sqrt(tripTime)) / kFactor : 0;
-    document.getElementById('s4_min_area').value = minArea.toFixed(2);
+    // --- REAL-TIME VALIDATIONS ---
+    const isVdropOk = hasCableSelected && vDropPct <= 3.0;
+    const isPowerOk = hasCableSelected && pLossPct < 2.0;
+    const isCccOk = hasCableSelected && deratedCCC > iFinal;
+    const isMcbSelectionOk = hasMcbSelected && mcb > 0 && mcb >= iFinal && mcb < ccc;
+    const isFinalProtectionOk = hasMcbSelected && mcb > 0 && mcb < deratedCCC;
+    const isMcbOk = isMcbSelectionOk && isFinalProtectionOk;
 
-    // Helper to set status pills
+    // Helper to set HUD status pills
     const setStat = (id, condition, okText, failText) => {
         const el = document.getElementById(id);
+        if (!el) return condition;
         if (condition) {
             el.innerText = okText;
             el.className = 'status-pill status-ok';
@@ -1066,75 +1121,87 @@ window.calculateEngineering = function() {
         return condition;
     };
 
-    const isPowerOk = setStat('status_ploss', pLossPct < 2, 'Power Loss OK', 'Power Loss over 2%');
-    const isCccOk = setStat('status_ccc', deratedCCC > iFinal, 'Cable CCC is OK', 'Cable CCC is NOT OK');
-    const isMcbOk = setStat('status_mcb', (mcb > 0 && mcb >= iFinal && mcb < ccc), 'MCB Selection is OK', 'MCB Selection NOT OK');
-    setStat('status_vdrop', true, 'Live Update ON', 'Live Update ON');
-    setStat('status_sc', true, 'Excel Logic', 'Excel Logic');
+    setStat('status_ploss', isPowerOk, 'PWR OK', 'PWR HI');
+    setStat('status_vdrop', isVdropOk, 'V-DRP OK', 'V-DRP HI');
+    setStat('status_ccc', isCccOk, 'CCC OK', 'CCC LO');
+    setStat('status_mcb', isMcbOk, 'MCB OK', 'MCB ERR');
 
-    const clues = [];
+    // Input validation (store but don't block on compliance)
     const inputAlerts = validateEngineeringInputs(totalPowerKw, totalLen, phase, voltage, pf);
-    inputAlerts.forEach(a => clues.push(a));
-    if (totalPowerKw <= 0 && ib > 0) {
-        clues.push(`Total inverter AC power is 0. Check Stage 2 inverter AC kW mapping/material specs (ac_power_kw).`);
-    }
-    if (!isCccOk) {
-        clues.push(`DCCC (${deratedCCC.toFixed(2)}A) must be greater than Safety Current (${iFinal.toFixed(2)}A).`);
-    }
-    if (!isMcbOk) {
-        clues.push(`MCB must satisfy: Safety Current (${iFinal.toFixed(2)}A) <= MCB < CCC (${ccc.toFixed(2)}A).`);
-    }
-    if (!isPowerOk) {
-        clues.push(`Power loss is ${pLossPct.toFixed(2)}%, expected < 2.00%.`);
-    }
-    setClueBox(clues, recommendation);
 
-    // --- VISUAL HIGHLIGHTER ---
+    window.projectData.stage4.validation = {
+        isCompliant: hasCableSelected && hasMcbSelected && isPowerOk && isCccOk && isMcbOk && isVdropOk,
+        hasCableSelected,
+        hasMcbSelected,
+        isPowerOk,
+        isCccOk,
+        isMcbOk,
+        isVdropOk,
+        inputAlerts,
+        vDropPct: Number(vDropPct.toFixed(2)),
+        pLossPct: Number(pLossPct.toFixed(2)),
+        deratedCCC: Number(deratedCCC.toFixed(2)),
+        safetyCurrent: Number(iFinal.toFixed(2)),
+        mcbRating: mcb,
+        cableCcc: Number(ccc.toFixed(2)),
+        mcbSelectionOk: isMcbSelectionOk,
+        finalProtectionOk: isFinalProtectionOk
+    };
+    window.projectData.stage4.calculationFlow = [
+        'modules',
+        'dcCapacity',
+        'inverterCapacityAndCurrent',
+        'designCurrent',
+        'cableSelection',
+        'temperatureDerating',
+        'groupingDerating',
+        'deratedCableCurrentCarryingCapacity',
+        'cableCheck',
+        'mcbCoordination',
+        'voltageDropCheck',
+        'powerLossCheck'
+    ];
+
+    // --- VISUAL RED HIGHLIGHTER ---
     const cableSelect = document.getElementById('sel_ac_cable_s4');
     const cableContainer = document.getElementById('box_cable_select');
     const fixIcon = document.getElementById('icon_cable_fix');
     const msg = document.getElementById('cable_guide_msg');
 
-    cableSelect.classList.remove('input-error');
-    cableSelect.style.border = '2px solid #fbbf24';
-    cableContainer.style.backgroundColor = 'transparent';
+    if (cableSelect) {
+        cableSelect.classList.remove('input-error');
+        cableSelect.style.border = '2px solid #fbbf24';
+        if(cableContainer) cableContainer.style.backgroundColor = 'transparent';
 
-    if (!(isPowerOk && isCccOk && isMcbOk)) {
-        cableSelect.style.border = '2px solid #dc2626';
-        cableSelect.style.backgroundColor = '#fef2f2';
+        if (!(isPowerOk && isCccOk && isMcbOk && isVdropOk)) {
+            cableSelect.style.border = '2px solid #dc2626';
+            cableSelect.style.backgroundColor = '#fef2f2';
 
-        if (fixIcon) fixIcon.style.display = 'inline-block';
-        if (msg) {
-            const rec = recommendation || getCoordinatedRecommendation();
-            if (rec) {
-                msg.innerText = autoCoord
-                    ? `Suggested: ${rec.cableName} with ${rec.mcbName} (I_final ${rec.iFinal.toFixed(2)}A)`
-                    : `Manual mode: suggested ${rec.cableName} + ${rec.mcbName} (I_final ${rec.iFinal.toFixed(2)}A)`;
-            } else {
-                msg.innerText = 'No compliant cable+MCB pair found for current constraints.';
+            if (fixIcon) fixIcon.style.display = 'inline-block';
+            if (msg) {
+                if (autoCoord && !recommendation) {
+                    msg.innerText = 'No compliant pair found for this length!';
+                } else {
+                    msg.innerText = `Alert: Current selection is unsafe.`;
+                }
+                msg.style.color = '#dc2626';
+                msg.style.fontWeight = 'bold';
             }
-            msg.style.color = '#dc2626';
-            msg.style.fontWeight = 'bold';
-        }
-        cableSelect.classList.add('input-error');
-    } else {
-        cableSelect.style.border = '2px solid #22c55e';
-        cableSelect.style.backgroundColor = '#f0fdf4';
-
-        if (fixIcon) fixIcon.style.display = 'none';
-        if (msg) {
-            const rec = recommendation || getCoordinatedRecommendation();
-            if (autoCoord && rec) {
-                msg.innerText = `Auto selected: ${rec.cableName} + ${rec.mcbName} (I_final ${rec.iFinal.toFixed(2)}A)`;
-            } else {
-                msg.innerText = autoCoord
-                    ? 'Optimized coordinated pair selected (Cable + MCB).'
-                    : 'Manual selection is compliant.';
+            cableSelect.classList.add('input-error');
+        } else {
+            cableSelect.style.border = '2px solid #22c55e';
+            cableSelect.style.backgroundColor = '#f0fdf4';
+            if (fixIcon) fixIcon.style.display = 'none';
+            if (msg) {
+                if (autoCoord && recommendation) {
+                    msg.innerText = `Auto paired: ${recommendation.cableName}`;
+                } else {
+                    msg.innerText = 'Manual selection is fully compliant.';
+                }
+                msg.style.color = '#15803d';
+                msg.style.fontWeight = 'bold';
             }
-            msg.style.color = '#15803d';
-            msg.style.fontWeight = 'bold';
         }
-        setClueBox([], null);
     }
 };
 
@@ -1205,8 +1272,9 @@ window.calcCivilBlocks = function() {
 window.saveStage4 = function() {
     const sel = document.getElementById('sel_ac_cable_s4');
     const mcbSel = document.getElementById('sel_ac_mcb_s4');
+    const getValue = (id, fallback = '') => document.getElementById(id)?.value ?? fallback;
     const cableDetails = getSelectedS4CableDetails();
-    const cableName = cableDetails.name || sel.options[sel.selectedIndex]?.text;
+    const cableName = cableDetails.name || sel?.options?.[sel.selectedIndex]?.text || '';
     let mcbItem = null;
     if (mcbSel?.value) {
         try { mcbItem = JSON.parse(mcbSel.value); } catch { mcbItem = null; }
@@ -1224,13 +1292,36 @@ window.saveStage4 = function() {
         alert('Complete Stage 4 inputs before proceeding.');
         return;
     }
+    if (typeof calculateEngineering === 'function') calculateEngineering();
+    if (window.projectData?.stage4?.validation?.isCompliant === false && s4LastRecommendation) {
+        if (applyS4Recommendation(s4LastRecommendation) && typeof calculateEngineering === 'function') {
+            calculateEngineering();
+        }
+    }
+    
+    // Final validation check - only block on actual electrical failures
+    const validation = window.projectData?.stage4?.validation;
+    if (validation?.isCompliant === false) {
+        let failureReason = [];
+        if (!validation?.hasCableSelected) failureReason.push('Cable not selected');
+        if (!validation?.hasMcbSelected) failureReason.push('MCB not selected');
+        if (!validation?.isPowerOk) failureReason.push('Power loss exceeds 2%');
+        if (!validation?.isVdropOk) failureReason.push('Voltage drop exceeds 3%');
+        if (!validation?.isCccOk) failureReason.push('Cable ampacity insufficient');
+        if (!validation?.isMcbOk) failureReason.push('MCB coordination failed');
+        
+        alert('Stage 4 is not compliant:\n\n' + failureReason.join('\n') + '\n\nApply the suggested pair or correct the highlighted warnings before proceeding.');
+        return;
+    }
 
+    const existingStage4 = window.projectData.stage4 || {};
     window.projectData.stage4 = {
-        powerLossPct: document.getElementById('s4_ploss_pct').value,
-        voltageDropPct: document.getElementById('s4_vdrop_pct').value,
-        voltageDropV: document.getElementById('s4_vdrop_v').value,
-        requiredIt: document.getElementById('s4_req_it').value,
-        totalLength: document.getElementById('s4_len_total').value,
+        ...existingStage4,
+        powerLossPct: getValue('s4_ploss_pct', '0.00 %'),
+        voltageDropPct: getValue('s4_vdrop_pct', '0.00 %'),
+        voltageDropV: getValue('s4_vdrop_v', '0.00 V'),
+        requiredIt: getValue('s4_req_it', '0.00'),
+        totalLength: getValue('s4_len_total', '0'),
         cableSelected: cableName,
         cableSize: cableDetails.size || '',
         cableRate: cableDetails.rate || 0,

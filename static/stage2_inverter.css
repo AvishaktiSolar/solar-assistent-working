@@ -94,97 +94,6 @@
   box-shadow: 0 6px 16px rgba(14,165,233,0.2);
 }
 
-.manual-preview-box {
-  border: 1px dashed #cbd5e1;
-  background: #f8fafc;
-  border-radius: 8px;
-  padding: 10px;
-}
-
-.manual-preview-box.ok {
-  border-color: #86efac;
-  background: #f0fdf4;
-}
-
-.manual-preview-box.warn {
-  border-color: #fde68a;
-  background: #fffbeb;
-}
-
-.manual-preview-box.error {
-  border-color: #fca5a5;
-  background: #fef2f2;
-}
-
-.manual-string-status {
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 20px;
-  border: 1px solid transparent;
-}
-
-.manual-string-status.ok {
-  color: #166534;
-  background: #dcfce7;
-  border-color: #86efac;
-}
-
-.manual-string-status.warn {
-  color: #78350f;
-  background: #fef3c7;
-  border-color: #fcd34d;
-}
-
-.manual-string-status.error {
-  color: #991b1b;
-  background: #fee2e2;
-  border-color: #fca5a5;
-}
-
-
-#manual_string_builder {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 18px;
-  margin-top: 20px;
-}
-
-.manual-card-glass {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
-  background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(248,250,252,0.4) 100%);
-  border-radius: 14px;
-  padding: 18px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.manual-card-glass::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%);
-  animation: drift 6s ease-in-out infinite;
-}
-
-@keyframes drift {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(20px, -20px); }
-}
-
-.manual-card-glass:hover {
-  transform: translateY(-6px);
-  border-color: var(--p);
-  box-shadow: 0 20px 40px rgba(14,165,233,0.2), 0 0 40px rgba(14,165,233,0.1);
-  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(240,249,255,0.6) 100%);
-}
-
 .manual-string-input {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -209,23 +118,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-#added_inverters_list .info-box {
-    margin-bottom: 10px;
-    animation: fadeIn 0.3s ease-in-out;
-    position: relative;
-    padding-right: 40px; /* Space for the delete button */
-}
-
-/* Make the trash button look better */
-#added_inverters_list .text-danger {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    opacity: 0.6;
 }
 
 #added_inverters_list .text-danger:hover {
@@ -495,49 +387,51 @@ select:disabled, input:disabled {
 .half-width {
   flex: 1;
 }
-
-/* Hidden Section (for optimizer) */
-.hidden-section {
-  display: none;
-}
-
-/* =========================================
-   DESIGN OPTION CARDS (NEW)
-   ========================================= */
-.design-card {
-  border: 2px solid var(--brd);
-  padding: 12px;
-  border-radius: 10px;
+/* ── Quick Add Chips ──────────────────────────────────────── */
+.qa-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid;
   cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
+  transition: all 0.15s;
+  min-width: 54px;
+  line-height: 1.2;
 }
 
-.design-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.qa-chip:hover {
+  filter: brightness(0.92);
+  transform: translateY(-1px);
 }
 
-.design-card.selected {
-    border-color: var(--p) !important;
-    background: #f0f9ff !important;
-    /* Use outline instead of ring */
-    outline: 2px solid var(--p);
-    outline-offset: -2px; /* Pulls the outline inside the border */
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
-    transform: scale(1.02);
-    z-index: 10;
-}
-.design-card.invalid {
-  opacity: 0.6;
-  cursor: not-allowed;
+.qa-chip:active {
+  transform: scale(0.96);
 }
 
-.design-card.invalid:hover {
-  transform: none;
+.qa-chip-kw {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
 }
 
+.qa-chip-name {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+@keyframes chipFlash {
+  0%   { transform: scale(1);    filter: brightness(1); }
+  50%  { transform: scale(1.08); filter: brightness(0.85); }
+  100% { transform: scale(1);    filter: brightness(1); }
+}
+
+.qa-chip-flash {
+  animation: chipFlash 0.4s ease;
+}
 /* =========================================
    RIGHT PANEL REPORT SECTIONS
    ========================================= */
@@ -711,39 +605,6 @@ select:disabled, input:disabled {
   margin: 0 10px;
 }
 
-.sld-line.simple {
-  margin: 0 5px;
-}
-
-.sld-label {
-  position: absolute;
-  top: -25px;
-  background: white;
-  padding: 4px 10px;
-  border: 1px solid var(--brd);
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--p);
-  white-space: nowrap;
-}
-
-.arrow-line {
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(to right, var(--p) 0%, var(--p) 50%, transparent 50%, transparent 100%);
-  background-size: 10px 3px;
-  position: relative;
-}
-
-.arrow-line::after {
-  content: '▶';
-  position: absolute;
-  right: -5px;
-  top: -8px;
-  color: var(--p);
-  font-size: 0.8rem;
-}
 
 /* =========================================
    VISUAL DIAGRAM ENGINE (OPTIMIZER MODE)
@@ -764,155 +625,6 @@ select:disabled, input:disabled {
   padding-bottom: 15px;
   padding-top: 10px;
   gap: 0;
-}
-
-/* Scrollbar tweaks */
-.visual-scroll-container::-webkit-scrollbar { height: 6px; }
-.visual-scroll-container::-webkit-scrollbar-track { background: #f1f5f9; }
-.visual-scroll-container::-webkit-scrollbar-thumb { 
-  background: #94a3b8; 
-  border-radius: 3px; 
-}
-
-/* The Solar Block (Panel+Opt) */
-.solar-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  margin-right: 2px;
-}
-
-/* Panels */
-.panel-group { 
-  display: flex; 
-  gap: 2px; 
-  margin-bottom: 8px; 
-}
-
-.v-panel {
-  width: 32px; 
-  height: 45px;
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-  border: 1px solid #93c5fd;
-  border-radius: 2px;
-  position: relative;
-}
-
-.v-panel::after {
-  content: ""; 
-  position: absolute; 
-  top:0; left:0; right:0; bottom:0;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px);
-  background-size: 8px 11px;
-}
-
-/* Wires */
-.wire-drop-single { 
-  position: absolute; 
-  background:#64748b; 
-  width:2px; 
-  height:10px; 
-  top:45px; 
-  left:50%; 
-  transform:translateX(-50%); 
-}
-
-.wire-drop-left { 
-  position: absolute; 
-  background:#64748b; 
-  width:2px; 
-  height:12px; 
-  top:45px; 
-  left:25%; 
-  transform:skewX(15deg); 
-}
-
-.wire-drop-right { 
-  position: absolute; 
-  background:#64748b; 
-  width:2px; 
-  height:12px; 
-  top:45px; 
-  right:25%; 
-  transform:skewX(-15deg); 
-}
-
-.dc-wire {
-  height: 3px; 
-  background-color: #ea580c; 
-  width: 100%;
-  position: absolute; 
-  bottom: 13px; 
-  left: 50%; 
-  z-index: 1;
-}
-
-.solar-block:not(:last-child) .dc-wire { 
-  width: calc(100% + 4px); 
-}
-
-.solar-block:last-child .dc-wire { 
-  display: none; 
-}
-
-/* Optimizer Box */
-.v-opt {
-  width: 26px; 
-  height: 26px; 
-  border-radius: 4px; 
-  border: 2px solid;
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  font-size: 8px; 
-  font-weight: 800; 
-  z-index: 2; 
-  position: relative; 
-  background: #fff;
-}
-
-.opt-2to1 { 
-  border-color: #ea580c; 
-  color: #ea580c; 
-  background-color: #fff7ed; 
-}
-
-.opt-1to1 { 
-  border-color: #ca8a04; 
-  color: #ca8a04; 
-  background-color: #fefce8; 
-}
-
-/* Inverter Icon */
-.v-inverter-box {
-  width: 50px; 
-  height: 70px; 
-  background: #f1f5f9; 
-  border: 2px solid #475569;
-  border-radius: 6px; 
-  display: flex; 
-  flex-direction: column;
-  align-items: center; 
-  justify-content: center; 
-  margin-left: 15px; 
-  position: relative;
-}
-
-.inv-icon { 
-  font-size: 20px; 
-  color: #475569; 
-}
-
-.final-wire { 
-  width: 17px; 
-  height: 3px; 
-  background: #ea580c; 
-  position: absolute; 
-  bottom: 22px; 
-  left: -17px; 
 }
 
 /* =========================================
@@ -1558,43 +1270,7 @@ select:disabled, input:disabled {
   font-size: 0.9rem;
 }
 
-/* String Parameter Table Highlighting */
-.param-row-valid {
-  background: #f0fdf4 !important;
-}
 
-.param-row-error {
-  background: #fee2e2 !important;
-}
-
-.param-row-warning {
-  background: #fef3c7 !important;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-badge.valid {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status-badge.error {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.status-badge.warning {
-  background: #fef3c7;
-  color: #78350f;
-}
 /* ⚡ Add for Report Parameter Table */
 .report-table thead th {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
@@ -1656,14 +1332,6 @@ select:disabled, input:disabled {
   padding: 3px 8px;
   border-radius: 6px;
   font-weight: 700;
-}
-
-.v-panel-cool:hover {
-  transform: scale(1.4);
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
-  z-index: 10;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: crosshair;
 }
 
 /* ── Combined Report Blocks ───────────────────────────────── */
@@ -1868,7 +1536,505 @@ select:disabled, input:disabled {
     -webkit-print-color-adjust: exact;
   }
 }
+/* ── Inverter Sidebar ─────────────────────────────────────── */
+.inv-sidebar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+}
 
+.inv-progress-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-bottom: 3px;
+}
+
+.inv-prog-rem {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+.inv-progress-track {
+  height: 4px;
+  border-radius: 3px;
+  background: #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.inv-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s, background 0.3s;
+}
+
+.inv-units-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.inv-unit-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.inv-unit-card {
+  border: 0.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.inv-unit-card.merged-top {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 1.5px solid #0ea5e9;
+}
+
+.inv-unit-card.merged-bot {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 1.5px solid #0ea5e9;
+}
+
+.inv-card-hdr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+.inv-sys-badge {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.inv-sys-badge.merged {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.inv-model-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-trash-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+  padding: 0;
+}
+
+.inv-trash-btn:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.inv-specs-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.inv-spec-chip {
+  font-family: 'Courier New', monospace;
+  font-size: 10.5px;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 0.5px solid #e2e8f0;
+}
+
+.inv-spec-chip strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.inv-alloc-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.inv-panel-icon {
+  font-size: 13px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.inv-alloc-input {
+  width: 56px !important;
+  font-size: 12px !important;
+  font-family: 'Courier New', monospace !important;
+  padding: 4px 6px !important;
+  text-align: center;
+  font-weight: 600;
+  color: #0f172a;
+  border: 0.5px solid #e2e8f0 !important;
+  border-radius: 5px !important;
+}
+
+.inv-alloc-input:focus {
+  border-color: #0ea5e9 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.12) !important;
+}
+
+.inv-kwp-tag {
+  font-family: 'Courier New', monospace;
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+/* ── Merge Connector ──────────────────────────────────────── */
+.inv-merge-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  position: relative;
+  z-index: 2;
+}
+
+.inv-merge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 4px;
+  border: 0.5px dashed #cbd5e1;
+  background: white;
+  cursor: pointer;
+  font-size: 10px;
+  color: #94a3b8;
+  transition: all 0.15s;
+}
+
+.inv-merge-btn:hover {
+  border-color: #0ea5e9;
+  color: #0369a1;
+  background: #e0f2fe;
+  border-style: solid;
+}
+
+.inv-merge-btn.linked {
+  border: 1.5px solid #0ea5e9;
+  border-style: solid;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.inv-merge-btn span {
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* ── Recalculate ──────────────────────────────────────────── */
+.inv-recalc-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.inv-recalc-btn {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 0.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.inv-recalc-btn:hover {
+  border-color: #0ea5e9;
+  color: #0369a1;
+  background: #e0f2fe;
+}
+/* ═══════════════════════════════════════════════════════════
+   VISUAL STRING DIAGRAM — vsd-* namespace
+   ═══════════════════════════════════════════════════════════ */
+
+.vsd-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ── Pool Block (one inverter or one merged group) ─────────── */
+.vsd-pool-block {
+  padding: 16px 20px;
+  background: #fff;
+  transition: background 0.2s;
+}
+
+.vsd-pool-block.vsd-merged {
+  background: #f0f9ff;
+  border-left: 3px solid #0ea5e9;
+}
+
+/* ── Pool Header ───────────────────────────────────────────── */
+.vsd-pool-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.vsd-pool-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #3b82f6;
+  flex-shrink: 0;
+}
+
+.vsd-pool-dot.merged {
+  background: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.18);
+}
+
+.vsd-pool-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #0f172a;
+  flex: 1;
+}
+
+.vsd-merged-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.vsd-merged-badge i {
+  font-size: 0.6rem;
+}
+
+/* ── Merged Sub-section per Inverter ──────────────────────── */
+.vsd-merged-inv-section {
+  padding: 10px 0 10px 14px;
+  position: relative;
+}
+
+.vsd-merged-inv-section::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #bae6fd;
+  border-radius: 2px;
+}
+
+.vsd-merged-divider {
+  border-bottom: 1px dashed #bae6fd;
+  margin-bottom: 2px;
+}
+
+.vsd-merged-inv-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0369a1;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.vsd-server-icon {
+  font-size: 0.68rem;
+  opacity: 0.7;
+}
+
+/* ── String Row ────────────────────────────────────────────── */
+.vsd-string-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.vsd-string-row:last-child {
+  margin-bottom: 0;
+}
+
+.vsd-string-row:hover {
+  background: #f0f9ff;
+  border-color: #93c5fd;
+}
+
+/* ── String Label (left side) ─────────────────────────────── */
+.vsd-string-label {
+  min-width: 160px;
+  font-weight: 600;
+  color: #3b82f6;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.vsd-inv-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.vsd-ratio-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #c2410c;
+  background: #fff7ed;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #fdba74;
+}
+
+/* ── Panel Blocks ──────────────────────────────────────────── */
+.vsd-panels-wrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.vsd-panel-block {
+  width: 16px;
+  height: 24px;
+  background: #3b82f6;
+  border-radius: 2px;
+  flex-shrink: 0;
+  transition: transform 0.1s;
+}
+
+.vsd-panel-block:hover {
+  transform: scaleY(1.08);
+}
+
+/* Optimizer mode — slightly different shade */
+.vsd-pool-block .vsd-panel-block {
+  background: #2563eb;
+}
+
+.vsd-merged .vsd-panel-block {
+  background: #0284c7;
+}
+
+.vsd-overflow {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-left: 4px;
+  align-self: center;
+  font-weight: 600;
+}
+
+.vsd-mod-count {
+  margin-left: 10px;
+  font-size: 0.82rem;
+  color: #6b7280;
+  align-self: center;
+  white-space: nowrap;
+}
+
+/* ── DC OUT badge ──────────────────────────────────────────── */
+.vsd-string-row::after {
+  content: "DC OUT";
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #3b82f6;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Pool Separator ────────────────────────────────────────── */
+.vsd-pool-separator {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0 20px;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .vsd-string-label {
+    min-width: 120px;
+    font-size: 0.72rem;
+  }
+  .vsd-panel-block {
+    width: 13px;
+    height: 20px;
+  }
+  .vsd-pool-block {
+    padding: 12px 14px;
+  }
+}
 /* ═══════════════════════════════════════════════════════════════════════
    SVG POINTER EVENTS - ENSURE INTERACTIVE CANVAS GRID RESPONDS TO CLICKS
    ═══════════════════════════════════════════════════════════════════════ */

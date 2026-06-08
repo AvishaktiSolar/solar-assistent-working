@@ -14,6 +14,7 @@ let mergeInverterStringsEnabled = false;
 let manualLayoutState = null;
 let manualLayoutSeq = 1;
 let optimizerCatalog = [];
+let _allInverters = [];
 
 window.multiInverterDesign = multiInverterDesign;
 window.currentSystemType = currentSystemType;
@@ -113,8 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
       calculateStage2();
     });
   }
-  syncMergeInverterStringsUI();
-});
+
+  // ADD THIS INSIDE HERE:
   document.addEventListener('change', function(e) {
     if (e.target.id === 'inverter_selector' || e.target.id === 'optimizer_selector') {
       if (document.getElementById('ec4-wrap')) {
@@ -124,48 +125,190 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-// ============================================================
-// LOADERS
-// ============================================================
+  syncMergeInverterStringsUI();
+});
+
+
 async function loadInverters() {
   try {
     const res = await fetch("/procurement/api/get_inverters");
-    const items = await res.json();
-    populateSelect("inverter_selector", items);
-  } catch {
-    populateSelect("inverter_selector", [
-      {
-        name: "SolarEdge 10kW (SE10K)",
-        subcategory: "3-Phase",
-        specifications: { ac_power_kw: 10, max_dc_voltage: 900, min_mppt_voltage: 750, mppt: 2, max_dc_power: 12500, imax_string: 15, string_class: "SE12.5K-20K" },
-      },
-      {
-        name: "SolarEdge 15kW (SE15K)",
-        subcategory: "3-Phase",
-        specifications: { ac_power_kw: 15, max_dc_voltage: 1000, min_mppt_voltage: 750, mppt: 2, max_dc_power: 22500, imax_string: 15, string_class: "SE12.5K-20K" },
-      },
-      {
-        name: "SolarEdge 17kW (SE17K)",
-        subcategory: "3-Phase",
-        specifications: { ac_power_kw: 17, max_dc_voltage: 900, min_mppt_voltage: 750, mppt: 2, max_dc_power: 21250, imax_string: 15, string_class: "SE12.5K-20K" },
-      },
-      {
-        name: "Goodwe 10kW (GW10K-SDT)",
-        subcategory: "3-Phase",
-        specifications: { ac_power_kw: 10, max_dc_voltage: 1000, min_mppt_voltage: 160, mppt: 2, max_dc_power: 13000 },
-      },
-      {
-        name: "Goodwe 15kW (GW15K-SDT)",
-        subcategory: "3-Phase",
-        specifications: { ac_power_kw: 15, max_dc_voltage: 1000, min_mppt_voltage: 160, mppt: 2, max_dc_power: 19500 },
-      },
-      {
-        name: "Goodwe 5kW (GW5000-MS)",
-        subcategory: "1-Phase",
-        specifications: { ac_power_kw: 5, max_dc_voltage: 600, min_mppt_voltage: 60, mppt: 2, max_dc_power: 7500 },
-      },
-    ]);
+    if (!res.ok) {
+      console.error("Inverter API error:", res.status);
+      _allInverters = [];
+    } else {
+      _allInverters = await res.json();
+    }
+  } catch (e) {
+    console.warn("Inverter API failed:", e);
+    _allInverters = [];
   }
+  _buildBrandDropdown();
+}
+// Extract brand = first word of inverter name
+function _extractBrand(name) {
+  return (name || "").split(" ")[0];
+}
+
+// SolarEdge is optimizer-compatible — read from data, not hardcoded
+// Check if inverter has "Fixed Voltage" / optimizer architecture
+function _isOptimizerBrand(inverter) {
+  const spec  = inverter.specifications || {};
+  const arch  = (spec.architecture || "").toLowerCase();
+  const note  = (spec.note         || "").toLowerCase();
+  const name  = (inverter.name     || "").toLowerCase();
+  return arch.includes("optimizer") || 
+         arch.includes("fixed voltage") || 
+         note.includes("optimizer") || 
+         note.includes("requires optimizer") ||
+         name.includes("solaredge");
+}
+
+function _buildBrandDropdown() {
+  const brandSel = document.getElementById("inverter_brand_selector");
+  if (!brandSel) return;
+
+  // Get unique brands in the order they appear
+  const brandMap    = new Map(); // brand -> { isOptimizer, count }
+  _allInverters.forEach(inv => {
+    const brand = _extractBrand(inv.name);
+    if (!brand) return;
+    if (!brandMap.has(brand)) {
+      brandMap.set(brand, { isOptimizer: _isOptimizerBrand(inv), count: 0 });
+    }
+    brandMap.get(brand).count++;
+  });
+
+  const isOpt = currentSystemType === "optimizer";
+
+  brandSel.innerHTML = `<option value="">All Brands</option>`;
+
+  // Separate into optimizer-compatible and other brands
+  const optBrands   = [];
+  const otherBrands = [];
+  brandMap.forEach((meta, brand) => {
+    if (meta.isOptimizer) optBrands.push(brand);
+    else                  otherBrands.push(brand);
+  });
+
+  optBrands.sort();
+  otherBrands.sort();
+
+  if (isOpt && optBrands.length) {
+    const grp   = document.createElement("optgroup");
+    grp.label   = "✓ Optimizer Compatible";
+    optBrands.forEach(b => {
+      const o     = document.createElement("option");
+      o.value     = b;
+      o.textContent = `${b} (${brandMap.get(b).count})`;
+      grp.appendChild(o);
+    });
+    brandSel.appendChild(grp);
+  }
+
+  if (!isOpt || otherBrands.length) {
+    const grp2  = document.createElement("optgroup");
+    grp2.label  = isOpt ? "String Inverter Brands" : "All Brands";
+    otherBrands.forEach(b => {
+      const o     = document.createElement("option");
+      o.value     = b;
+      o.textContent = `${b} (${brandMap.get(b).count})`;
+      grp2.appendChild(o);
+    });
+    brandSel.appendChild(grp2);
+  }
+
+  // If not optimizer, also show optimizer brands in the same list
+  if (!isOpt && optBrands.length) {
+    const grp3  = document.createElement("optgroup");
+    grp3.label  = "Optimizer System Brands";
+    optBrands.forEach(b => {
+      const o     = document.createElement("option");
+      o.value     = b;
+      o.textContent = `${b} (${brandMap.get(b).count})`;
+      grp3.appendChild(o);
+    });
+    brandSel.appendChild(grp3);
+  }
+
+  // Auto-select the appropriate brand for current mode
+  if (isOpt && optBrands.length) {
+    brandSel.value = optBrands[0]; // e.g. SolarEdge
+  }
+
+  _filterInvertersByBrand();
+}
+
+function _filterInvertersByBrand() {
+  const brandSel = document.getElementById("inverter_brand_selector");
+  const invSel   = document.getElementById("inverter_selector");
+  if (!invSel) return;
+
+  const selectedBrand = brandSel?.value || "";
+  const isOpt         = currentSystemType === "optimizer";
+
+  // Filter: brand match + system type match
+  const filtered = _allInverters.filter(inv => {
+    const brandMatch = !selectedBrand || _extractBrand(inv.name) === selectedBrand;
+    // In optimizer mode only show optimizer-compatible inverters
+    // In string mode only show non-optimizer inverters
+    const typeMatch = isOpt
+      ? _isOptimizerBrand(inv)
+      : !_isOptimizerBrand(inv);
+    // If a brand is explicitly selected, respect it regardless of type filter
+    return selectedBrand ? brandMatch : (brandMatch && typeMatch);
+  });
+
+  // Rebuild inverter dropdown
+  invSel.innerHTML = `<option value="">-- Select Inverter --</option>`;
+
+  if (filtered.length === 0) {
+    invSel.innerHTML = `<option value="">No inverters for this brand/mode</option>`;
+    
+    return;
+  }
+
+  // Group by subcategory (1-Phase / 3-Phase)
+  const grouped = {};
+  filtered.forEach(inv => {
+    const sub = inv.subcategory || "Other";
+    if (!grouped[sub]) grouped[sub] = [];
+    grouped[sub].push(inv);
+  });
+
+  Object.entries(grouped).forEach(([sub, items]) => {
+    const grp   = document.createElement("optgroup");
+    grp.label   = sub;
+    items.forEach(inv => {
+      const o     = document.createElement("option");
+      o.value     = JSON.stringify(inv);
+      const acKw  = inv.specifications?.ac_power_kw || 0;
+      o.textContent = acKw
+        ? `${inv.name} — ${acKw}kW`
+        : inv.name;
+      grp.appendChild(o);
+    });
+    invSel.appendChild(grp);
+  });
+
+  // Auto-select first inverter
+  if (invSel.options.length > 1) {
+    invSel.selectedIndex = 1;
+  }
+
+
+
+  hasAutoSelected = false;
+  calculateStage2();
+}
+
+// Called when brand changes
+window._onBrandChange = function() {
+  _filterInvertersByBrand();
+};
+
+// Called when system type toggles — rebuild brand dropdown for new mode
+function _rebuildBrandDropdownForMode() {
+  _buildBrandDropdown();
 }
 
 async function loadOptimizers() {
@@ -221,42 +364,103 @@ function populateSelect(id, items) {
 // MULTI-INVERTER MANAGEMENT
 // ============================================================
 window.addInverterToDesign = function () {
-  const invSelect = document.getElementById("inverter_selector");
+  const invSelect  = document.getElementById("inverter_selector");
   const countInput = document.getElementById("inv_count");
   if (!invSelect?.value) return alert("Please select an inverter first.");
 
-  const inverter = JSON.parse(invSelect.value);
-  const qty = parseInt(countInput?.value) || 1;
+  const inverter     = JSON.parse(invSelect.value);
+  const qty          = parseInt(countInput?.value) || 1;
+  const specs        = inverter.specifications || {};
+  const panelWattage = window.projectData?.stage1?.panelWattage || 400;
+  const totalPanels  = window.projectData?.stage1?.panelCount   || 0;
 
-  // Get specs and calculate panels based on max DC capacity
-  const specs = inverter.specifications || {};
-
-  // Priority: max_dc_power > (ac_power_kw * 1.25) > (getAcKw * 1.3 * 1000)
-  let maxDcWatts = specs.max_dc_power;
-
-  if (!maxDcWatts) {
+  // Calculate DC capacity of NEW inverter to estimate its fair share
+  let newInvMaxDcWatts = specs.max_dc_power;
+  if (!newInvMaxDcWatts) {
     const acKw = specs.ac_power_kw || getAcKw(specs) || 0;
-    if (acKw > 0) {
-      maxDcWatts = acKw * 1000 * 1.25; // 1.25x DC/AC ratio is optimal
-    } else {
-      maxDcWatts = 15000; // Safe fallback
+    newInvMaxDcWatts = acKw > 0 ? acKw * 1000 * 1.25 : 15000;
+  }
+  newInvMaxDcWatts *= qty;
+
+  // Calculate total DC capacity across ALL inverters including new one
+  const allInverters  = [...multiInverterDesign];
+  const existingDcSum = allInverters.reduce((s, item) => {
+    const sp    = item.inverter.specifications || {};
+    let dc      = sp.max_dc_power;
+    if (!dc) {
+      const acKw = sp.ac_power_kw || getAcKw(sp) || 0;
+      dc = acKw > 0 ? acKw * 1000 * 1.25 : 15000;
     }
+    return s + dc * (item.qty || 1);
+  }, 0);
+
+  const totalDcCapacity = existingDcSum + newInvMaxDcWatts;
+
+  // Proportionally rebalance ALL inverters so total == panelCount
+  if (totalPanels > 0 && totalDcCapacity > 0) {
+    // Rebalance existing inverters first
+    allInverters.forEach(item => {
+      const sp    = item.inverter.specifications || {};
+      let dc      = sp.max_dc_power;
+      if (!dc) {
+        const acKw = sp.ac_power_kw || getAcKw(sp) || 0;
+        dc = acKw > 0 ? acKw * 1000 * 1.25 : 15000;
+      }
+      dc *= (item.qty || 1);
+      item.assignedPanels = Math.floor((dc / totalDcCapacity) * totalPanels);
+    });
+
+    // Assign new inverter its proportional share
+    const newPanels = Math.floor((newInvMaxDcWatts / totalDcCapacity) * totalPanels);
+
+    // Fix rounding: assign remainder to the largest inverter
+    const totalAssigned = allInverters.reduce((s, i) => s + i.assignedPanels, 0) + newPanels;
+    const remainder     = totalPanels - totalAssigned;
+
+    // Push new inverter
+    multiInverterDesign.push({
+      id:             Date.now(),
+      inverter,
+      qty,
+      assignedPanels: newPanels + remainder, // remainder goes here
+      manualOverride: false,
+      manualTrackers: [],
+      mergeWith:      null,
+    });
+
+    // Correct any remaining delta on the largest capacity inverter
+    const nowTotal = multiInverterDesign.reduce((s, i) => s + i.assignedPanels, 0);
+    const delta    = totalPanels - nowTotal;
+    if (delta !== 0 && multiInverterDesign.length > 0) {
+      // Find inverter with most DC capacity to absorb delta
+      let maxDc = 0, maxIdx = 0;
+      multiInverterDesign.forEach((item, idx) => {
+        const sp    = item.inverter.specifications || {};
+        let dc      = sp.max_dc_power || (getAcKw(sp) * 1250) || 15000;
+        dc *= (item.qty || 1);
+        if (dc > maxDc) { maxDc = dc; maxIdx = idx; }
+      });
+      multiInverterDesign[maxIdx].assignedPanels += delta;
+    }
+
+  } else {
+    // No panels in system yet — just add with 0 panels
+    multiInverterDesign.push({
+      id:             Date.now(),
+      inverter,
+      qty,
+      assignedPanels: 0,
+      manualOverride: false,
+      manualTrackers: [],
+      mergeWith:      null,
+    });
   }
 
-  const panelWattage = window.projectData?.stage1?.panelWattage || 400;
-  const suggestedPanels = Math.floor((maxDcWatts / panelWattage) * qty);
-
-  multiInverterDesign.push({
-    id: Date.now(),
-    inverter,
-    qty,
-    assignedPanels: suggestedPanels,
-    manualOverride: false,
-    manualTrackers: [],
-    mergeWith: null,  // Track which inverter this one merges with
-  });
   window.multiInverterDesign = multiInverterDesign;
   renderInverterSplitControls();
+  if (manualModeEnabled && currentSystemType === "optimizer") {
+    refreshInteractiveCanvasIfEnabled();
+  }
 };
 
 function renderInverterSplitControls() {
@@ -268,85 +472,126 @@ function renderInverterSplitControls() {
   }
 
   const totalPanels = window.projectData?.stage1?.panelCount || 0;
+  const panelWattage = window.projectData?.stage1?.panelWattage || 400;
   const totalAssigned = multiInverterDesign.reduce((s, i) => s + (i.assignedPanels || 0), 0);
   const remaining = totalPanels - totalAssigned;
-  const remainColor = remaining === 0 ? "#16a34a" : remaining < 0 ? "#dc2626" : "#d97706";
+  const pct = totalPanels > 0 ? Math.min(100, (totalAssigned / totalPanels) * 100) : 0;
+  const barColor = remaining === 0 ? "#3B6D11" : remaining < 0 ? "#A32D2D" : "#BA7517";
+  const remText = remaining === 0 ? "✓ complete" : remaining > 0 ? `${remaining} remaining` : `${Math.abs(remaining)} over`;
 
-  container.innerHTML = `
-    <div style="padding:8px 12px; background:#f1f5f9; border-radius:6px; margin-bottom:16px; font-size:0.75rem; border-left:3px solid ${remainColor};">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-        <span><strong style="color:${remainColor};">${totalAssigned}/${totalPanels}</strong> <span style="color:${remainColor};">${remaining === 0 ? "✓ Complete" : remaining > 0 ? remaining + " left" : Math.abs(remaining) + " over"}</span></span>
-        <button onclick="recalculateInverterPanels()" style="padding:3px 8px; font-size:0.7rem; background:#e0f2fe; border:1px solid #0ea5e9; color:#0c4a6e; border-radius:4px; cursor:pointer; font-weight:600;">Recalculate</button>
+  let html = `
+    <div class="inv-sidebar-wrap">
+      <div class="inv-progress-hdr">
+        <span class="inv-prog-label">Panel allocation</span>
+        <span class="inv-prog-rem" style="color:${barColor};">${remText}</span>
       </div>
-    </div>
-    ${multiInverterDesign
-      .map((item, idx) => {
-        const specs = item.inverter.specifications || {};
-        const acKw = getAcKw(specs);
-        const maxDcKw = getMaxDcPow(specs) / 1000;
-        const panelKwp =
-          item.assignedPanels > 0
-            ? ((item.assignedPanels * (window.projectData?.stage1?.panelWattage || 0)) / 1000).toFixed(2)
-            : 0;
-        
-        // Check if this inverter is merged with the next one
-        const isMergedWithNext = item.mergeWith === (multiInverterDesign[idx + 1]?.id || null);
-        // Check if this inverter is merged from the previous one
-        const isMergedFromPrev = multiInverterDesign[idx - 1]?.mergeWith === item.id;
-        // Determine spacing: less space when merged, more space when single
-        const marginBottom = isMergedWithNext ? "2px" : (multiInverterDesign.length === 1 ? "24px" : "14px");
-        const marginTop = isMergedFromPrev ? "0px" : "0px";
-        
-        return `
-        <div style="border:1px solid #e2e8f0; border-radius:6px; margin-bottom:${marginBottom}; margin-top:${marginTop}; padding:12px; background:white; display:flex; flex-direction:column; gap:10px;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-            <div style="flex:1;">
-              <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px; display:flex; align-items:center; gap:10px; color:#1e293b;">
-                <span style="background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:4px; font-size:0.8rem; font-weight:700;">System ${idx + 1}</span>
-                <span style="font-size:0.85rem;">${item.qty}× ${item.inverter.name}</span>
-              </div>
-              <div style="font-size:0.7rem; color:#64748b; margin-bottom:8px; line-height:1.4;">
-                AC: ${(acKw * item.qty).toFixed(1)}kW | Max DC: ${(maxDcKw * item.qty).toFixed(1)}kWp
-              </div>
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <input type="number" value="${item.assignedPanels}" min="0"
-                       onchange="updateAssignedPanels(${item.id}, this.value)"
-                       style="width:60px; padding:4px 6px; border:1px solid #cbd5e1; border-radius:4px; font-weight:700; font-size:0.8rem;">
-                <span style="font-size:0.75rem; color:#64748b;">${panelKwp} kWp</span>
-              </div>
-            </div>
-            <button onclick="removeInverterFromDesign(${item.id})" style="background:none;border:none;cursor:pointer;color:#ef4444;padding:4px;">
-              <i class="fas fa-trash" style="font-size:1rem;"></i>
+      <div class="inv-progress-track">
+        <div class="inv-progress-fill" style="width:${pct.toFixed(1)}%;background:${barColor};"></div>
+      </div>
+      <div class="inv-units-list">`;
+
+  multiInverterDesign.forEach((item, idx) => {
+    const specs = item.inverter.specifications || {};
+    const acKw = getAcKw(specs) * item.qty;
+    const maxDcKwp = (getMaxDcPow(specs) * item.qty / 1000).toFixed(1);
+    const kwp = item.assignedPanels > 0
+      ? ((item.assignedPanels * panelWattage) / 1000).toFixed(2)
+      : "0.00";
+    const isMergedDown = item.mergeWith === (multiInverterDesign[idx + 1]?.id ?? null);
+    const isMergedUp = multiInverterDesign[idx - 1]?.mergeWith === item.id;
+    const cardClass = [
+      "inv-unit-card",
+      isMergedDown ? "merged-top" : "",
+      isMergedUp   ? "merged-bot" : "",
+    ].filter(Boolean).join(" ");
+
+    const shortName = item.inverter.name.replace(/\s*\(.*\)/, "");
+    const modelAbbr = item.inverter.name.match(/\(([^)]+)\)/)?.[1] || shortName;
+
+    html += `
+      <div class="inv-unit-wrap">
+        <div class="${cardClass}" id="inv-card-${item.id}">
+          <div class="inv-card-hdr">
+            <span class="inv-sys-badge${isMergedUp ? " merged" : ""}" title="System ${idx + 1}">
+              SYS-${idx + 1}
+            </span>
+            <span class="inv-model-name" title="${item.inverter.name}">${item.qty}× ${modelAbbr}</span>
+            <button class="inv-trash-btn" onclick="removeInverterFromDesign(${item.id})"
+              aria-label="Remove SYS-${idx + 1}" title="Remove this inverter">
+              <i class="fas fa-trash-alt" aria-hidden="true"></i>
             </button>
           </div>
-          ${multiInverterDesign.length > 1 ? `
-          <div style="border-top:1px solid #e2e8f0; padding-top:8px;">
-            <label style="font-size:0.7rem; color:#1e293b; font-weight:600; display:block; margin-bottom:4px;">
-              <i class="fas fa-link" style="color:#0ea5e9;"></i> Merge with Inverter
-            </label>
-            <select onchange="setMergeInverter(${item.id}, this.value)" style="width:100%; padding:4px 6px; border:1px solid #cbd5e1; border-radius:4px; font-size:0.75rem; background:white;">
-              <option value="">No Merge (Separate System)</option>
-              ${multiInverterDesign
-                .map((inv, invIdx) => inv.id !== item.id ? `<option value="${inv.id}" ${item.mergeWith === inv.id ? "selected" : ""}>Merge with System ${invIdx + 1}</option>` : "")
-                .filter(opt => opt)
-                .join("")}
-            </select>
-            <div style="font-size:0.65rem; color:#64748b; margin-top:3px;">
-              ${item.mergeWith ? "✓ This system merges with another" : "⚙️ Separate system - independent strings"}
-            </div>
+          <div class="inv-specs-row">
+            <span class="inv-spec-chip">AC <strong>${acKw.toFixed(1)} kW</strong></span>
+            <span class="inv-spec-chip">DC <strong>${maxDcKwp} kWp</strong></span>
           </div>
-          ` : ""}
-        </div>`;
-      })
-      })
-      .join("")}`;  
+          <div class="inv-alloc-row">
+            <i class="fas fa-solar-panel inv-panel-icon" aria-hidden="true"></i>
+            <input type="number" class="inv-alloc-input" value="${item.assignedPanels}"
+              min="0" title="Assigned panels for SYS-${idx + 1}"
+              onchange="updateAssignedPanels(${item.id}, this.value)" />
+            <span class="inv-kwp-tag">${kwp} kWp</span>
+          </div>
+        </div>
+      </div>`;
+
+    if (idx < multiInverterDesign.length - 1) {
+      const nextItem = multiInverterDesign[idx + 1];
+      const linked = item.mergeWith === nextItem.id;
+      html += `
+      <div class="inv-merge-connector">
+        <button class="inv-merge-btn${linked ? " linked" : ""}"
+          id="merge-btn-${item.id}-${nextItem.id}"
+          onclick="toggleInverterMergeUI(${item.id}, ${nextItem.id})"
+          title="${linked ? "Unmerge" : "Merge"} SYS-${idx + 1} and SYS-${idx + 2} into a shared string pool"
+          aria-label="${linked ? "Unmerge" : "Merge"} SYS-${idx + 1} and SYS-${idx + 2}">
+          <i class="fas fa-${linked ? "link" : "unlink"}" aria-hidden="true"></i>
+          <span>${linked ? "merged" : "merge"}</span>
+        </button>
+      </div>`;
+    }
+  });
+
+  html += `
+      </div>
+      <div class="inv-recalc-row">
+        <button class="inv-recalc-btn" onclick="recalculateInverterPanels()" title="Recalculate panel allocations">
+          <i class="fas fa-sync-alt" aria-hidden="true"></i> Recalculate
+        </button>
+      </div>
+    </div>`;
+
+  container.innerHTML = html;
 }
 
-window.updateAssignedPanels = function (id, val) {
+window.toggleInverterMergeUI = function(sourceId, targetId) {
+  const sourceItem = multiInverterDesign.find(i => i.id === sourceId);
+  if (!sourceItem) return;
+  sourceItem.mergeWith = sourceItem.mergeWith === targetId ? null : targetId;
+
+  const hasMerge = multiInverterDesign.some(i => i.mergeWith != null);
+  mergeInverterStringsEnabled = hasMerge;
+  window.mergeInverterStringsEnabled = hasMerge;
+  syncMergeInverterStringsUI();
+  renderInverterSplitControls();
+  calculateStage2();
+
+  // ── Live canvas refresh when in manual optimizer mode ─────────
+  if (manualModeEnabled && currentSystemType === "optimizer") {
+    _refreshCanvasAfterMergeChange();
+  }
+};
+
+window.updateAssignedPanels = function(id, val) {
   const item = multiInverterDesign.find(i => i.id === id);
   if (item) item.assignedPanels = parseInt(val) || 0;
   renderInverterSplitControls();
   calculateStage2();
+
+  // Refresh canvas if in manual optimizer mode since boundaries shifted
+  if (manualModeEnabled && currentSystemType === "optimizer") {
+    _refreshCanvasAfterMergeChange();
+  }
 };
 
 window.removeInverterFromDesign = function (id) {
@@ -362,22 +607,28 @@ window.removeInverterFromDesign = function (id) {
   calculateStage2();
 };
 
-window.setMergeInverter = function (sourceId, targetId) {
+window.setMergeInverter = function(sourceId, targetId) {
   const sourceItem = multiInverterDesign.find(i => i.id === sourceId);
   if (!sourceItem) return;
-  
+
   sourceItem.mergeWith = targetId ? parseInt(targetId) : null;
-  
-  // If merging, the global merge flag should reflect this
-  const hasMergedInverters = multiInverterDesign.some(item => item.mergeWith !== null && item.mergeWith !== undefined);
+
+  const hasMergedInverters = multiInverterDesign.some(
+    item => item.mergeWith !== null && item.mergeWith !== undefined
+  );
   if (hasMergedInverters !== mergeInverterStringsEnabled) {
     mergeInverterStringsEnabled = hasMergedInverters;
     window.mergeInverterStringsEnabled = mergeInverterStringsEnabled;
     syncMergeInverterStringsUI();
   }
-  
+
   renderInverterSplitControls();
   calculateStage2();
+
+  // ── Live canvas refresh when in manual optimizer mode ─────────
+  if (manualModeEnabled && currentSystemType === "optimizer") {
+    _refreshCanvasAfterMergeChange();
+  }
 };
 
 /**
@@ -386,26 +637,69 @@ window.setMergeInverter = function (sourceId, targetId) {
  */
 window.recalculateInverterPanels = function () {
   const panelWattage = window.projectData?.stage1?.panelWattage || 400;
-  multiInverterDesign.forEach(item => {
-    const specs = item.inverter.specifications || {};
+  const totalPanels  = window.projectData?.stage1?.panelCount   || 0;
 
-    // Priority: max_dc_power > (ac_power_kw * 1.25) > (getAcKw * 1.3 * 1000)
-    let maxDcWatts = specs.max_dc_power;
-    if (!maxDcWatts) {
-      const acKw = specs.ac_power_kw || getAcKw(specs) || 0;
-      if (acKw > 0) {
-        maxDcWatts = acKw * 1000 * 1.25;
-      } else {
-        maxDcWatts = 15000;
+  if (multiInverterDesign.length === 0) return;
+
+  if (totalPanels === 0) {
+    // No target — calculate raw from DC capacity
+    multiInverterDesign.forEach(item => {
+      const specs = item.inverter.specifications || {};
+      let dc = specs.max_dc_power;
+      if (!dc) {
+        const acKw = specs.ac_power_kw || getAcKw(specs) || 0;
+        dc = acKw > 0 ? acKw * 1000 * 1.25 : 15000;
       }
-    }
+      item.assignedPanels = Math.floor((dc * item.qty) / panelWattage);
+    });
+    renderInverterSplitControls();
+    calculateStage2();
+    return;
+  }
 
-    item.assignedPanels = Math.floor((maxDcWatts / panelWattage) * item.qty);
+  // Proportional rebalance based on each inverter's DC capacity weight
+  const dcCapacities = multiInverterDesign.map(item => {
+    const specs = item.inverter.specifications || {};
+    let dc = specs.max_dc_power;
+    if (!dc) {
+      const acKw = specs.ac_power_kw || getAcKw(specs) || 0;
+      dc = acKw > 0 ? acKw * 1000 * 1.25 : 15000;
+    }
+    return dc * (item.qty || 1);
   });
+
+  const totalDc = dcCapacities.reduce((s, d) => s + d, 0);
+
+  if (totalDc === 0) return;
+
+  // Floor allocation first
+  let assigned = 0;
+  multiInverterDesign.forEach((item, idx) => {
+    const share        = Math.floor((dcCapacities[idx] / totalDc) * totalPanels);
+    item.assignedPanels = share;
+    assigned           += share;
+  });
+
+  // Distribute remainder panels to largest DC capacity inverters
+  let remainder = totalPanels - assigned;
+  if (remainder > 0) {
+    // Sort indices by DC capacity descending
+    const sortedIdx = dcCapacities
+      .map((dc, i) => ({ dc, i }))
+      .sort((a, b) => b.dc - a.dc)
+      .map(x => x.i);
+
+    for (let k = 0; k < remainder; k++) {
+      multiInverterDesign[sortedIdx[k % sortedIdx.length]].assignedPanels += 1;
+    }
+  }
+
   renderInverterSplitControls();
   calculateStage2();
+  if (manualModeEnabled && currentSystemType === "optimizer") {
+    refreshInteractiveCanvasIfEnabled();
+  }
 };
-
 // ============================================================
 // STAGE REFRESH
 // ============================================================
@@ -534,7 +828,7 @@ function setSystemType(type) {
   if (typeof window.updateShadowInputConstraintBadge === "function") {
     window.updateShadowInputConstraintBadge();
   }
-
+  _rebuildBrandDropdownForMode();
   updateManualModeUI();
   calculateStage2();
 
@@ -579,6 +873,10 @@ function setSystemType(type) {
     }
   }
 }
+
+
+
+
 // ============================================================
 // MAIN DISPATCHER
 // ============================================================
@@ -1907,18 +2205,28 @@ function _normalizeCanvasInverterSlices(totalPanels) {
   const invertersToUse = resolveManualInverters();
   if (!invertersToUse || invertersToUse.length === 0) return [];
 
-  const units = invertersToUse.map((u, idx) => ({
-    id: u.id,
-    name: u?.inverter?.name || `Inverter ${idx + 1}`,
-    idx: idx + 1,
+  // KEY CHANGE: Do NOT group merged inverters into pools.
+  // Every inverter gets its own slice with its own color.
+  // Merged inverters just share the "merged" visual indicator but keep separate panel blocks.
+  const units = invertersToUse.map((inv, idx) => ({
+    id:    inv.id,
+    name:  inv.inverter?.name || `Inverter ${idx + 1}`,
+    idx:   idx + 1,
     color: _PAL[idx % _PAL.length],
-    count: Math.max(0, parseInt(u?.assignedPanels || 0)),
+    count: Math.max(0, parseInt(inv.assignedPanels || 0)),
+    mergeWith: inv.mergeWith || null,
   }));
 
-  if (units.length === 1 && units[0].count === 0) units[0].count = totalPanels;
+  // If single inverter with 0 panels assigned, give it everything
+  if (units.length === 1 && units[0].count === 0) {
+    units[0].count = totalPanels;
+  }
 
+  // Balance total to match target — adjust last unit for any rounding delta
   let sum = units.reduce((s, u) => s + u.count, 0);
-  if (sum < totalPanels && units.length > 0) units[units.length - 1].count += totalPanels - sum;
+  if (sum < totalPanels && units.length > 0) {
+    units[units.length - 1].count += totalPanels - sum;
+  }
   if (sum > totalPanels) {
     let overflow = sum - totalPanels;
     for (let i = units.length - 1; i >= 0 && overflow > 0; i--) {
@@ -1928,27 +2236,41 @@ function _normalizeCanvasInverterSlices(totalPanels) {
     }
   }
 
+  // Build slices — one per inverter, sequential panel ranges
   const slices = [];
   let cursor = 0;
   units.forEach(u => {
     if (u.count <= 0) return;
     const start = cursor;
-    const end = Math.min(totalPanels - 1, cursor + u.count - 1);
+    const end   = Math.min(totalPanels - 1, cursor + u.count - 1);
     const count = end >= start ? end - start + 1 : 0;
     if (count > 0) {
-      slices.push({ id: u.id, name: u.name, idx: u.idx, color: u.color, start, end, count });
+      slices.push({
+        id:        u.id,
+        name:      u.name,
+        idx:       u.idx,
+        color:     u.color,
+        start,
+        end,
+        count,
+        mergeWith: u.mergeWith,
+      });
       cursor = end + 1;
     }
   });
 
-  if (slices.length === 0 && totalPanels > 0) {
-    slices.push({ id: "default", name: "Inverter 1", idx: 1, color: _PAL[0], start: 0, end: totalPanels - 1, count: totalPanels });
+  // Ensure last slice covers any remaining panels
+  if (slices.length > 0 && cursor < totalPanels) {
+    const last = slices[slices.length - 1];
+    last.end   = totalPanels - 1;
+    last.count = last.end - last.start + 1;
   }
 
-  if (cursor < totalPanels && slices.length > 0) {
-    const last = slices[slices.length - 1];
-    last.end = totalPanels - 1;
-    last.count = last.end - last.start + 1;
+  if (slices.length === 0 && totalPanels > 0) {
+    slices.push({
+      id: "default", name: "Inverter 1", idx: 1,
+      color: _PAL[0], start: 0, end: totalPanels - 1, count: totalPanels,
+    });
   }
 
   return slices;
@@ -1981,18 +2303,37 @@ function _renderInverterSliceLegend() {
   const host = document.getElementById("ec4-inv-slices");
   if (!host) return;
   const slices = interactiveCanvasState.inverterSlices || [];
-  if (!slices.length) {
-    host.innerHTML = "";
-    host.style.display = "none";
-    return;
-  }
+  if (!slices.length) { host.innerHTML = ""; host.style.display = "none"; return; }
+
   host.style.display = "flex";
-  host.innerHTML = slices
-    .map(s => `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid ${s.color};background:${s.color}22;color:#0f172a;font-size:.66rem;font-weight:700;">
+
+  // Build pills — for merged pairs, show a chain icon between them
+  let html = "";
+  const rendered = new Set();
+
+  slices.forEach((s, i) => {
+    if (rendered.has(s.id)) return;
+    rendered.add(s.id);
+
+    html += `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+      border-radius:999px;border:1px solid ${s.color};background:${s.color}22;
+      color:#0f172a;font-size:.66rem;font-weight:700;">
       <span style="width:8px;height:8px;border-radius:50%;background:${s.color};"></span>
-      INV ${s.idx}: ${s.count} panels (${s.start + 1}-${s.end + 1})
-    </span>`)
-    .join("");
+      INV ${s.idx}: ${s.count} panels (${s.start + 1}–${s.end + 1})
+    </span>`;
+
+    // If this inverter merges with the next one, show a chain link between pills
+    const nextSlice = slices[i + 1];
+    if (s.mergeWith && nextSlice && s.mergeWith === nextSlice.id) {
+      html += `<span style="font-size:0.65rem;color:#0369a1;font-weight:700;
+        background:#e0f2fe;border:1px solid #bae6fd;padding:2px 7px;border-radius:20px;
+        display:inline-flex;align-items:center;gap:3px;">
+        <i class="fas fa-link" style="font-size:0.55rem;"></i> merged
+      </span>`;
+    }
+  });
+
+  host.innerHTML = html;
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -2816,25 +3157,52 @@ function _ec4BuildGrid() {
   });
 
   // ── ROW SEPARATOR LINES between inverter zones ─────────────────────
-  // Draw a full-width colored line in the GAP row between each slice
+// ── ROW SEPARATORS + MERGE INDICATORS between inverter zones ──────
   slices.forEach((slice, sIdx) => {
-    if (sIdx === 0) return; // no separator before first slice
-    // Find the cell index of the first panel of this slice
+    if (sIdx === 0) return;
     const firstCellIdx = panelToCellIdx[slice.start];
     if (firstCellIdx < 0) return;
     const firstCellRow = Math.floor(firstCellIdx / cols);
-    // The gap row is immediately above — between row (firstCellRow-1) and firstCellRow
     const lineY = firstCellRow * CELL_H + 10 - GAP / 2;
-    const sc    = slice.color;
 
-    // Wide glow
-    parts.push(`<line x1="6" y1="${lineY}" x2="${svgW - 6}" y2="${lineY}"
-      stroke="${sc}" stroke-width="10" opacity="0.18"
-      stroke-linecap="round" style="pointer-events:none;"/>`);
-    // Sharp separator
-    parts.push(`<line x1="6" y1="${lineY}" x2="${svgW - 6}" y2="${lineY}"
-      stroke="${sc}" stroke-width="2.5" opacity="0.9"
-      stroke-linecap="round" style="pointer-events:none;"/>`);
+    const prevSlice = slices[sIdx - 1];
+    const isMerged  = prevSlice && prevSlice.mergeWith === slice.id;
+
+    if (isMerged) {
+      // MERGED: draw BOTH colors side by side with a chain icon label
+      // Left half = prev inverter color, right half = this inverter color
+      const midX = svgW / 2;
+
+      // Subtle dual-color band
+      parts.push(`<rect x="6" y="${lineY - 4}" width="${midX - 6}" height="8" rx="3"
+        fill="${prevSlice.color}" opacity="0.22" style="pointer-events:none;"/>`);
+      parts.push(`<rect x="${midX}" y="${lineY - 4}" width="${svgW - midX - 6}" height="8" rx="3"
+        fill="${slice.color}" opacity="0.22" style="pointer-events:none;"/>`);
+
+      // Sharp line in each color
+      parts.push(`<line x1="6" y1="${lineY}" x2="${midX - 3}" y2="${lineY}"
+        stroke="${prevSlice.color}" stroke-width="2" opacity="0.9"
+        stroke-linecap="round" style="pointer-events:none;"/>`);
+      parts.push(`<line x1="${midX + 3}" y1="${lineY}" x2="${svgW - 6}" y2="${lineY}"
+        stroke="${slice.color}" stroke-width="2" opacity="0.9"
+        stroke-linecap="round" style="pointer-events:none;"/>`);
+
+      // Center chain badge
+      parts.push(`<rect x="${midX - 28}" y="${lineY - 9}" width="56" height="18" rx="9"
+        fill="#0ea5e9" opacity="0.95" style="pointer-events:none;"/>`);
+      parts.push(`<text x="${midX}" y="${lineY + 5}" text-anchor="middle"
+        font-size="9" font-weight="700" fill="#ffffff"
+        style="pointer-events:none;user-select:none;">⛓ MERGED</text>`);
+
+    } else {
+      // UNMERGED: standard single-color separator
+      parts.push(`<line x1="6" y1="${lineY}" x2="${svgW - 6}" y2="${lineY}"
+        stroke="${slice.color}" stroke-width="10" opacity="0.18"
+        stroke-linecap="round" style="pointer-events:none;"/>`);
+      parts.push(`<line x1="6" y1="${lineY}" x2="${svgW - 6}" y2="${lineY}"
+        stroke="${slice.color}" stroke-width="2.5" opacity="0.9"
+        stroke-linecap="round" style="pointer-events:none;"/>`);
+    }
   });
 
   // ── INV PILL LABELS (bottom-left of first panel of each slice) ─────
@@ -3088,6 +3456,34 @@ function _ec4UpdateBom() {
   const totalOpt = qty1+qty2;
   cards += `<div class="ec4-bom-card" style="border-color:#8b5cf6;background:#f5f3ff;"><span class="ec4-bom-qty" style="color:#6d28d9;">${totalOpt}</span><span class="ec4-bom-name" style="color:#6d28d9;">Total Optimizers</span></div>`;
   bomGrid.innerHTML = cards;
+}
+function getInverterPools(invertersToUse) {
+  const pools = [];
+  const visited = new Set();
+
+  invertersToUse.forEach(inv => {
+    if (visited.has(inv.id)) return;
+    const pool = [inv];
+    visited.add(inv.id);
+
+    // Group any inverters linked to this one
+    let added = true;
+    while(added) {
+      added = false;
+      invertersToUse.forEach(other => {
+        if (visited.has(other.id)) return;
+        // Check if 'other' is linked to anything currently in the pool
+        const isLinked = pool.some(p => p.mergeWith === other.id || other.mergeWith === p.id);
+        if (isLinked) {
+          pool.push(other);
+          visited.add(other.id);
+          added = true;
+        }
+      });
+    }
+    pools.push(pool);
+  });
+  return pools;
 }
 
 function _e4(id, val, color) {
@@ -3509,6 +3905,66 @@ function refreshInteractiveCanvasIfEnabled() {
   _renderInverterSliceLegend();
   _ec4Refresh();
 }
+// ============================================================
+// CANVAS REFRESH ON MERGE CHANGE
+// Rebuilds panel ownership map and redraws grid without
+// wiping completed strings — preserves user's work where possible
+// ============================================================
+function _refreshCanvasAfterMergeChange() {
+  const s1 = getStage1Snapshot();
+  const totalPanels = s1.panelCount || 0;
+  if (!totalPanels) return;
+
+  // Rebuild ownership map with new merge state
+  const ownership = _buildPanelToInverterMap(totalPanels);
+
+  // Check if slices actually changed — avoid unnecessary redraws
+  const oldSig = JSON.stringify(
+    (interactiveCanvasState.inverterSlices || []).map(s => `${s.id}:${s.start}:${s.end}:${s.color}`)
+  );
+  const newSig = JSON.stringify(
+    (ownership.slices || []).map(s => `${s.id}:${s.start}:${s.end}:${s.color}`)
+  );
+
+  if (oldSig === newSig) return; // Nothing changed visually
+
+  // Save completed strings that are still valid (panels still within same inverter block)
+  const validStrings = interactiveCanvasState.completedStrings.filter(str => {
+    if (!str.panels || str.panels.length === 0) return false;
+    // Check all panels in this string still belong to the same owner
+    const firstOwner = ownership.map[str.panels[0]];
+    return str.panels.every(pid => {
+      const o = ownership.map[pid];
+      // Keep string if owner hasn't changed
+      return o && firstOwner && o.id === firstOwner.id;
+    });
+  });
+
+  const droppedCount = interactiveCanvasState.completedStrings.length - validStrings.length;
+
+  // Update state
+  interactiveCanvasState.panelToInverter  = ownership.map;
+  interactiveCanvasState.inverterSlices   = ownership.slices;
+  interactiveCanvasState.completedStrings = validStrings;
+  interactiveCanvasState.currentString    = []; // Clear in-progress string
+
+  // Redraw
+  _ec4BuildGrid();
+  _ec4UpdateRatio();
+  _renderInverterSliceLegend();
+  _ec4UpdateHealthBar();
+  _ec4Refresh();
+
+  // Notify user if any strings were dropped due to boundary changes
+  if (droppedCount > 0) {
+    const hint = document.getElementById("ec4-remaining-hint");
+    const msg  = document.getElementById("ec4-rem-hint-msg");
+    if (hint && msg) {
+      hint.style.display = "flex";
+      msg.textContent = `${droppedCount} string${droppedCount > 1 ? "s" : ""} were removed because inverter boundaries changed after merge. Please reassign those panels.`;
+    }
+  }
+}
 
 // ══════════════════════════════════════════════════════════════════
 // GLOBAL EXPORTS
@@ -3525,6 +3981,7 @@ window.updateLiveMetrics               = updateLiveMetrics;
 window.checkSolarEdgeHealth            = checkSolarEdgeHealth;
 window._updateCompletedStringsSummary  = _updateCompletedStringsSummary;
 window.refreshInteractiveCanvasIfEnabled = refreshInteractiveCanvasIfEnabled;
+window._refreshCanvasAfterMergeChange = _refreshCanvasAfterMergeChange;
 window.interactiveCanvasState          = interactiveCanvasState;
 
 console.log('[Stage2 Canvas v4.0 — Mixed Optimizer] loaded ✓');
@@ -3627,7 +4084,7 @@ function renderManualVisualDiagram() {
       ? `${m.assignedInv.inverter.name.split(" ")[0]} | S${i + 1}`
       : `S${i + 1}`;
     const invSelect =
-      invertersToUse.length > 1 && !mergeInverterStringsEnabled
+      invertersToUse.length > 1
         ? `
       <select class="manual-string-inv" data-uid="${str.uid}" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.75rem;">
         ${buildInvOptions(str.assignedInverterId)}
@@ -3807,7 +4264,6 @@ function renderManualVisualDiagram() {
 
   document.querySelectorAll(".manual-string-inv").forEach(sel => {
     sel.onchange = () => {
-      if (mergeInverterStringsEnabled) return;
       const uid = parseInt(sel.getAttribute("data-uid"));
       const target = manualLayoutState.strings.find(s => s.uid === uid);
       if (!target) return;
@@ -3974,14 +4430,17 @@ function applyManualLayoutToDesign(forceManualConfirm = false) {
     renderGoodWeSystemReport(unitReports, s1, customOption);
   }
 } // ============================================================
+// ============================================================
+// RENDER: VISUAL STRING DIAGRAM — Fixed Merge/Unmerge Display
+// ============================================================
 function renderVisualStringDiagram(trackers) {
   const container = document.getElementById("diagram_container");
   const section   = document.getElementById("visual_string_diagram");
   if (!container) return;
 
+  // Manual mode delegates to its own renderer
   if (manualModeEnabled) {
     if (currentSystemType === "optimizer") {
-      // Unhide the section so canvas is visible, but don't overwrite canvas content
       if (section) section.classList.remove("hidden");
       return;
     }
@@ -3990,58 +4449,177 @@ function renderVisualStringDiagram(trackers) {
   }
 
   if (section) section.classList.remove("hidden");
+  if (!trackers || trackers.length === 0) return;
 
-  const grouped = {};
-  (trackers || []).forEach(t => {
-    const key = mergeInverterStringsEnabled
-      ? "merged"
-      : (t.assignedInverterId || t.assignedInverterName || "default");
-    if (!grouped[key]) {
-      grouped[key] = {
-        name: mergeInverterStringsEnabled ? "Merged Inverter Pool" : (t.assignedInverterName || "Inverter"),
-        trackers: [],
-      };
+  // ── Build inverter pool groups from multiInverterDesign ──────────
+  // Each pool is a set of inverters that are merged together.
+  // Unmerged inverters form their own single-inverter pool.
+  function buildDisplayPools() {
+    const design = multiInverterDesign;
+
+    if (!design || design.length === 0) {
+      // Single inverter fallback — group all trackers together
+      return [{
+        isMerged: false,
+        label: trackers[0]?.assignedInverterName || "Inverter",
+        inverterIds: ["default"],
+        trackers: [...trackers],
+      }];
     }
-    grouped[key].trackers.push(t);
+
+    const visited = new Set();
+    const pools   = [];
+
+    design.forEach((inv, idx) => {
+      if (visited.has(inv.id)) return;
+
+      // Walk merge chain: gather all inverters linked to this one
+      const pool      = [inv];
+      const poolIds   = new Set([inv.id]);
+      visited.add(inv.id);
+
+      let changed = true;
+      while (changed) {
+        changed = false;
+        design.forEach(other => {
+          if (visited.has(other.id)) return;
+          const linkedToPool =
+            pool.some(p => p.mergeWith === other.id || other.mergeWith === p.id);
+          if (linkedToPool) {
+            pool.push(other);
+            poolIds.add(other.id);
+            visited.add(other.id);
+            changed = true;
+          }
+        });
+      }
+
+      const isMerged = pool.length > 1;
+
+      // Label: "INV1 & INV2 — SE15K + SE10K" for merged, "SE25K (SE25K)" for single
+      let label;
+      if (isMerged) {
+        const nums   = pool.map(p => `INV${design.indexOf(p) + 1}`).join(" & ");
+        const models = pool.map(p => {
+          const abbr = p.inverter.name.match(/\(([^)]+)\)/)?.[1] || p.inverter.name.split(" ")[0];
+          return abbr;
+        }).join(" + ");
+        label = `${nums} — ${models}`;
+      } else {
+        label = inv.inverter.name;
+      }
+
+      // Gather trackers belonging to this pool
+      const poolTrackers = trackers.filter(t =>
+        poolIds.has(t.assignedInverterId) ||
+        (!t.assignedInverterId && idx === 0)
+      );
+
+      pools.push({ isMerged, label, pool, poolIds, trackers: poolTrackers });
+    });
+
+    return pools;
+  }
+
+  const pools = buildDisplayPools();
+  const isOpt = currentSystemType === "optimizer";
+
+  // ── Render helper: one tracker row ──────────────────────────────
+  function renderStringRow(t, invName, showInvTag) {
+    const strings = t.stringQty || (t.formation ? Number(t.formation.split("*")[0]) || 1 : 1);
+    const panels  = t.panelsPerString || (t.formation ? Number(t.formation.split("*")[1]) || 0 : 0);
+    const total   = strings * panels;
+    const maxVis  = 20;
+
+    // Label logic: optimizer uses S-id, string uses MPPT-id
+    const invShort = invName
+      ? (invName.match(/\(([^)]+)\)/)?.[1] || invName.split(" ")[0])
+      : "";
+    const trackLabel = isOpt
+      ? `S${t.id}${showInvTag && invShort ? `<span class="vsd-inv-tag">${invShort}</span>` : ""}`
+      : `MPPT${t.id}${showInvTag && invShort ? `<span class="vsd-inv-tag">${invShort}</span>` : ""}`;
+
+    const typeTag = t.type
+      ? `<span class="vsd-ratio-tag">${t.type}</span>`
+      : "";
+
+    const blocks = Array(Math.min(total, maxVis))
+      .fill(0)
+      .map(() => `<div class="vsd-panel-block"></div>`)
+      .join("");
+    const overflow = total > maxVis
+      ? `<span class="vsd-overflow">+${total - maxVis}</span>`
+      : "";
+
+    return `
+      <div class="vsd-string-row">
+        <div class="vsd-string-label">${trackLabel} ${typeTag}</div>
+        <div class="vsd-panels-wrap">
+          ${blocks}
+          ${overflow}
+          <span class="vsd-mod-count">${total} mod.</span>
+        </div>
+      </div>`;
+  }
+
+  // ── Render each pool as a section ───────────────────────────────
+  let html = `<div class="vsd-root">`;
+
+  pools.forEach((pool, pIdx) => {
+    if (!pool.trackers || pool.trackers.length === 0) return;
+
+    html += `<div class="vsd-pool-block${pool.isMerged ? " vsd-merged" : ""}">`;
+
+    // Pool header
+    html += `
+      <div class="vsd-pool-header">
+        <span class="vsd-pool-dot${pool.isMerged ? " merged" : ""}"></span>
+        <span class="vsd-pool-title">${pool.label}</span>
+        ${pool.isMerged ? `<span class="vsd-merged-badge"><i class="fas fa-link"></i> merged pool</span>` : ""}
+      </div>`;
+
+    if (pool.isMerged) {
+      // ── MERGED POOL: group sub-sections per inverter within the pool ──
+      // Each inverter gets its own labeled sub-group inside the merged block
+      pool.pool.forEach((inv, invIdx) => {
+        const design       = multiInverterDesign;
+        const invNum       = design.indexOf(inv) + 1;
+        const invAbbr      = inv.inverter.name.match(/\(([^)]+)\)/)?.[1]
+                          || inv.inverter.name.split(" ")[0];
+        const invTrackers  = pool.trackers.filter(
+          t => t.assignedInverterId === inv.id
+        );
+        if (!invTrackers.length) return;
+
+        const isLast = invIdx === pool.pool.length - 1;
+
+        html += `
+          <div class="vsd-merged-inv-section${!isLast ? " vsd-merged-divider" : ""}">
+            <div class="vsd-merged-inv-label">
+              <i class="fas fa-server vsd-server-icon"></i>
+              INV${invNum} · ${invAbbr}
+            </div>
+            ${invTrackers.map(t => renderStringRow(t, inv.inverter.name, false)).join("")}
+          </div>`;
+      });
+
+    } else {
+      // ── UNMERGED: single inverter, direct string rows ─────────────
+      const invName = pool.pool?.[0]?.inverter?.name || pool.label;
+      pool.trackers.forEach(t => {
+        html += renderStringRow(t, invName, false);
+      });
+    }
+
+    html += `</div>`; // vsd-pool-block
+
+    // Separator between pools (not after last)
+    if (pIdx < pools.length - 1) {
+      html += `<div class="vsd-pool-separator"></div>`;
+    }
   });
 
-  let html = `<div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:24px; display:flex; flex-direction:column; gap:18px;">`;
-  Object.values(grouped).forEach((group, gIdx) => {
-    html += `
-      <div style="padding-bottom:10px; border-bottom:${gIdx < Object.keys(grouped).length - 1 ? "2px dashed #cbd5e1" : "none"};">
-        <div style="font-weight:800; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
-          <span style="width:10px; height:10px; border-radius:50%; background:#2563eb;"></span>
-          ${group.name}
-        </div>
-    `;
-    group.trackers.forEach(t => {
-      const strings = t.stringQty || (t.formation ? Number(t.formation.split("*")[0]) || 1 : 1);
-      const panels = t.panelsPerString || (t.formation ? Number(t.formation.split("*")[1]) || 0 : 0);
-      for (let s = 1; s <= strings; s++) {
-        const label = mergeInverterStringsEnabled
-          ? `S${t.id}-${s}`
-          : (t.assignedInverterName ? `${t.assignedInverterName.split(" ")[0]}|MPPT${t.id}-S${s}` : `MPPT${t.id}-S${s}`);
-        const badge = t.type
-          ? `<span style="font-size:0.7rem; color:#ea580c; background:#fff7ed; padding:2px 6px; border-radius:4px; border:1px solid #fdba74;">${t.type}</span>`
-          : "";
-        html += `
-          <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:10px;">
-            <div style="min-width:180px; font-weight:600; color:#3b82f6; font-size:0.8rem;">${label} ${badge}</div>
-            <div style="display:flex; gap:4px; flex:1; flex-wrap:wrap;">
-              ${Array(Math.min(panels, 20))
-                .fill(0)
-                .map(() => `<div style="width:16px; height:24px; background:#3b82f6; border-radius:2px;"></div>`)
-                .join("")}
-              ${panels > 20 ? `<span style="margin-left:4px; color:#6b7280; font-size:0.8rem; align-self:center;">+${panels - 20}</span>` : ""}
-              <span style="margin-left:8px; color:#6b7280; font-size:0.875rem; align-self:center;">${panels} mod.</span>
-            </div>
-            <div style="padding:6px 12px; background:#eff6ff; border:1px solid #3b82f6; border-radius:4px; font-size:0.75rem; color:#3b82f6; font-weight:500;">DC OUT</div>
-          </div>`;
-      }
-    });
-    html += `</div>`;
-  });
-  html += `</div>`;
+  html += `</div>`; // vsd-root
   container.innerHTML = html;
 }
 
@@ -4443,14 +5021,14 @@ function buildStringCard(i, isOpt, mergeEnabled, invOptions) {
         </div>
         <div id="manual_str${i}_status" style="font-size:0.65rem; font-weight:700; color:#10b981; background:#f0fdf4; padding:2px 8px; border-radius:20px; border:1px solid #dcfce7;">STANDBY</div>
       </div>
+      
       <div style="margin-bottom:12px;">
-        <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">${mergeEnabled ? "String Pool" : "Assign to Inverter Unit"}</label>
-        ${
-          mergeEnabled
-            ? `<div style="padding:10px; border:1px solid #bfdbfe; border-radius:10px; background:#eff6ff; font-size:0.82rem; font-weight:700; color:#1d4ed8;">Merged inverter pool (combined allocation)</div>`
-            : `<select id="manual_str${i}_inv_id" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:white; font-size:0.85rem; font-weight:600; color:#334155;">${invOptions}</select>`
-        }
+        <label style="font-size:0.7rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block; margin-bottom:6px;">Assign to Inverter / Pool</label>
+        <select id="manual_str${i}_inv_id" class="manual-string-input" data-string="${i}" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:white; font-size:0.85rem; font-weight:600; color:#334155;">
+          ${invOptions}
+        </select>
       </div>
+      
       ${
         isOpt
           ? `
@@ -4486,6 +5064,7 @@ function buildStringCard(i, isOpt, mergeEnabled, invOptions) {
       </div>
     </div>`;
 }
+
 
 function updateManualPreview() {
   const stringCount = parseInt(document.getElementById("manual_string_count")?.value || 2);
@@ -4902,14 +5481,20 @@ function rebalanceManualLayout(modifiedUid) {
 // ============================================================
 function buildInvOptions(selectedId) {
   const invertersToUse = resolveManualInverters();
-  return invertersToUse
-    .map((item, idx) => {
-      const isSelected = item.id.toString() === (selectedId || "default").toString() ? "selected" : "";
-      return `<option value="${item.id}" ${isSelected}>Unit ${idx + 1}: ${item.inverter.name}</option>`;
-    })
-    .join("");
+  const pools = getInverterPools(invertersToUse);
+  
+  return pools.map((pool, idx) => {
+    const isMerged = pool.length > 1;
+    const label = isMerged 
+      ? `Units ${pool.map(p => invertersToUse.indexOf(p) + 1).join(' & ')} [MERGED]` 
+      : `Unit ${invertersToUse.indexOf(pool[0]) + 1}: ${pool[0].inverter.name}`;
+    
+    // Auto-select if the string was assigned to any inverter in this pool
+    const isSelected = pool.some(p => p.id.toString() === (selectedId || "default").toString()) ? "selected" : "";
+    
+    return `<option value="${pool[0].id}" ${isSelected}>${label}</option>`;
+  }).join("");
 }
-
 // ============================================================
 // VERIFY MANUAL STRING DESIGN
 // ============================================================

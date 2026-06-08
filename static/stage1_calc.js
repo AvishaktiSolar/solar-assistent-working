@@ -10,6 +10,22 @@ window.projectData = window.projectData || {};
 window.selectedPanelSpecs = {};
 window.calculatedPanelCount = 0;
 
+// === DEBOUNCE SYSTEM FOR LIVE HEADER ===
+window.headerUpdateTimer = null;
+window.headerUpdateScheduled = false;
+window.isProjectLoading = false;
+
+function scheduleHeaderUpdate() {
+  if (window.headerUpdateTimer) {
+    clearTimeout(window.headerUpdateTimer);
+  }
+  window.headerUpdateScheduled = true;
+  window.headerUpdateTimer = setTimeout(() => {
+    window.headerUpdateScheduled = false;
+    updateLiveHeader();
+  }, 150);
+}
+
 // ==================================================================
 //  2. PANEL SELECTION LOGIC (Stage 1.3)
 // ==================================================================
@@ -174,12 +190,13 @@ function handleHeaderPanelChange(val) {
   }
 }
 window.handleHeaderPanelChange = handleHeaderPanelChange;
+
+
 // ==================================================================
-//  UPDATED LIVE HEADER + STEP 1.3 SUMMARY FIX (In calc.js)
+//  FIXED LIVE HEADER (Prevents Overwrite Glitch During Typing)
 // ==================================================================
 
 function updateLiveHeader() {
-  // Helper to safely set text without crashing
   function safeSetText(id, text) {
     const el = document.getElementById(id);
     if (el) el.innerText = text;
@@ -190,20 +207,15 @@ function updateLiveHeader() {
 
   // Update Top Bar
   safeSetText("header-target-energy", annualDemand > 0 ? annualDemand.toLocaleString() + " kWh" : "0 kWh");
-
-  // --- FIX FOR STEP 1.3 SUMMARY BOX ---
-  // This explicitly pushes the calculated demand to the summary card
   safeSetText("total_annual_units", annualDemand.toLocaleString() + " kWh");
 
-  // Calculate average cost if bills exist
   if (window.bills && window.bills.length > 0) {
-    const totalCost = window.bills.reduce((s, b) => s + (parseFloat(b.amount) || 0), 0);
+    const totalCost = window.bills.reduce((s, b) => s + (parseFloat(b.bill_amount) || 0), 0);
     const avgRate = annualDemand > 0 ? totalCost / annualDemand : 0;
 
     safeSetText("total_annual_cost", "₹" + totalCost.toLocaleString());
     safeSetText("avg_unit_cost", "₹" + avgRate.toFixed(2));
   }
-  // ------------------------------------
 
   // 2. Solar Calculations
   if (window.fetchedSolarData) {
@@ -211,32 +223,46 @@ function updateLiveHeader() {
 
     // Update Top Bar Specs
     safeSetText("header-system-size", calcData.systemSizeKwp.toFixed(2) + " kWp");
-    safeSetText("header-annual-energy", calcData.totalAnnualEnergy.toFixed(0) + " kWh");
+    safeSetText("header-annual-energy", calcData.totalAnnualEnergy.toFixed(2) + " kWh");
 
     // Update Savings Badge
     const savingsEl = document.getElementById("header-achieved-savings");
     if (savingsEl) {
       const achieved = annualDemand > 0 ? (calcData.totalAnnualEnergy / annualDemand) * 100 : 0;
-      savingsEl.innerText = achieved.toFixed(1) + "%";
+      savingsEl.innerText = achieved.toFixed(2) + "%";
 
       if (achieved >= 100) savingsEl.style.color = "#4ade80";
       else if (achieved > 80) savingsEl.style.color = "#fbbf24";
       else savingsEl.style.color = "#f87171";
     }
 
-    // Sync Panel Input (if not active)
-    const panelInput = document.getElementById("header-panel-input");
-    if (panelInput && document.activeElement !== panelInput) {
-      panelInput.value = calcData.panelsNeeded;
+    // --- ANTI-GLITCH PROTECTION BLOCK ---
+    const headerPanelInput = document.getElementById("header-panel-input");
+    
+    // Safety check: If the user is currently focused or typing in the nav input, 
+    // DO NOT let the background script alter its value or recalculate older targets.
+    if (headerPanelInput && document.activeElement === headerPanelInput) {
+      return; 
+    }
+
+    // Sync Panel Input only when idle
+    if (headerPanelInput) {
+      headerPanelInput.value = calcData.panelsNeeded;
     }
   }
 }
 
-// Polling
+// Keep polling safe - respect project loading flag
 setInterval(() => {
-  if (window.bills && window.bills.length > 0) updateLiveHeader();
+  const headerPanelInput = document.getElementById("header-panel-input");
+  // Only auto-update if user isn't typing AND project isn't loading AND bills exist
+  if (!window.isProjectLoading && 
+      document.activeElement !== headerPanelInput && 
+      window.bills && window.bills.length > 0 &&
+      !window.headerUpdateScheduled) {
+    updateLiveHeader();
+  }
 }, 2000);
-
 // ==================================================================
 //  5. GENERATION MODAL
 // ==================================================================
@@ -718,20 +744,16 @@ function toggleShadowScenario(btn) {
   }
 }
 
-const ORIENTATION_AZIMUTHS = [90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270];
-const ORIENTATION_TILTS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90];
-const ORIENTATION_TABLE = [
-  [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90],
-  [90, 91, 93, 94, 95, 95, 96, 95, 95, 94, 92, 91, 89],
-  [88, 91, 94, 96, 97, 98, 98, 98, 97, 96, 93, 90, 87],
-  [86, 90, 94, 96, 98, 100, 100, 99, 98, 96, 93, 89, 86],
-  [84, 88, 92, 96, 98, 99, 100, 99, 97, 95, 90, 86, 82],
-  [80, 85, 89, 93, 95, 97, 97, 96, 95, 92, 88, 84, 78],
-  [76, 81, 86, 89, 92, 93, 93, 91, 90, 87, 84, 79, 74],
-  [70, 76, 80, 84, 86, 87, 87, 86, 85, 82, 78, 74, 69],
-  [65, 69, 74, 77, 79, 80, 80, 79, 77, 75, 72, 68, 63],
-  [58, 62, 65, 69, 71, 71, 71, 71, 69, 67, 64, 60, 56],
-];
+function updateTiltAngleReference() {
+  const tiltEl = document.getElementById("tilt_angle");
+  const tiltRefEl = document.getElementById("stage3_tilt_reference");
+  if (tiltEl && tiltRefEl) {
+    const tiltValue = parseFloat(tiltEl.value) || 0;
+    tiltRefEl.innerText = tiltValue.toFixed(1) + "°";
+  }
+}
+
+// Orientation loss calculation (now uses analytical formula instead of lookup table)
 
 function clampNumber(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -744,36 +766,47 @@ function getStageTiltAngle() {
 }
 
 function getOrientationOutputPercent(tiltDeg, azimuthDeg) {
+  // Get latitude from input
+  const latEl = document.getElementById("latitude");
+  const latitude = latEl && latEl.value ? parseFloat(latEl.value) : 0;
+  
   const tilt = clampNumber(tiltDeg, 0, 90);
   let az = azimuthDeg;
   if (!Number.isFinite(az)) az = 180;
   az = ((az % 360) + 360) % 360;
-  if (az < 90) az = 90;
-  if (az > 270) az = 270;
-
-  const t = ORIENTATION_TILTS;
-  const a = ORIENTATION_AZIMUTHS;
-
-  const tIdx = t.findIndex((v, i) => tilt >= v && (i === t.length - 1 || tilt <= t[i + 1]));
-  const t0 = tIdx < 0 ? 0 : tIdx;
-  const t1 = Math.min(t0 + 1, t.length - 1);
-
-  const aIdx = a.findIndex((v, i) => az >= v && (i === a.length - 1 || az <= a[i + 1]));
-  const a0 = aIdx < 0 ? 0 : aIdx;
-  const a1 = Math.min(a0 + 1, a.length - 1);
-
-  const tLow = t[t0], tHigh = t[t1];
-  const aLow = a[a0], aHigh = a[a1];
-
-  const q11 = ORIENTATION_TABLE[t0][a0];
-  const q21 = ORIENTATION_TABLE[t0][a1];
-  const q12 = ORIENTATION_TABLE[t1][a0];
-  const q22 = ORIENTATION_TABLE[t1][a1];
-
-  const lerp = (x, x0, x1, y0, y1) => (x1 === x0 ? y0 : y0 + ((y1 - y0) * (x - x0)) / (x1 - x0));
-  const r1 = lerp(az, aLow, aHigh, q11, q21);
-  const r2 = lerp(az, aLow, aHigh, q12, q22);
-  return lerp(tilt, tLow, tHigh, r1, r2);
+  
+  // Calculate optimum tilt
+  const optimumTilt = Math.abs(latitude);
+  
+  // Calculate tilt error
+  const tiltError = Math.abs(tilt - optimumTilt);
+  
+  // Calculate azimuth error (180° = South)
+  let azimuthError = Math.abs(az - 180);
+  if (azimuthError > 180) {
+    azimuthError = 360 - azimuthError;
+  }
+  
+  // Convert latitude to radians for cos calculation
+  const latRad = latitude * (Math.PI / 180);
+  
+  // Calculate combined angular error
+  const angularError = Math.sqrt(
+    Math.pow(tiltError, 2) + 
+    Math.pow(azimuthError * Math.cos(latRad), 2)
+  );
+  
+  // Calculate orientation loss
+  let lossPercent = 0;
+  if (tiltError <= 2 && azimuthError <= 5) {
+    lossPercent = 0;
+  } else {
+    lossPercent = Math.min(0.02 * Math.pow(angularError, 2), 100);
+  }
+  
+  // Efficiency = 100 - Loss
+  const efficiency = 100 - lossPercent;
+  return efficiency;
 }
 
 function getAverageOrientationLoss() {
@@ -1045,10 +1078,14 @@ function validateShadowCellInput(input) {
   const scenario = input.closest(".shadow-scenario");
   const panelInput = scenario ? scenario.querySelector(".system-panel-input") : null;
   const assignedPanels = panelInput ? Math.max(0, parseInt(panelInput.value, 10) || 0) : totalPanelCount;
-  const maxAllowed = singleSystemMode ? totalPanelCount : assignedPanels;
-  if (numValue > maxAllowed) numValue = maxAllowed;
   
-  // For both GoodWe and SolarEdge in Shadow step: keep integer-only, allow odd/even values.
+  const maxAllowed = singleSystemMode ? totalPanelCount : assignedPanels;
+  
+  // Set HTML max attribute dynamically
+  input.max = String(maxAllowed);
+
+  // Strictly clamp integer
+  if (numValue > maxAllowed) numValue = maxAllowed;
   
   input.value = String(numValue);
 }
@@ -1160,7 +1197,11 @@ function markStepAsComplete(stepNumber) {
 
 // Event Listeners
 document.addEventListener("input", function (e) {
-  if (e.target.classList.contains("shadow-cell") || e.target.classList.contains("azimuth-input") || e.target.classList.contains("system-panel-input")) {
+  if (e.target.classList.contains("shadow-cell") || 
+      e.target.classList.contains("azimuth-input") || 
+      e.target.classList.contains("system-panel-input")) {
+    
+    if (e.target.classList.contains("shadow-cell")) validateShadowCellInput(e.target);
     if (e.target.classList.contains("system-panel-input") && typeof attachShadowInputValidation === "function") {
       attachShadowInputValidation();
     }
@@ -1170,9 +1211,7 @@ document.addEventListener("input", function (e) {
     }
     updateLiveHeader();
     const modal = document.getElementById("gen-analysis-modal");
-    if (modal && modal.style.display === "flex") {
-      showGenerationModal();
-    }
+    if (modal && modal.style.display === "flex") showGenerationModal();
   }
 });
 
@@ -1207,10 +1246,18 @@ document.addEventListener("DOMContentLoaded", function () {
   updateShadowScenarioLabels();
   calculateShadowTable();
   updateLiveHeader();
+  updateTiltAngleReference();
   
   // Initialize shadow input validation with Stage 2 constraints
   if (typeof initShadowValidation === "function") {
     initShadowValidation();
+  }
+  
+  // Setup tilt angle reference update listener
+  const tiltInput = document.getElementById("tilt_angle");
+  if (tiltInput) {
+    tiltInput.addEventListener("input", updateTiltAngleReference);
+    tiltInput.addEventListener("change", updateTiltAngleReference);
   }
 });
 
@@ -1284,22 +1331,11 @@ function propagateLiveUpdates(panelCount) {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-    const scenarios = document.querySelectorAll(".shadow-scenario");
-    const singleSystemMode = !scenarios || scenarios.length <= 1;
-    const totalPanelCount = getEffectiveTotalPanelCount();
-    const scenario = input.closest(".shadow-scenario");
-    const panelInput = scenario ? scenario.querySelector(".system-panel-input") : null;
-    const assignedPanels = panelInput ? Math.max(0, parseInt(panelInput.value, 10) || 0) : totalPanelCount;
-    input.max = String(singleSystemMode ? totalPanelCount : assignedPanels);
+    // const scenarios = document.querySelectorAll(".shadow-scenario");
+    // const singleSystemMode = !scenarios || scenarios.length <= 1;
+    // const totalPanelCount = getEffectiveTotalPanelCount();
+    // const scenario = input.closest(".shadow-scenario");
+    // const panelInput = scenario ? scenario.querySelector(".system-panel-input") : null;
+    // const assignedPanels = panelInput ? Math.max(0, parseInt(panelInput.value, 10) || 0) : totalPanelCount;
+    // input.max = String(singleSystemMode ? totalPanelCount : assignedPanels);
 

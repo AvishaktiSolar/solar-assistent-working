@@ -1,13 +1,11 @@
 // ==================================================================
-//  stage5_switchgear.js - Electrical BoQ (Hybrid: Fixed + Dynamic + Editable)
+//  stage5_switchgear.js - Electrical BoQ (Cost Removed, Multi-System Added)
 // ==================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     loadStage3Materials();
     initStage3OverrideTracking();
     autoPopulateStage3FromDesign();
-    // Calculate initial totals immediately to account for fixed rows
-    setTimeout(calculateGrandTotal, 500);
 });
 
 function safeNum(val, fallback = 0) {
@@ -35,7 +33,7 @@ const JB_CATALOG = [
 const STAGE3_OVERRIDE_KEYS = [
     'qty_dc_mcb', 'size_dc_mcb', 'qty_dc_fuse', 'qty_dc_spd', 'qty_dc_cable',
     'qty_ac_mcb', 'size_ac_mcb', 'qty_ac_elcb', 'size_ac_elcb', 'qty_ac_spd',
-    'qty_ac_cable', 'size_ac_cable'
+    'qty_ac_cable', 'size_ac_cable', 'qty_dcdb'
 ];
 
 function setIfExists(id, value) {
@@ -48,7 +46,7 @@ function setQtyIfExists(id, value) {
     const el = document.getElementById(`qty_${id}`);
     if (!el) return;
     el.value = safeNum(value, 0);
-    if (typeof calcRowTotal === 'function') calcRowTotal(id);
+    if (typeof updateQuantities === 'function') updateQuantities(id);
 }
 
 function getOverrideMap() {
@@ -78,9 +76,9 @@ function setAutoFieldValue(key, value) {
     map[key] = { ...(map[key] || {}), auto_value: value };
     if (!isOverridden(key)) {
         el.value = value;
-        if (key.startsWith('qty_') && typeof calcRowTotal === 'function') {
+        if (key.startsWith('qty_') && typeof updateQuantities === 'function') {
             const rowId = key.replace('qty_', '');
-            calcRowTotal(rowId);
+            updateQuantities(rowId);
         }
     }
 }
@@ -217,16 +215,15 @@ function getStage3DerivedInputs() {
 
 function autoPopulateStage3FromDesign() {
     const d = getStage3DerivedInputs();
-    const centralized = d.nInverters <= 1;
     const iDcTotal = d.stringsParallel * d.iString;
     const dcMcbRating = 1.25 * iDcTotal;
     const acMcbRating = d.iFinal;
     const useMccb = acMcbRating > 200;
 
-    // DC side
-    setAutoFieldValue('qty_dc_mcb', centralized ? 1 : d.stringsParallel);
-    setAutoFieldValue('qty_dc_fuse', d.stringsParallel);
-    setAutoFieldValue('qty_dc_spd', d.optimizerMode === 'SolarEdge' ? d.nInverters : d.nMppt);
+    // Trigger Multi-System DB scaling
+    initStage3MultiSystems();
+
+    // DC Side - Cable and rating
     setAutoFieldValue('qty_dc_cable', d.stringsParallel * d.lPerString);
     setAutoFieldValue('size_dc_mcb', `${Math.ceil(dcMcbRating)}A min`);
 
@@ -265,7 +262,6 @@ function autoPopulateStage3FromDesign() {
         }
     }
 
-    // Derived values not rendered as rows are saved for downstream usage.
     if (!window.projectData) window.projectData = {};
     if (!window.projectData.stage3Computed) window.projectData.stage3Computed = {};
     window.projectData.stage3Computed = {
@@ -288,6 +284,40 @@ function autoPopulateStage3FromDesign() {
 
     autoSizeDbPanels();
 }
+
+// --- NEW: Multi System / DCDB Logic ---
+function initStage3MultiSystems() {
+    const sysCountInput = document.getElementById('s3_system_count');
+    if (!sysCountInput) return;
+
+    const multi = window.projectData?.strings?.multiInverterDesign || window.projectData?.stage2?.multiInverterDesign || window.multiInverterDesign || [];
+    let realTimeSystemCount = 1;
+
+    if (Array.isArray(multi) && multi.length > 0) {
+        realTimeSystemCount = multi.reduce((sum, unit) => sum + safeNum(unit?.qty, 1), 0);
+    } else {
+        const s2 = window.projectData?.strings || {};
+        realTimeSystemCount = parseInt(s2.inverterCount, 10) || 1;
+    }
+
+    sysCountInput.value = realTimeSystemCount;
+    syncMultiSystemDCDB();
+}
+
+window.syncMultiSystemDCDB = function() {
+    const sysCount = safeNum(document.getElementById('s3_system_count')?.value, 1);
+    
+    const fieldsToUpdate = ['qty_dcdb', 'qty_dc_mcb', 'qty_dc_fuse', 'qty_dc_spd'];
+    fieldsToUpdate.forEach(id => {
+        const el = document.getElementById(id);
+        // Map quantity if the user hasn't manually overridden the field
+        if (el && !isOverridden(id)) {
+            el.value = sysCount;
+        }
+    });
+    
+    autoSizeDbPanels();
+};
 
 function validateStage3Rules(ctx) {
     const warnings = [];
@@ -565,11 +595,6 @@ function refreshStage3UI() {
         if (dcCab && !dcCab.value) dcCab.value = 50;
         if (acCab && !acCab.value) acCab.value = 20;
 
-        // Trigger calculation for all rows to ensure totals are fresh
-        ['dc_cable', 'dc_mcb', 'dc_fuse', 'dc_spd', 'ac_spd'].forEach(id => {
-            const el = document.getElementById(`qty_${id}`);
-            if (el) calcRowTotal(id);
-        });
         autoPopulateStage3FromDesign();
 
         // If Stage 4 updated cable, reflect it back when revisiting Stage 3.
@@ -578,7 +603,7 @@ function refreshStage3UI() {
     }
 }
 
-// --- 1. DATA LOADING (Only for Dynamic Dropdowns) ---
+// --- 1. DATA LOADING ---
 async function loadStage3Materials() {
     try {
         const res = await fetch('/procurement/api/get_stage3_materials');
@@ -589,7 +614,6 @@ async function loadStage3Materials() {
             throw new Error(`stage3 materials API failed (${res.status})`);
         }
 
-        // Populate only the rows that have Select elements
         populateDropdown('sel_dcdb', data.boxes);
         populateDropdown('sel_acdb', data.boxes);
         populateDropdown('sel_ac_mcb', data.protection_ac);
@@ -598,9 +622,6 @@ async function loadStage3Materials() {
         autoSizeDbPanels();
         syncStage3CableFromState();
         syncStage3McbFromState();
-
-        // Note: DC MCB, Fuse, SPD, Cable & AC SPD are skipped
-        // because they are rendered as Fixed Inputs in the HTML.
     } catch (e) {
         console.warn('Stage 3 API failed, trying materials.json fallback', e);
         try {
@@ -617,16 +638,10 @@ async function loadStage3Materials() {
                 protection_ac: (materials || []).filter(m =>
                     (contains(m?.category, 'PROTECTION') || contains(m?.category, 'SWITCHGEAR') || contains(m?.category, 'BREAKER')) &&
                     (
-                        contains(m?.name, 'AC') ||
-                        contains(m?.name, 'MCB') ||
-                        contains(m?.name, 'MCCB') ||
-                        contains(m?.name, 'RCCB') ||
-                        contains(m?.name, 'ELCB') ||
-                        contains(m?.subcategory, 'AC') ||
-                        contains(m?.subcategory, 'MCB') ||
-                        contains(m?.subcategory, 'MCCB') ||
-                        contains(m?.subcategory, 'RCCB') ||
-                        contains(m?.subcategory, 'ELCB')
+                        contains(m?.name, 'AC') || contains(m?.name, 'MCB') || contains(m?.name, 'MCCB') ||
+                        contains(m?.name, 'RCCB') || contains(m?.name, 'ELCB') || contains(m?.subcategory, 'AC') ||
+                        contains(m?.subcategory, 'MCB') || contains(m?.subcategory, 'MCCB') ||
+                        contains(m?.subcategory, 'RCCB') || contains(m?.subcategory, 'ELCB')
                     )
                 ),
                 cables_ac: (materials || []).filter(m =>
@@ -651,14 +666,14 @@ async function loadStage3Materials() {
 
 function populateDropdown(elementId, items) {
     const sel = document.getElementById(elementId);
-    if (!sel) return; // Guard clause if element is fixed (input) instead of select
+    if (!sel) return;
 
     sel.innerHTML = '<option value="">-- Select --</option>';
     (Array.isArray(items) ? items : []).forEach(item => {
         const opt = document.createElement('option');
         opt.value = JSON.stringify(item);
-        // Display Name + Rate hint
-        opt.innerText = `${item.name} (Default: INR ${item.rate})`;
+        // Cost hint removed completely
+        opt.innerText = item.name;
         sel.appendChild(opt);
     });
 }
@@ -670,26 +685,19 @@ window.updateRow = function(rowId, defaultSize) {
 
     const item = JSON.parse(sel.value);
 
-    // 1. Update Hidden Rate
-    const rate = parseFloat(item.rate) || 0;
-    document.getElementById(`rate_${rowId}`).value = rate;
-
-    // 2. Update Size (Priority: DB Spec > DB Name > Default)
+    // Update Size (Priority: DB Spec > DB Name > Default)
     let size = defaultSize;
     if (item.specifications) {
         if (item.specifications.size) size = item.specifications.size;
         else if (item.specifications.rating) size = item.specifications.rating;
     }
 
-    // Only update visual size if DB has specific info, else keep default
     if (size && size !== '-' && size !== '') {
-        document.getElementById(`size_${rowId}`).value = size;
+        const sizeInput = document.getElementById(`size_${rowId}`);
+        if(sizeInput) sizeInput.value = size;
     }
 
-    // 3. Recalculate Cost
-    calcRowTotal(rowId);
-
-    // Keep AC cable in sync with Stage 4 and state (without waiting for Save).
+    // Keep AC cable in sync with Stage 4 and state.
     if (rowId === 'ac_cable') {
         const cableName = item?.name || sel.options[sel.selectedIndex]?.text || '';
         if (!window.projectData) window.projectData = {};
@@ -711,50 +719,16 @@ window.updateRow = function(rowId, defaultSize) {
     }
 };
 
-// --- 3. COST CALCULATION ---
-// Triggered when Qty changes OR Item is selected
-window.calcRowTotal = function(rowId) {
-    const qtyInput = document.getElementById(`qty_${rowId}`);
-    const rateInput = document.getElementById(`rate_${rowId}`);
-    const costInput = document.getElementById(`cost_${rowId}`);
-
-    if (!qtyInput || !rateInput || !costInput) return;
-
-    const qty = parseFloat(qtyInput.value) || 0;
-    const rate = parseFloat(rateInput.value) || 0;
-
-    // Auto-calculate Total = Qty * Rate
-    const total = qty * rate;
-    costInput.value = total.toFixed(2);
-
+// Replaces the old calcRowTotal trigger. Ensures DB Panels still size correctly when quantities change.
+window.updateQuantities = function(rowId) {
     if (['dc_mcb', 'dc_fuse', 'dc_spd', 'ac_mcb', 'ac_spd'].includes(rowId)) {
         autoSizeDbPanels();
     }
-
-    calculateGrandTotal();
 };
 
-// Triggered when ANY Cost input changes manually
-window.calculateGrandTotal = function() {
-    let grandTotal = 0;
-    const rows = ['dcdb', 'dc_mcb', 'dc_fuse', 'dc_spd', 'dc_cable', 'acdb', 'ac_mcb', 'ac_elcb', 'ac_spd', 'ac_cable'];
-
-    rows.forEach(id => {
-        const el = document.getElementById(`cost_${id}`);
-        if (el) {
-            // Read value directly to support Manual Overrides
-            const val = parseFloat(el.value) || 0;
-            grandTotal += val;
-        }
-    });
-
-    const totalEl = document.getElementById('stage3_grand_total');
-    if (totalEl) totalEl.innerText = grandTotal.toLocaleString('en-IN');
-};
-
-// --- 4. SAVE DATA ---
+// --- 3. SAVE DATA ---
 window.saveStage3 = function() {
-    // Helper to extract data from either Select or Input
+    // Helper to extract data without cost
     const getData = (id) => {
         const el = document.getElementById(`sel_${id}`);
         let itemText = '-';
@@ -770,18 +744,10 @@ window.saveStage3 = function() {
 
         return {
             item: itemText,
-            size: document.getElementById(`size_${id}`).value,
-            qty: document.getElementById(`qty_${id}`).value,
-            // Critical: Saves the value currently in the box (Manual or Calculated)
-            cost: document.getElementById(`cost_${id}`).value
+            size: document.getElementById(`size_${id}`)?.value || '',
+            qty: document.getElementById(`qty_${id}`)?.value || 0
         };
     };
-
-    const totalCostText = document.getElementById('stage3_grand_total')?.innerText || '';
-    if (!totalCostText || totalCostText === '0' || totalCostText === '0.00' || totalCostText === '0.0') {
-        const allowManualOverride = confirm('Total cost is zero. Continue to next stage with manual override?');
-        if (!allowManualOverride) return;
-    }
 
     const data = {
         dc: {
@@ -798,11 +764,11 @@ window.saveStage3 = function() {
             spd: getData('ac_spd'),
             cable: getData('ac_cable')
         },
-        totalCost: totalCostText,
         computed: window.projectData?.stage3Computed || {}
     };
 
     // Save to global state
+    if(!window.projectData) window.projectData = {};
     window.projectData.stage3 = data;
 
     if (typeof setStageCompletion === 'function') {
@@ -812,4 +778,3 @@ window.saveStage3 = function() {
     // Proceed
     if (typeof switchStage === 'function') switchStage(5);
 };
-

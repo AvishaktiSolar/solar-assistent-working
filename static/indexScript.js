@@ -58,6 +58,10 @@ async function loadProjectNumbers() {
 
 async function loadProjectIntoStage1(projectNumber) {
   if (!projectNumber) return;
+  
+  // Set loading flag to prevent header updates during project load
+  window.isProjectLoading = true;
+  
   try {
     const res = await fetch(`/projects/${encodeURIComponent(projectNumber)}`);
     if (!res.ok) return;
@@ -104,6 +108,7 @@ async function loadProjectIntoStage1(projectNumber) {
         window.bills.push(local);
         renderBill(local);
       });
+      // Update summary once after all bills are rendered
       if (typeof updateSummary === "function") updateSummary();
       const emptyState = document.getElementById("bills-empty-state");
       if (emptyState) emptyState.style.display = window.bills.length > 0 ? "none" : "block";
@@ -114,9 +119,12 @@ async function loadProjectIntoStage1(projectNumber) {
     }
 
     if (typeof syncMapToInputs === "function") syncMapToInputs();
-    if (typeof updateLiveHeader === "function") updateLiveHeader();
+    // All updates are now batched through scheduleHeaderUpdate() in updateSummary()
   } catch (e) {
     console.warn("Failed to load project", e);
+  } finally {
+    // Clear loading flag to allow normal updates
+    window.isProjectLoading = false;
   }
 }
 
