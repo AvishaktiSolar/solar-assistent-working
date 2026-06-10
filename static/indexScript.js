@@ -256,6 +256,10 @@ window.showS1Page = function (pageNum, force) {
     // Force calculation when entering Shadow Page (Stage 3)
     // TARGET STEP 4 (SHADOW PAGE)
     if (pageNum === 4) {
+      if (typeof syncShadowScenariosFromStage2 === "function") {
+        syncShadowScenariosFromStage2();
+      }
+
       // 1. Force Shadow Table Pre-calculation (Existing logic)
       const wattage = document.getElementById("panel_wattage")?.value;
       if (wattage && window.fetchedSolarData) {

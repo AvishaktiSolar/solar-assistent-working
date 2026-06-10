@@ -674,7 +674,8 @@ function updateShadowScenarioLabels() {
   scenarios.forEach((scenario, idx) => {
     scenario.dataset.scenario = String(idx + 1);
     const title = scenario.querySelector(".shadow-scenario-title");
-    if (title) title.innerText = `System ${idx + 1}`;
+    const autoLabel = scenario.dataset.autoLabel;
+    if (title) title.innerText = autoLabel || `System ${idx + 1}`;
     const removeBtn = scenario.querySelector(".shadow-scenario-remove");
     if (removeBtn) removeBtn.style.display = scenarios.length > 1 ? "inline-flex" : "none";
   });
@@ -731,6 +732,114 @@ function updateScenarioPanelInputMode(forceRebalance = false) {
     input.style.opacity = singleMode ? "0.85" : "1";
     input.style.pointerEvents = singleMode ? "none" : "auto";
   });
+}
+
+function getStage2ShadowSystemGroups() {
+  const stage2Design =
+    (Array.isArray(window.projectData?.stage2?.multiInverterDesign) && window.projectData.stage2.multiInverterDesign.length > 0)
+      ? window.projectData.stage2.multiInverterDesign
+      : (Array.isArray(window.multiInverterDesign) && window.multiInverterDesign.length > 0 ? window.multiInverterDesign : []);
+
+  if (stage2Design.length === 0) {
+    return [{
+      ids: ["default"],
+      panelCount: getEffectiveTotalPanelCount(),
+      label: "System 1",
+      isMerged: false,
+    }];
+  }
+
+  const visited = new Set();
+  const groups = [];
+
+  stage2Design.forEach(unit => {
+    if (visited.has(unit.id)) return;
+    const pool = [unit];
+    visited.add(unit.id);
+
+    let added = true;
+    while (added) {
+      added = false;
+      stage2Design.forEach(other => {
+        if (visited.has(other.id)) return;
+        const isLinked = pool.some(p => p.mergeWith === other.id || other.mergeWith === p.id);
+        if (isLinked) {
+          pool.push(other);
+          visited.add(other.id);
+          added = true;
+        }
+      });
+    }
+
+    groups.push({
+      ids: pool.map(p => p.id),
+      panelCount: pool.reduce((sum, p) => sum + (parseInt(p.assignedPanels, 10) || 0), 0),
+      label: "",
+      isMerged: pool.length > 1,
+    });
+  });
+
+  return groups.map((group, idx) => ({
+    ...group,
+    label: group.isMerged ? `System ${idx + 1} (Merged Inverters)` : `System ${idx + 1}`,
+  }));
+}
+
+function getStage2ShadowSystemSignature(groups = null) {
+  const shadowGroups = groups || getStage2ShadowSystemGroups();
+  return shadowGroups
+    .map(group => `${group.ids.join("+")}:${group.panelCount}:${group.isMerged ? "M" : "S"}`)
+    .join("|");
+}
+
+function setScenarioPanelCount(scenario, panelCount) {
+  const input = scenario ? scenario.querySelector(".system-panel-input") : null;
+  if (input) input.value = String(Math.max(0, parseInt(panelCount, 10) || 0));
+}
+
+function createShadowScenario(options = {}) {
+  const container = document.getElementById("shadow_scenarios");
+  const template = document.getElementById("shadow_scenario_template");
+  if (!container || !template || !template.content) return null;
+  const clone = template.content.cloneNode(true);
+  container.appendChild(clone);
+  const scenarios = container.querySelectorAll(".shadow-scenario");
+  return scenarios[scenarios.length - 1] || null;
+}
+
+function syncShadowScenariosFromStage2(force = false) {
+  const container = document.getElementById("shadow_scenarios");
+  const template = document.getElementById("shadow_scenario_template");
+  if (!container || !template || !template.content) return;
+
+  const groups = getStage2ShadowSystemGroups();
+  const signature = getStage2ShadowSystemSignature(groups);
+  const hasManualOverride = window.shadowScenarioManualOverride === true;
+  const previousSignature = window.shadowAutoSyncSignature || "";
+
+  if (!force && hasManualOverride && previousSignature === signature) return;
+
+  while (container.querySelectorAll(".shadow-scenario").length < groups.length) {
+    createShadowScenario({ auto: true });
+  }
+
+  while (container.querySelectorAll(".shadow-scenario").length > groups.length) {
+    const scenarios = container.querySelectorAll(".shadow-scenario");
+    scenarios[scenarios.length - 1].remove();
+  }
+
+  Array.from(container.querySelectorAll(".shadow-scenario")).forEach((scenario, idx) => {
+    const group = groups[idx] || groups[0];
+    scenario.dataset.autoLabel = group?.label || `System ${idx + 1}`;
+    scenario.dataset.stage2SystemIds = (group?.ids || []).join(",");
+    setScenarioPanelCount(scenario, group?.panelCount || 0);
+  });
+
+  window.shadowAutoSyncSignature = signature;
+  window.shadowScenarioManualOverride = false;
+  updateShadowScenarioLabels();
+  updateScenarioPanelInputMode(false);
+  attachShadowInputValidation();
 }
 
 function toggleShadowScenario(btn) {
@@ -841,12 +950,11 @@ function getScenarioOrientationLoss(scenario) {
   return clampNumber(100 - output, 0, 100);
 }
 
-function addShadowScenario() {
-  const container = document.getElementById("shadow_scenarios");
-  const template = document.getElementById("shadow_scenario_template");
-  if (!container || !template || !template.content) return;
-  const clone = template.content.cloneNode(true);
-  container.appendChild(clone);
+function addShadowScenario(options = {}) {
+  createShadowScenario(options);
+  if (!options || options.auto !== true) {
+    window.shadowScenarioManualOverride = true;
+  }
   updateShadowScenarioLabels();
   updateScenarioPanelInputMode(true);
   calculateShadowTable();
@@ -860,6 +968,7 @@ function removeShadowScenario(btn) {
   const scenarios = container.querySelectorAll(".shadow-scenario");
   if (scenarios.length <= 1) return;
   scenario.remove();
+  window.shadowScenarioManualOverride = true;
   updateShadowScenarioLabels();
   updateScenarioPanelInputMode(true);
   calculateShadowTable();
@@ -868,6 +977,7 @@ function removeShadowScenario(btn) {
 window.addShadowScenario = addShadowScenario;
 window.removeShadowScenario = removeShadowScenario;
 window.toggleShadowScenario = toggleShadowScenario;
+window.syncShadowScenariosFromStage2 = syncShadowScenariosFromStage2;
 // Stage 3 shadow losses: calculateShadowTable()/getMonthlyShadowArray()\r\n// feed monthlyShadowLosses used by calculateSolarPhysics().
 function calculateShadowTable() {
   const bodies = getShadowScenarioBodies();
