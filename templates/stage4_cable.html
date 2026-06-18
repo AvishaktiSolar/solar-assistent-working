@@ -1,187 +1,546 @@
-﻿<section id="stage-4" class="stage-view">
+﻿<!-- ============================================================
+     STAGE 4 — AC Cable & Switchgear Sizing
+     FIXED: fixed footer, scrollable body, 2-col circuit cards
+     ============================================================ -->
+<section id="stage-4" class="stage-view">
 
-    <div id="s4_hidden_data" style="display: none;">
-        <input id="s4_inv_model">
-        <input id="s4_inv_cap">
-        <input id="s4_tot_power">
-        <input id="s4_dc_capacity">
-        <input id="s4_inv_current">
-        <input id="s4_phase">
-        <input id="s4_req_it">
-        <input id="s4_panel_count">
-        <input id="s4_panel_wattage">
-        <input id="s4_cable_r">
-        <input id="s4_cable_ccc">
-        <input id="s4_mcb_rating">
-        <input id="s4_derated_ccc">
-        <input id="s4_adf">
-        <input id="s4_cable_r_m">
-        <input id="s4_floor_height" value="4.27">
-        <input id="s4_vert_calc">
-        <input id="s4_len_auto">
-    </div>
+<div id="s4_hidden_data" style="display:none;">
+  <input id="s4_inv_model"><input id="s4_inv_cap"><input id="s4_tot_power">
+  <input id="s4_dc_capacity"><input id="s4_inv_current"><input id="s4_phase">
+  <input id="s4_req_it"><input id="s4_panel_count"><input id="s4_panel_wattage">
+  <input id="s4_cable_r"><input id="s4_cable_ccc"><input id="s4_mcb_rating">
+  <input id="s4_derated_ccc"><input id="s4_adf"><input id="s4_cable_r_m">
+  <input id="s4_len_total">
+</div>
 
-    <div class="dashboard-grid" style="display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%;">
-        <div class="card full-height-card s4-card">
-            <div class="card-header compact-header">
-                <i class="fas fa-bolt"></i> Cable Sizing
-            </div>
-            
-            <div class="card-body scrollable-y">
-                <div class="s4-layout">
-                    
-                    <div class="s4-main">
+<style>
+#stage-4 *, #stage-4 *::before, #stage-4 *::after { box-sizing: border-box; }
 
-                        <div class="s4-panel s4-panel-full">
-                            <div class="s4-panel-header">
-                                <span><i class="fas fa-sliders-h"></i> System Parameters</span>
-                            </div>
-                            <div class="s4-panel-body s4-grid-2">
-                                <div class="eng-kv">
-                                    <span class="eng-label">System Voltage (V)</span>
-                                    <input class="eng-input" type="number" id="s4_voltage" value="415" step="1" onchange="calculateEngineering()">
-                                </div>
-                                <div class="eng-kv">
-                                    <span class="eng-label">Power Factor (cosf)</span>
-                                    <input class="eng-input" type="number" id="s4_pf" value="0.99" step="0.01" min="0.1" max="1" onchange="calculateEngineering()">
-                                </div>
-                                <div class="eng-kv s4-span-2">
-                                    <span class="eng-label">Inverters on Site (From Stage 2)</span>
-                                    <div id="s4_inverter_list" style="background: #f8fafc; border: 1px solid #94a3b8; border-radius: 4px; padding: 10px; max-height: 80px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 0.85rem; color: #0f172a;">
-                                        Loading inverters...
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+/* ── Stage shell: fills viewport, no scroll on section itself ── */
+#stage-4 {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
 
-                        <div class="s4-panel s4-panel-full">
-                            <div class="s4-panel-header">
-                                <span><i class="fas fa-bezier-curve"></i> Cable & Protection Configuration</span>
-                                <span class="s4-subtle" id="cable_guide_msg"></span>
-                            </div>
-                            <div class="s4-panel-body s4-grid-4">
-                                <div class="eng-kv s4-span-4" style="padding-bottom: 5px;">
-                                    <label class="eng-input" style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer; border: none; padding: 0; background: transparent;">
-                                        <input type="checkbox" id="s4_auto_coord_chk" checked onchange="calculateEngineering()">
-                                        Auto Coordinate Selection (Cable + MCB)
-                                    </label>
-                                </div>
+/* ── Fixed footer bar pinned to bottom of stage ── */
+.s4-fixed-footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  z-index: 10;
+}
 
-                                <div class="eng-kv">
-                                    <span class="eng-label">Cable Make</span>
-                                    <select id="sel_ac_cable_make_s4" class="eng-input s4-select" onchange="handleCableMakeChangeS4()">
-                                        <option value="">Loading...</option>
-                                    </select>
-                                </div>
+/* ── Scrollable content area between top-bar and footer ── */
+.s4-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+  min-height: 0; /* critical for flex children to scroll */
+}
 
-                                <div class="eng-kv" id="box_cable_select">
-                                    <span class="eng-label s4-strong">
-                                        <i class="fas fa-hand-pointer" id="icon_cable_fix" style="display:none; color:red; margin-right:5px;"></i> Select Cable Size
-                                    </span>
-                                    <select id="sel_ac_cable_s4" class="eng-input s4-select" onchange="handleManualSelection('cable')">
-                                        <option value="">Loading...</option>
-                                    </select>
-                                </div>
+/* ── Two-column outer layout: main + sidebar ── */
+.s4-wrap {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 16px;
+  align-items: start;
+}
+.s4-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.s4-side { position: sticky; top: 0; display: flex; flex-direction: column; gap: 10px; }
 
-                                <div class="eng-kv">
-                                    <span class="eng-label">Temp Factor (Ca)</span>
-                                    <select class="eng-input s4-select" id="s4_temp_factor" onchange="calculateEngineering()">
-                                        <option value="1.00">30°C (1.00)</option>
-                                        <option value="0.94">35°C (0.94)</option>
-                                        <option value="0.87" selected>40°C (0.87)</option>
-                                        <option value="0.82">45°C (0.82)</option>
-                                        <option value="0.76">50°C (0.76)</option>
-                                        <option value="0.71">55°C (0.71)</option>
-                                    </select>
-                                </div>
+/* ── Cards ── */
+.s4c { background:#fff; border:0.5px solid #e2e8f0; border-radius:10px; overflow:visible; }
+.s4c-hd {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 14px; background:#f8fafc; border-bottom:0.5px solid #e2e8f0;
+  font-size:11px; font-weight:600; color:#475569;
+  text-transform:uppercase; letter-spacing:.05em; gap:8px;
+  border-radius: 10px 10px 0 0;
+}
+.s4c-hd-icon { width:13px;height:13px;stroke:#64748b;fill:none;stroke-width:2;
+                stroke-linecap:round;stroke-linejoin:round;flex-shrink:0; }
+.s4c-body { padding:14px; overflow:visible; }
 
-                                <div class="eng-kv">
-                                    <span class="eng-label">Group Factor (Cg)</span>
-                                    <select class="eng-input s4-select" id="s4_group_factor" onchange="calculateEngineering()">
-                                        <option value="1.00">1 Cable (1.00)</option>
-                                        <option value="0.80">2 Cables (0.80)</option>
-                                        <option value="0.70" selected>3 Cables (0.70)</option>
-                                        <option value="0.65">4 Cables (0.65)</option>
-                                        <option value="0.60">6 Cables (0.60)</option>
-                                    </select>
-                                </div>
+/* ── Form grids ── */
+.s4g2 { display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px; }
+.s4g3 { display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px; }
+.s4g4 { display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px; }
 
-                                <div class="eng-kv s4-span-4">
-                                    <span class="eng-label">Select AC MCB/MCCB</span>
-                                    <select id="sel_ac_mcb_s4" class="eng-input s4-select" onchange="handleManualSelection('mcb')">
-                                        <option value="">Loading...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+/* ── Fields ── */
+.s4f { display:flex;flex-direction:column;gap:3px; }
+.s4f label { font-size:11px;font-weight:500;color:#64748b; }
+.s4f input,.s4f select,.s4f output {
+  height:32px;padding:0 9px;border:0.5px solid #cbd5e1;border-radius:6px;
+  background:#f8fafc;color:#1e293b;font-size:12px;width:100%;outline:none;
+  transition:border-color .15s;
+}
+.s4f output {
+  display:flex;align-items:center;background:#f1f5f9;color:#334155;
+  font-weight:600;cursor:default;
+}
+.s4f input:focus,.s4f select:focus {
+  border-color:#94a3b8;background:#fff;box-shadow:0 0 0 2px rgba(148,163,184,.15);
+}
+.s4f input[readonly] { background:#f1f5f9;color:#64748b;cursor:default; }
 
-                        <div class="s4-panel s4-panel-half">
-                            <div class="s4-panel-header">
-                                <span><i class="fas fa-route"></i> Routing & Distance</span>
-                            </div>
-                            <div class="s4-panel-body">
-                                <div class="eng-kv" style="margin-bottom: 5px;">
-                                    <label class="s4-len-override-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size: 0.8rem;">
-                                        <input type="checkbox" id="s4_auto_len_chk" checked onchange="calculateEngineering()">
-                                        Auto Calculate Length
-                                    </label>
-                                </div>
-                                <div class="s4-grid-2">
-                                    <div class="eng-kv">
-                                        <span class="eng-label">Floors</span>
-                                        <input class="eng-input" type="number" id="s4_floors_disp" min="0" step="1" onchange="calculateEngineering()">
-                                    </div>
-                                    <div class="eng-kv">
-                                        <span class="eng-label">Dist. to Meter (m)</span>
-                                        <input class="eng-input" type="number" id="len_horizontal" value="0" onchange="calculateEngineering()">
-                                    </div>
-                                </div>
-                                <div class="eng-kv" style="margin-top: 10px;">
-                                    <span class="eng-label">Total Length (m)</span>
-                                    <input class="eng-input s4-total" type="number" id="s4_len_total" min="0" step="0.1" onchange="calculateEngineering()">
-                                </div>
-                            </div>
-                        </div>
+/* ── Toggle ── */
+.s4-toggle {
+  display:flex;align-items:center;gap:8px;padding-top:10px;
+  border-top:0.5px solid #f1f5f9;margin-top:8px;
+  font-size:12px;font-weight:500;color:#334155;cursor:pointer;
+}
+.s4-toggle input[type=checkbox] { width:14px;height:14px;accent-color:#3b82f6;flex-shrink:0;cursor:pointer; }
 
-                    </div> <aside class="s4-side">
-                        <div class="s4-panel s4-panel-dark">
-                            <div class="s4-panel-body">
-                                
-                                <div class="s4-metric">
-                                    <div class="s4-metric-label" style="color: #fbbf24;">Target Safety Current</div>
-                                    <input id="s4_safety_current" readonly value="0.00 A" style="color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);">
-                                </div>
+/* ── Banner ── */
+.s4-banner {
+  display:none;align-items:flex-start;gap:9px;padding:9px 12px;
+  background:#eff6ff;border:0.5px solid #bfdbfe;border-radius:7px;
+  font-size:12px;color:#1e40af;
+}
+.s4-banner svg { width:14px;height:14px;stroke:#3b82f6;fill:none;stroke-width:2;
+                  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px; }
 
-                                <div class="s4-metric">
-                                    <div class="s4-metric-label">Voltage Drop</div>
-                                    <input id="s4_vdrop_pct" readonly value="0.00 %">
-                                </div>
-                                
-                                <div class="s4-metric">
-                                    <div class="s4-metric-label">Power Loss</div>
-                                    <input id="s4_ploss_pct" readonly value="0.00 %">
-                                </div>
+/* ── Badges ── */
+.s4-badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;
+             font-weight:600;padding:2px 8px;border-radius:20px; }
+.s4-badge.single { background:#dbeafe;color:#1d4ed8; }
+.s4-badge.merged { background:#d1fae5;color:#065f46; }
 
-                                <div class="status-container" style="margin-top: 10px;">
-                                    <div id="status_ploss" class="status-pill status-warn">Power</div>
-                                    <div id="status_vdrop" class="status-pill status-warn">V-Drop</div>
-                                    <div id="status_ccc" class="status-pill status-warn">CCC</div>
-                                    <div id="status_mcb" class="status-pill status-warn">MCB</div>
-                                </div>
-                            </div>
-                        </div>
-                    </aside>
+/* ── Status pills ── */
+.status-pill { font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+                text-transform:uppercase;letter-spacing:.04em; }
+.status-warn { background:#fef3c7;color:#92400e; }
+.status-ok   { background:#d1fae5;color:#065f46; }
+.status-fail { background:#fee2e2;color:#991b1b; }
 
-                </div> <div class="calc-footer s4-footer">
-                    <button class="btn btn-secondary" onclick="switchStage(1); showS1Page(4, true);">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </button>
-                    <button class="btn btn-success" onclick="saveStage4()">
-                        Save & Next Switchgear <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
+/* ── Sidebar metrics ── */
+.s4-metric { background:#f8fafc;border:0.5px solid #e2e8f0;border-radius:8px;padding:10px 13px; }
+.s4-metric-lbl { font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;
+                  color:#94a3b8;margin-bottom:3px; }
+.s4-metric input { background:transparent;border:none;font-size:20px;font-weight:700;
+                    color:#1e293b;width:100%;outline:none;padding:0; }
+.s4-metric.amber input { color:#b45309; }
 
-            </div>
+/* ── Legend ── */
+.s4-legend { font-size:11px;color:#64748b;line-height:1.8; }
+.s4-legend b { color:#334155;display:block;margin-bottom:2px; }
+.s4-empty { padding:20px;text-align:center;color:#94a3b8;background:#f8fafc;
+             border:1px dashed #e2e8f0;border-radius:8px;font-size:12px; }
+.s4-div { height:0.5px;background:#f1f5f9;margin:10px 0; }
+
+/* ── Buttons ── */
+.s4-btn {
+  display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;
+  border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;
+  border:0.5px solid #cbd5e1;background:#f8fafc;color:#475569;transition:background .15s;
+}
+.s4-btn:hover { background:#f1f5f9; }
+.s4-btn-primary { background:#1e293b;color:#f8fafc;border-color:#1e293b; }
+.s4-btn-primary:hover { background:#334155; }
+#cable_guide_msg { font-size:11px;font-style:italic;margin-left:auto; }
+
+/* ── Circuit grid: 2 per row ── */
+#s4_inverter_list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* ── Individual circuit card ── */
+.s4-ckt {
+  border:0.5px solid #e2e8f0;border-radius:8px;overflow:visible;
+  background:#fff;margin-bottom:0; /* gap handles spacing now */
+  display: flex;
+  flex-direction: column;
+}
+.s4-ckt-hd {
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+  gap:10px;padding:8px 12px;background:#f8fafc;
+  border-bottom:0.5px solid #f1f5f9;
+  border-radius:8px 8px 0 0;
+}
+.s4-ckt-body { padding:12px; flex:1; }
+.s4-ckt-meta { font-size:11px;color:#64748b;line-height:1.5; }
+.s4-ckt-amps { font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap; }
+.s4-ckt-checks {
+  display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;
+  padding-top:8px;border-top:0.5px solid #f1f5f9;align-items:center;
+}
+
+/* ── Mode toggle ── */
+.s4-mode-toggle {
+  display:none;
+  align-items:center;gap:2px;padding:2px;
+  background:#f1f5f9;border:0.5px solid #e2e8f0;border-radius:6px;
+}
+.s4-mode-btn {
+  display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;
+  border-radius:4px;font-size:11px;font-weight:600;border:none;
+  background:transparent;color:#64748b;cursor:pointer;white-space:nowrap;
+  transition:background .12s,color .12s;
+}
+.s4-mode-btn:hover  { background:#e2e8f0;color:#334155; }
+.s4-mode-btn.active { background:#1e293b;color:#f8fafc; }
+
+/* ── Mode hints ── */
+.s4-mode-hint {
+  display:flex;align-items:flex-start;gap:7px;padding:7px 10px;border-radius:6px;
+  font-size:11px;color:#1e40af;background:#eff6ff;border:0.5px solid #bfdbfe;
+  margin-bottom:10px;line-height:1.5;
+}
+.s4-mode-hint svg { flex-shrink:0;margin-top:1px; }
+.s4-mode-hint-per { color:#065f46;background:#ecfdf5;border-color:#6ee7b7; }
+
+#s4_global_selector_wrap { transition:opacity .2s; }
+
+/* ── Per-circuit selectors ── */
+.s4-per-selectors {
+  background:#f8fafc;border:0.5px solid #e2e8f0;border-radius:7px;
+  padding:10px;margin-bottom:8px;
+}
+.s4-per-selectors-grid {
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:8px;margin-bottom:7px;
+}
+.s4-per-selectors .s4f label  { font-size:10px; }
+.s4-per-selectors .s4f input,
+.s4-per-selectors .s4f select { height:28px;font-size:11px;padding:0 7px; }
+.s4-per-auto-row { border-top:0.5px solid #e2e8f0;padding-top:6px; }
+.s4-per-auto-row .s4-toggle { padding-top:0;border-top:none;margin-top:0;font-size:11px;color:#475569; }
+
+.s4-per-vdrop-row { display:flex;align-items:center;gap:8px;padding:3px 0 5px; }
+.s4-per-vdrop-lbl { font-size:10px;font-weight:600;color:#94a3b8;
+                     text-transform:uppercase;letter-spacing:.04em;flex-shrink:0; }
+.s4-per-vdrop-val { font-size:13px;font-weight:700; }
+
+.s4-ckt-per { border-width:1px;border-color:#cbd5e1; }
+.s4-ckt-per .s4-ckt-hd { background:#f1f5f9; }
+
+/* ── Responsive ── */
+@media (max-width:900px) {
+  .s4-wrap { grid-template-columns:1fr; }
+  .s4-side { position:static; }
+  #s4_inverter_list { grid-template-columns:1fr; }
+}
+@media (max-width:600px) {
+  .s4-scroll-body { padding:8px; }
+  #s4_inverter_list { grid-template-columns:1fr; }
+}
+</style>
+
+<!-- ═══════════════════════════════════════════════════
+     SCROLLABLE BODY
+════════════════════════════════════════════════════ -->
+<div class="s4-scroll-body">
+<div class="s4-wrap">
+
+  <!-- ── LEFT: main content ── -->
+  <div class="s4-main">
+
+    <!-- 1. Global parameters -->
+    <div class="s4c">
+      <div class="s4c-hd">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <svg class="s4c-hd-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83
+                     M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+          Global parameters
         </div>
+        <span id="cable_guide_msg" style="color:#64748b;font-size:11px;font-style:italic;text-transform:none;letter-spacing:0;font-weight:400;"></span>
+      </div>
+      <div class="s4c-body">
+        <div class="s4g4">
+          <div class="s4f">
+            <label>System voltage (V)</label>
+            <input type="number" id="s4_voltage" value="415" step="1" onchange="calculateEngineering()">
+          </div>
+          <div class="s4f">
+            <label>Power factor (cosφ)</label>
+            <input type="number" id="s4_pf" value="0.99" step="0.01" min="0.1" max="1" onchange="calculateEngineering()">
+          </div>
+          <div class="s4f">
+            <label>Temp factor (Ca)</label>
+            <select id="s4_temp_factor" onchange="calculateEngineering()">
+              <option value="1.00">30°C — 1.00</option>
+              <option value="0.94">35°C — 0.94</option>
+              <option value="0.87" selected>40°C — 0.87</option>
+              <option value="0.82">45°C — 0.82</option>
+              <option value="0.76">50°C — 0.76</option>
+              <option value="0.71">55°C — 0.71</option>
+            </select>
+          </div>
+          <div class="s4f">
+            <label>Grouping factor (Cg)</label>
+            <select id="s4_group_factor" onchange="calculateEngineering()">
+              <option value="1.00">1 cable — 1.00</option>
+              <option value="0.80">2 cables — 0.80</option>
+              <option value="0.70" selected>3 cables — 0.70</option>
+              <option value="0.65">4 cables — 0.65</option>
+              <option value="0.60">6 cables — 0.60</option>
+            </select>
+          </div>
+        </div>
+        <div class="s4-toggle">
+          <input type="checkbox" id="s4_auto_coord_chk" checked onchange="calculateEngineering()">
+          <label for="s4_auto_coord_chk">Auto-select best cable and breaker for each circuit</label>
+        </div>
+      </div>
     </div>
+
+    <!-- 2. Topology notice -->
+    <div class="s4-banner" id="s4_topo_notice">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="s4_topo_notice_text"></span>
+    </div>
+
+    <!-- 3. Branch circuits -->
+    <div class="s4c">
+      <div class="s4c-hd">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <svg class="s4c-hd-icon" viewBox="0 0 24 24">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+          </svg>
+          Branch circuits
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span id="s4_ckt_count_lbl"
+                style="font-size:11px;color:#94a3b8;font-weight:400;
+                       text-transform:none;letter-spacing:0;"></span>
+          <div class="s4-mode-toggle" id="s4_mode_toggle_wrap">
+            <button class="s4-mode-btn active" id="btn_mode_global"
+                    onclick="setS4CircuitMode('global')"
+                    title="Same cable + MCB for every circuit">
+              <svg style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              Global
+            </button>
+            <button class="s4-mode-btn" id="btn_mode_per"
+                    onclick="setS4CircuitMode('per')"
+                    title="Independent cable + MCB per circuit">
+              <svg style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24">
+                <rect x="2"  y="3"  width="9" height="9" rx="1"/>
+                <rect x="13" y="3"  width="9" height="9" rx="1"/>
+                <rect x="2"  y="15" width="9" height="9" rx="1"/>
+                <rect x="13" y="15" width="9" height="9" rx="1"/>
+              </svg>
+              Per circuit
+            </button>
+          </div>
+        </div>
+      </div><!-- /s4c-hd -->
+
+      <div class="s4c-body">
+
+        <!-- Global cable selectors -->
+        <div id="s4_global_selector_wrap">
+          <div class="s4g3" style="margin-bottom:10px;">
+            <div class="s4f">
+              <label>Cable make</label>
+              <select id="sel_ac_cable_make_s4" onchange="handleCableMakeChangeS4()">
+                <option value="">Loading…</option>
+              </select>
+            </div>
+            <div class="s4f" id="box_cable_select">
+              <label>
+                <i id="icon_cable_fix" class="fas fa-exclamation-triangle"
+                   style="display:none;color:#dc2626;margin-right:4px;font-size:10px;"></i>
+                Cable size
+              </label>
+              <select id="sel_ac_cable_s4" onchange="handleManualSelection('cable')">
+                <option value="">Loading…</option>
+              </select>
+            </div>
+            <div class="s4f">
+              <label>AC MCB / MCCB</label>
+              <select id="sel_ac_mcb_s4" onchange="handleManualSelection('mcb')">
+                <option value="">Loading…</option>
+              </select>
+            </div>
+          </div>
+          <div class="s4-mode-hint" id="s4_global_hint">
+            <svg style="width:12px;height:12px;" viewBox="0 0 24 24"
+                 fill="none" stroke="#3b82f6" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>
+              <strong>Global mode</strong> — the same cable and MCB are applied to every circuit.
+              Switch to <strong>Per circuit</strong> for independent selections
+              (merged buses or multi-inverter systems with different run lengths).
+            </span>
+          </div>
+        </div>
+
+        <!-- Per-circuit hint -->
+        <div class="s4-mode-hint s4-mode-hint-per" id="s4_per_hint" style="display:none;">
+          <svg style="width:12px;height:12px;" viewBox="0 0 24 24"
+               fill="none" stroke="#059669" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <span>
+            <strong>Per-circuit mode</strong> — each circuit below has its own cable make,
+            size, and MCB. The global selectors above are <strong>inactive</strong> in this mode.
+          </span>
+        </div>
+
+        <!-- Circuit cards — rendered 2-per-row by CSS grid -->
+        <div id="s4_inverter_list">
+          <div class="s4-empty" style="grid-column:1/-1;">
+            <svg style="width:16px;height:16px;stroke:#94a3b8;fill:none;stroke-width:2;
+                        vertical-align:middle;margin-bottom:4px;" viewBox="0 0 24 24">
+              <line x1="12" y1="2"    x2="12" y2="6"/>
+              <line x1="12" y1="18"   x2="12" y2="22"/>
+              <line x1="4.93" y1="4.93"  x2="7.76"  y2="7.76"/>
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+              <line x1="2"  y1="12"   x2="6"  y2="12"/>
+              <line x1="18" y1="12"   x2="22" y2="12"/>
+            </svg><br>
+            Loading circuit topology from previous stages…
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /branch circuits -->
+
+    <!-- 4. Cable routing -->
+    <div class="s4c">
+      <div class="s4c-hd">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <svg class="s4c-hd-icon" viewBox="0 0 24 24">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
+          Cable routing
+        </div>
+      </div>
+      <div class="s4c-body">
+        <div class="s4g3">
+          <div class="s4f">
+            <label>Floors traversed</label>
+            <input type="number" id="s4_floors_disp" value="0" min="0" step="1"
+                   oninput="calculateEngineering()">
+          </div>
+          <div class="s4f">
+            <label>Horizontal run to meter (m)</label>
+            <input type="number" id="len_horizontal" value="0" min="0" step="0.5"
+                   oninput="calculateEngineering()">
+          </div>
+          <div class="s4f">
+            <label>Total cable length (m)</label>
+            <output id="s4_len_total_disp">0.00</output>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /s4-main -->
+
+  <!-- ── RIGHT: sidebar ── -->
+  <div class="s4-side">
+
+    <div class="s4c">
+      <div class="s4c-hd">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <svg class="s4c-hd-icon" viewBox="0 0 24 24">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Summary
+        </div>
+      </div>
+      <div class="s4c-body" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="s4-metric amber">
+          <div class="s4-metric-lbl">Total design current</div>
+          <input id="s4_safety_current" readonly value="— A">
+        </div>
+        <div class="s4-metric">
+          <div class="s4-metric-lbl">Worst-case V-drop</div>
+          <input id="s4_vdrop_pct" readonly value="— %">
+        </div>
+        <div class="s4-metric">
+          <div class="s4-metric-lbl">Aggregated power loss</div>
+          <input id="s4_ploss_pct" readonly value="— %">
+        </div>
+        <div style="padding-top:6px;border-top:0.5px solid #f1f5f9;">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;
+                      letter-spacing:.07em;color:#94a3b8;margin-bottom:6px;">System checks</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">
+            <span class="status-pill status-warn" id="status_ploss">Power</span>
+            <span class="status-pill status-warn" id="status_vdrop">V-drop</span>
+            <span class="status-pill status-warn" id="status_ccc">CCC</span>
+            <span class="status-pill status-warn" id="status_mcb">MCB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="s4c">
+      <div class="s4c-body">
+        <div class="s4-legend">
+          <b>Circuit types</b>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span class="s4-badge single">Single</span> One inverter, direct run
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="s4-badge merged">Merged</span> Combined inverters
+          </div>
+          <div class="s4-div"></div>
+          <b>V-drop limits</b>
+          <div>&#x2705; &lt; 2.0% — OK</div>
+          <div>&#x26A0;&#xFE0F; 2.0–3.0% — review</div>
+          <div>&#x274C; &gt; 3.0% — oversize cable</div>
+          <div class="s4-div"></div>
+          <b>Selection mode</b>
+          <div id="s4_legend_mode_lbl"
+               style="font-size:11px;padding:4px 7px;border-radius:5px;
+                      background:#f1f5f9;color:#475569;margin-top:2px;">
+            Global — one size fits all circuits
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /s4-side -->
+
+</div><!-- /s4-wrap -->
+</div><!-- /s4-scroll-body -->
+
+<!-- ═══════════════════════════════════════════════════
+     FIXED FOOTER — always visible at bottom
+════════════════════════════════════════════════════ -->
+<div class="s4-fixed-footer">
+  <button class="s4-btn" onclick="switchStage(1); showS1Page(4, true);">
+    <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;
+                stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Back
+  </button>
+  <button class="s4-btn s4-btn-primary" onclick="saveStage4()">
+    Save &amp; next — switchgear
+    <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;
+                stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  </button>
+</div>
+
 </section>

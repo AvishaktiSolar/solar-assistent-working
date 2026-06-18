@@ -205,7 +205,7 @@
   border-color: #f59e0b;
 }
 
-#s4_auto_coord_chk, #s4_auto_len_chk {
+#s4_auto_coord_chk {
   accent-color: var(--s4-blue);
   transform: scale(1.1);
   cursor: pointer;
@@ -396,4 +396,142 @@
   .s4-grid-4, .s4-grid-3, .s4-grid-2 { grid-template-columns: 1fr; }
   .s4-span-2, .s4-span-3, .s4-span-4 { grid-column: 1 / -1; }
   .s4-footer { flex-direction: column; }
+}
+
+/* ==================================================================
+   STAGE 4 — CSS ADDITIONS
+   Append these rules to the existing stage4_cable.css / <style> block
+   ================================================================== */
+
+/* ── Mode toggle (Global / Per-circuit) ──────────────────────────── */
+.s4-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: #f1f5f9;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.s4-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, color .12s;
+}
+
+.s4-mode-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.s4-mode-btn.active {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+/* ── Mode hint strip ─────────────────────────────────────────────── */
+.s4-mode-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 0.5px solid #bfdbfe;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.s4-mode-hint-per {
+  color: #065f46;
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+}
+
+/* ── Per-circuit selector block ──────────────────────────────────── */
+.s4-per-selectors {
+  background: #f8fafc;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.s4-per-selectors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+/* Compact inputs inside per-circuit blocks */
+.s4-per-selectors .s4f input,
+.s4-per-selectors .s4f select {
+  height: 28px;
+  font-size: 11px;
+  padding: 0 7px;
+}
+
+.s4-per-selectors .s4f label {
+  font-size: 10px;
+}
+
+.s4-per-auto-row {
+  border-top: 0.5px solid #e2e8f0;
+  padding-top: 6px;
+}
+
+.s4-per-auto-row .s4-toggle {
+  font-size: 11px;
+  color: #475569;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+/* ── Per-circuit V-drop readout ──────────────────────────────────── */
+.s4-per-vdrop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  margin-bottom: 4px;
+}
+
+.s4-per-vdrop-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+
+.s4-per-vdrop-val {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── Circuit card in per-circuit mode gets a slightly thicker border ─ */
+.s4-ckt-per {
+  border-width: 1px;
+  border-color: #cbd5e1;
+}
+
+.s4-ckt-per .s4-ckt-hd {
+  background: #f1f5f9;
 }

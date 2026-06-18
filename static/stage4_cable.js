@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Dependency chain: any core input change recalculates engineering instantly.
     [
-        's4_voltage', 's4_pf', 's4_floors_disp', 'len_horizontal', 's4_len_total', 's4_phase', 's4_tot_power'
+        's4_voltage', 's4_pf', 's4_floors_disp', 'len_horizontal', 's4_phase', 's4_tot_power'
     ].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', () => calculateEngineering());
@@ -487,97 +487,178 @@ function evaluateCable(item, ctx) {
     return { vDropPct, pLossPct, deratedCCC, vdropOk, plossOk, cccOk, mcbOk, mcbSelectionOk, finalProtectionOk, ccc };
 }
 
-function getCoordinatedRecommendation() {
+function getCoordinatedRecommendationForRow(row) {
     const cableSel = document.getElementById('sel_ac_cable_s4');
-    const mcbSel = document.getElementById('sel_ac_mcb_s4');
-    if (!cableSel || !mcbSel) return null;
+    const mcbSel   = document.getElementById('sel_ac_mcb_s4');
+    if (!cableSel || !mcbSel || !row) return null;
 
-    const phase = normalizePhase(document.getElementById('s4_phase')?.value);
-    const voltage = safeNum(document.getElementById('s4_voltage')?.value, phase === '1-Phase' ? 230 : 415);
-    const pf = safeNum(document.getElementById('s4_pf')?.value, 0.99);
-    const totalPowerKw = safeNum(document.getElementById('s4_tot_power')?.value, 0);
-    const autoLenChecked = document.getElementById('s4_auto_len_chk')?.checked === true;
-    const autoLen = safeNum(document.getElementById('s4_len_auto')?.value, 0);
-    const lenFromInput = safeNum(document.getElementById('s4_len_total')?.value, 0);
-    const totalLen = lenFromInput > 0 ? lenFromInput : (autoLenChecked && autoLen > 0 ? autoLen : 0);
-
-    const ib = getSiteImax(totalPowerKw, voltage, pf, phase).iMax;
-    const iFinal = ib * 1.25;
-
-    const tf = safeNum(document.getElementById('s4_temp_factor')?.value, 1);
-    const gf = safeNum(document.getElementById('s4_group_factor')?.value, 1);
+    const tf = row.tf, gf = row.gf;
 
     const mcbCandidates = [];
     for (let i = 1; i < mcbSel.options.length; i++) {
-        const raw = mcbSel.options[i].value;
-        if (!raw) continue;
         try {
-            const item = JSON.parse(raw);
+            const item   = JSON.parse(mcbSel.options[i].value);
             const rating = parseProtectionRating(item);
             if (rating > 0) mcbCandidates.push({ index: i, item, rating });
-        } catch {
-            continue;
-        }
+        } catch { continue; }
     }
     mcbCandidates.sort((a, b) => a.rating - b.rating);
 
-    const catalog = Array.isArray(s4CableCatalog) && s4CableCatalog.length > 0
-        ? s4CableCatalog
-        : Array.from(cableSel.options)
-            .slice(1)
-            .map(opt => {
-                try { return JSON.parse(opt.value); } catch { return null; }
-            })
-            .filter(Boolean);
-    const cableCandidates = catalog.map(item => ({ item, sq: parseSqmm(item?.name) }));
-    cableCandidates.sort((a, b) => {
-        const as = a.sq || Number.MAX_SAFE_INTEGER;
-        const bs = b.sq || Number.MAX_SAFE_INTEGER;
-        return as - bs;
-    });
+    const cableCandidates = (s4CableCatalog.length > 0 ? s4CableCatalog : [])
+        .map(item => ({ item, sq: parseSqmm(item?.name) }))
+        .sort((a, b) => (a.sq || 1e9) - (b.sq || 1e9));
 
-    const baseCtx = {
-        totalLen,
-        ib,
-        pInvW: totalPowerKw * 1000,
-        vSys: voltage,
-        vdropFactor: getPhaseFactors(phase).vdropFactor,
-        maxVdrop: 3,
-        maxPloss: 2,
-        tf,
-        gf,
-        ifac: 1,
-        safetyCurrent: iFinal,
-        mcb: 0,
-        mcbMin: iFinal
+    const ctx = {
+        totalLen:    row.totalLen,
+        ib:          row.ib,
+        pInvW:       row.totalKw * 1000,
+        vSys:        safeNum(document.getElementById('s4_voltage')?.value, 415),
+        vdropFactor: row.vdropFactor,
+        maxVdrop:    3,
+        maxPloss:    2,
+        tf, gf,
+        ifac:        1,
+        safetyCurrent: row.iFinal,
+        mcb:         0,
+        mcbMin:      row.iFinal
     };
 
     for (const cable of cableCandidates) {
-        const ev = evaluateCable(cable.item, baseCtx);
+        const ev = evaluateCable(cable.item, ctx);
         if (!(ev.cccOk && ev.vdropOk && ev.plossOk)) continue;
 
-        const coordinatedMcb = mcbCandidates.find(m => m.rating >= iFinal && m.rating < ev.ccc && m.rating < ev.deratedCCC);
-        if (!coordinatedMcb) continue;
+        const mcb = mcbCandidates.find(
+            m => m.rating >= row.iFinal && m.rating < ev.ccc && m.rating < ev.deratedCCC
+        );
+        if (!mcb) continue;
 
         return {
-            cableIndex: findCableOptionIndex(cableSel, cable.item?.name || ''),
-            cableItem: cable.item,
-            cableName: getCableSizeText(cable.item),
-            cableMake: getCableMake(cable.item),
-            mcbIndex: coordinatedMcb.index,
-            mcbItem: coordinatedMcb.item,
-            mcbName: mcbSel.options[coordinatedMcb.index]?.text || coordinatedMcb.item?.name || '',
-            mcbRating: coordinatedMcb.rating,
-            iBase: ib,
-            iFinal,
+            cableItem:  cable.item,
+            cableName:  getCableSizeText(cable.item),
+            cableMake:  getCableMake(cable.item),
+            mcbItem:    mcb.item,
+            mcbName:    mcbSel.options[mcb.index]?.text || mcb.item?.name || '',
+            mcbRating:  mcb.rating,
+            iBase:      row.ib,
+            iFinal:     row.iFinal,
             deratedCCC: ev.deratedCCC,
-            vDropPct: ev.vDropPct,
-            pLossPct: ev.pLossPct
+            vDropPct:   ev.vDropPct,
+            pLossPct:   ev.pLossPct
         };
     }
     return null;
 }
 
+/**
+ * NEW FUNCTION — renders one collapsible card per circuit row into #s4_inverter_list.
+ * Each card shows: group label, type badge, Ib, design current,
+ *                  cable selection (read-only display), MCB, validation pills.
+ */
+function renderS4Circuits(rows) {
+    const container = document.getElementById('s4_inverter_list');
+    if (!container) return;
+
+    if (!rows || rows.length === 0) {
+        container.innerHTML = `<div class="s4-empty">No circuit topology loaded from previous stages.</div>`;
+        return;
+    }
+
+    // Show/hide the topology notice banner
+    const banner     = document.getElementById('s4_topo_notice');
+    const bannerText = document.getElementById('s4_topo_notice_text');
+    if (banner && bannerText) {
+        const mergedCount = rows.filter(r => r.type === 'merged').length;
+        if (rows.length > 1 || mergedCount > 0) {
+            const desc = rows.length === 1
+                ? `All inverters are merged onto a single AC bus — one cable run to meter.`
+                : `${rows.length} circuits detected from Stage 3 grouping. Each row below is one cable run.`;
+            bannerText.textContent = desc;
+            banner.style.display = 'flex';
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    // Update circuit count label
+    const countLbl = document.getElementById('s4_ckt_count_lbl');
+    if (countLbl) countLbl.textContent = `${rows.length} circuit${rows.length !== 1 ? 's' : ''}`;
+
+    // Hide/show the global cable make + cable size + MCB selectors:
+    // When there is only 1 circuit, the global selectors drive that circuit directly.
+    // When there are multiple circuits, each row manages its own selection (future enhancement
+    // — for now, the global selector still sets all rows uniformly, which is common in practice
+    // for identical inverters). The user can override per-row in a follow-up version.
+
+    container.innerHTML = rows.map((row, i) => {
+        const badgeClass = row.type === 'merged' ? 'merged' : 'single';
+        const badgeLabel = row.type === 'merged'
+            ? `Merged · ${row.inverters.length} inv`
+            : row.type === 'independent' ? 'Independent' : 'Single';
+
+        const invLines = (row.inverters || []).map(inv =>
+            `<span>${inv.label}: ${inv.name}${inv.qty > 1 ? ` ×${inv.qty}` : ''} — ${(inv.acKw * (inv.qty || 1)).toFixed(2)} kW</span>`
+        ).join('<br>');
+
+        // Validation pills
+        const pill = (ok, okTxt, failTxt) =>
+            `<span class="status-pill ${ok === null ? 'status-warn' : ok ? 'status-ok' : 'status-fail'}">${ok === null ? '—' : ok ? okTxt : failTxt}</span>`;
+
+        const pillsHtml = row.cableItem
+            ? `${pill(row.cccOk,   'CCC OK',    'CCC LO')}
+               ${pill(row.vdropOk, 'V-DRP OK',  'V-DRP HI')}
+               ${pill(row.plossOk, 'PWR OK',    'PWR HI')}
+               ${pill(row.mcbOk,   'MCB OK',    'MCB ERR')}`
+            : pill(null, '', 'No cable');
+
+        const vdropDisplay = row.vDropPct !== null
+            ? `${row.vDropPct.toFixed(2)} %`
+            : '—';
+        const cableDisplay = row.cableItem
+            ? getCableSizeText(row.cableItem)
+            : 'Not selected';
+        const mcbDisplay = row.mcbItem
+            ? (parseProtectionRating(row.mcbItem) + ' A')
+            : '—';
+
+        return `
+<div class="s4-ckt" id="ckt_row_${i}" data-row="${i}">
+  <div class="s4-ckt-hd">
+    <span class="s4-badge ${badgeClass}">${badgeLabel}</span>
+    <div class="s4-ckt-meta">
+      <strong>${row.label}</strong><br>
+      ${invLines}
+    </div>
+    <span class="s4-ckt-amps">
+      I<sub>b</sub> = ${row.ib.toFixed(1)} A<br>
+      <small style="font-weight:400;font-size:11px;">Design: ${row.iFinal.toFixed(1)} A</small>
+    </span>
+  </div>
+  <div class="s4-ckt-body">
+    <div class="s4g3" style="margin-bottom:8px;">
+      <div class="s4f">
+        <label>Cable (from global selector)</label>
+        <input readonly value="${cableDisplay}" style="background:#f1f5f9;color:#334155;">
+      </div>
+      <div class="s4f">
+        <label>MCB</label>
+        <input readonly value="${mcbDisplay}" style="background:#f1f5f9;color:#334155;">
+      </div>
+      <div class="s4f">
+        <label>V-drop</label>
+        <input readonly value="${vdropDisplay}" style="background:#f1f5f9;color:${
+            row.vDropPct === null ? '#94a3b8' : row.vDropPct > 3 ? '#991b1b' : row.vDropPct > 2 ? '#92400e' : '#065f46'
+        };">
+      </div>
+    </div>
+    <div class="s4-ckt-checks">${pillsHtml}</div>
+    <div style="display:flex;gap:8px;margin-top:12px;border-top:1px solid #e2e8f0;padding-top:8px;">
+      <button class="s4-edit-btn" onclick="alert('Edit circuit ' + ${i})" style="flex:1;padding:6px;background:#3b82f6;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:500;">✎ Edit</button>
+      <button class="s4-del-btn" onclick="alert('Remove circuit ' + ${i})" style="flex:1;padding:6px;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:500;">✕ Remove</button>
+    </div>
+  </div>
+</div>`;
+    }).join('');
+}
 // --- 1. LOAD DROPDOWN ---
 async function loadACCablesS4() {
     try {
@@ -764,23 +845,6 @@ function refreshStage4UI() {
         const iMax = siteData.iMax;
         const actualTotalKw = siteData.totalKw > 0 ? siteData.totalKw : totalCapKw;
 
-        // 4. Build the Visual List of Inverters (INV 1, INV 2, etc.) in the UI
-        const listContainer = document.getElementById('s4_inverter_list');
-        if (listContainer) {
-            let html = '';
-            if (siteData.breakdown && siteData.breakdown.length > 0) {
-                siteData.breakdown.forEach(inv => {
-                    html += `
-                    <div style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px dashed #cbd5e1;">
-                        <span><b>${inv.label}:</b> ${inv.name} ${inv.qty > 1 ? `(x${inv.qty})` : ''}</span>
-                        <span style="color:#0284c7; font-weight:600;">${(inv.kw * inv.qty).toFixed(2)} kW | ${(inv.imax * inv.qty).toFixed(2)} A</span>
-                    </div>`;
-                });
-            } else {
-                html = '<div>No inverters mapped.</div>';
-            }
-            listContainer.innerHTML = html;
-        }
 
         // 5. Calculate DC Panel Details
         const panelCount = safeNum(s1.panelCount ?? stage2.panelCount ?? window.projectData?.design?.panelCount, 0);
@@ -896,6 +960,140 @@ function syncStage4CableToStage3() {
     s3Sel.selectedIndex = idx;
     if (typeof updateRow === 'function') updateRow('ac_cable', '');
 }
+/**
+ * NEW FUNCTION — reads Stage 3 merging/grouping result.
+ * Returns an array of circuit groups, where each group = one cable run.
+ * 
+ * Group shape:
+ * {
+ *   id: string,           // "group_0", "group_1", etc.
+ *   label: string,        // "Circuit 1 (INV 1+2+3)" or "INV 1"
+ *   type: 'single'|'merged'|'independent',
+ *   inverters: [          // inverters in this group
+ *     { label, name, qty, acKw, imax }
+ *   ],
+ *   totalKw: number,      // sum of ac_power_kw × qty in this group
+ *   totalImax: number,    // sum of imax × qty in this group
+ * }
+ */
+function getS3MergingGroups() {
+    const s3 = window.projectData?.stage3 || {};
+    const stage2 = window.projectData?.stage2 || {};
+    const strings = window.projectData?.strings || {};
+
+    // ── Priority 1: Stage 3 explicit merging groups ──────────────────────
+    // If Stage 3 stored merging groups (e.g. from an AC combiner panel UI),
+    // use those directly.
+    const s3Groups = s3.mergingGroups || s3.acGroups || s3.circuitGroups;
+    if (Array.isArray(s3Groups) && s3Groups.length > 0) {
+        return s3Groups.map((grp, i) => _resolveGroup(grp, i));
+    }
+
+    // ── Priority 2: Stage 3 merge flag (all merged into one bus) ─────────
+    if (s3.allMerged === true || s3.acBus === 'combined') {
+        const multi = getResolvedMultiInverters();
+        const totalKw  = multi.reduce((s, u) => s + safeNum(u?.inverter?.specifications?.ac_power_kw, 0) * safeNum(u?.qty, 1), 0);
+        const totalAmp = multi.reduce((s, u) => s + safeNum(u?.inverter?.specifications?.output_current, 0) * safeNum(u?.qty, 1), 0);
+        return [{
+            id: 'group_0',
+            label: 'Combined AC bus (all inverters)',
+            type: 'merged',
+            inverters: _multiToInverterList(multi),
+            totalKw,
+            totalImax: totalAmp
+        }];
+    }
+
+    // ── Priority 3: Read multiInverterDesign — find merged chains first
+    const multi = getResolvedMultiInverters();
+    if (Array.isArray(multi) && multi.length > 0) {
+        // Find merged chains first
+        const mergedGroups = [];
+        const visited = new Set();
+        multi.forEach((unit, i) => {
+            if (visited.has(unit.id)) return;
+            const chain = [unit];
+            visited.add(unit.id);
+            let changed = true;
+            while (changed) {
+                changed = false;
+                multi.forEach(other => {
+                    if (visited.has(other.id)) return;
+                    if (chain.some(u => u.mergeWith === other.id || other.mergeWith === u.id)) {
+                        chain.push(other); visited.add(other.id); changed = true;
+                    }
+                });
+            }
+            const totalKw = chain.reduce((s,u)=>s+safeNum(u?.inverter?.specifications?.ac_power_kw,0)*safeNum(u?.qty,1),0);
+            const totalImax = chain.reduce((s,u)=>s+safeNum(u?.inverter?.specifications?.output_current||u?.inverter?.specifications?.imax,0)*safeNum(u?.qty,1),0);
+            mergedGroups.push({
+                id: `group_${mergedGroups.length}`,
+                label: chain.length > 1
+                    ? `Circuit ${mergedGroups.length+1} — ${chain.length} inv merged`
+                    : (unit?.inverter?.name || `INV ${i+1}`),
+                type: chain.length > 1 ? 'merged' : 'independent',
+                inverters: chain.map((u,ci) => ({
+                    label: `INV ${multi.indexOf(u)+1}`,
+                    name: u?.inverter?.name || 'Inverter',
+                    qty: safeNum(u?.qty,1),
+                    acKw: safeNum(u?.inverter?.specifications?.ac_power_kw,0),
+                    imax: safeNum(u?.inverter?.specifications?.output_current||u?.inverter?.specifications?.imax,0)
+                })),
+                totalKw, totalImax
+            });
+        });
+        return mergedGroups;
+    }
+
+    // ── Priority 4: Single inverter fallback ─────────────────────────────
+    const phase   = normalizePhase(strings.inverterPhase || stage2.phase || '3-Phase');
+    const voltage = safeNum(document.getElementById('s4_voltage')?.value, phase === '1-Phase' ? 230 : 415);
+    const pf      = safeNum(document.getElementById('s4_pf')?.value, 0.99);
+    const totalKw = safeNum(strings.acCapacity || stage2.acCapacity || 0, 0);
+    const model   = strings.inverterModel || stage2.inverterModel || '';
+    const matInv  = matchInverterByName(model);
+    let outI      = safeNum(matInv?.specifications?.output_current || matInv?.specifications?.imax, 0);
+    if (outI <= 0 && totalKw > 0) outI = calcIb(totalKw, voltage, pf, phase);
+
+    return [{
+        id: 'group_0',
+        label: model ? `${model}` : 'Single inverter circuit',
+        type: 'single',
+        inverters: [{ label: 'INV 1', name: model || 'Inverter', qty: 1, acKw: totalKw, imax: outI }],
+        totalKw,
+        totalImax: outI
+    }];
+}
+
+// ── Internal helpers for getS3MergingGroups ──────────────────────────────
+
+function _resolveGroup(grp, i) {
+    const totalKw  = safeNum(grp.totalKw  || grp.total_kw,  0);
+    const totalAmp = safeNum(grp.totalAmp || grp.total_amp || grp.imax, 0);
+    return {
+        id:        grp.id        || `group_${i}`,
+        label:     grp.label     || grp.name || `Circuit ${i + 1}`,
+        type:      grp.type      || (grp.inverters?.length > 1 ? 'merged' : 'single'),
+        inverters: Array.isArray(grp.inverters) ? grp.inverters : [],
+        totalKw,
+        totalImax: totalAmp
+    };
+}
+
+function _multiToInverterList(multi) {
+    return (multi || []).map((unit, i) => {
+        const specs  = unit?.inverter?.specifications || {};
+        const matInv = resolveInverterFromMaterials(unit);
+        const mSpecs = matInv?.specifications || {};
+        return {
+            label: `INV ${i + 1}`,
+            name:  unit?.inverter?.name || matInv?.name || 'Generic Inverter',
+            qty:   safeNum(unit?.qty, 1),
+            acKw:  safeNum(specs.ac_power_kw  || mSpecs.ac_power_kw,  0),
+            imax:  safeNum(specs.output_current || mSpecs.output_current || specs.imax || mSpecs.imax, 0)
+        };
+    });
+}
 
 function syncStage4McbToStage3() {
     const mcbSel = document.getElementById('sel_ac_mcb_s4');
@@ -930,6 +1128,96 @@ function syncStage4McbToStage3() {
     s3Sel.selectedIndex = idx;
     if (typeof updateRow === 'function') updateRow('ac_mcb', '');
 }
+/**
+ * NEW FUNCTION — converts merging groups into calculation-ready circuit rows.
+ * Each row is self-contained: has its own Ib, length, cable/MCB selection.
+ * 
+ * ctx = { voltage, pf, phase, totalLen, tf, gf }
+ */
+function buildCircuitRows(groups, ctx) {
+    const { voltage, pf, phase, totalLen, tf, gf } = ctx;
+
+    return groups.map(grp => {
+        // If totalImax is already known from specs, use it directly.
+        // Otherwise fall back to calcIb for this group's power.
+        let ib = safeNum(grp.totalImax, 0);
+        if (ib <= 0 && grp.totalKw > 0) {
+            ib = calcIb(grp.totalKw, voltage, pf, phase);
+        }
+        if (ib <= 0) {
+            // Last resort: re-derive from the individual inverters list
+            ib = grp.inverters.reduce((sum, inv) => {
+                let invI = safeNum(inv.imax, 0);
+                if (invI <= 0 && safeNum(inv.acKw, 0) > 0) {
+                    invI = calcIb(inv.acKw, voltage, pf, phase);
+                }
+                return sum + invI * safeNum(inv.qty, 1);
+            }, 0);
+        }
+
+        const iFinal = ib * 1.25;                 // design current with 25% safety factor
+        const { vdropFactor } = getPhaseFactors(phase);
+
+        return {
+            ...grp,
+            ib,
+            iFinal,
+            vdropFactor,
+            totalLen,
+            tf,
+            gf,
+            // Per-circuit cable/MCB selections — start unset, filled by auto-coord or user
+            cableItem:  null,
+            mcbItem:    null,
+            // Per-circuit validation results — filled by calculateCircuitRow()
+            vDropPct:   null,
+            pLossPct:   null,
+            deratedCCC: null,
+            valid:      false
+        };
+    });
+}
+/**
+ * NEW FUNCTION — runs all electrical checks for a single circuit row.
+ * Mutates row in-place and returns it.
+ */
+function calculateCircuitRow(row) {
+    if (!row.cableItem) return row;
+
+    const { rKm, ccc } = getCableProps(row.cableItem);
+    const adf         = row.tf * row.gf;
+    const deratedCCC  = ccc * adf;
+    const vDrop       = (row.vdropFactor * row.ib * row.totalLen * rKm) / 1000;
+    const voltage     = safeNum(document.getElementById('s4_voltage')?.value, 415);
+    const vDropPct    = voltage > 0 ? (vDrop / voltage) * 100 : 0;
+    const pInvW       = row.totalKw * 1000;
+    const pLossPct    = pInvW > 0
+        ? (((row.ib * row.ib) * (rKm / 1000) * row.totalLen) / pInvW) * 100
+        : 0;
+
+    const mcbRating   = parseProtectionRating(row.mcbItem);
+    const cccOk       = deratedCCC > row.iFinal;
+    const vdropOk     = vDropPct  <= 3.0;
+    const plossOk     = pLossPct  <  2.0;
+    const mcbSelOk    = mcbRating > 0 && mcbRating >= row.iFinal && mcbRating < ccc;
+    const mcbProtOk   = mcbRating > 0 && mcbRating < deratedCCC;
+    const mcbOk       = mcbSelOk && mcbProtOk;
+
+    row.rKm        = rKm;
+    row.ccc        = ccc;
+    row.deratedCCC = deratedCCC;
+    row.adf        = adf;
+    row.vDropPct   = vDropPct;
+    row.pLossPct   = pLossPct;
+    row.mcbRating  = mcbRating;
+    row.cccOk      = cccOk;
+    row.vdropOk    = vdropOk;
+    row.plossOk    = plossOk;
+    row.mcbOk      = mcbOk;
+    row.valid      = !!row.cableItem && !!row.mcbItem && cccOk && vdropOk && plossOk && mcbOk;
+
+    return row;
+}
 
 // ==================================================
 //  PART A: ELECTRICAL CALCULATION (With Visual Validation)
@@ -946,265 +1234,156 @@ window.handleManualSelection = function(type = '') {
     }
     calculateEngineering(true);
 };
-
 window.calculateEngineering = function(isManualChange = false) {
-    // 1. Manual Override Logic
-    // If the user manually changes a dropdown, turn off auto-coordination so alerts can show
-    const autoChk = document.getElementById('s4_auto_coord_chk');
-    if (isManualChange && autoChk && autoChk.checked) {
-        autoChk.checked = false; 
-    }
+    const autoChk   = document.getElementById('s4_auto_coord_chk');
+    if (isManualChange && autoChk?.checked) autoChk.checked = false;
     const autoCoord = autoChk?.checked !== false;
 
-    const panelCount = safeNum(document.getElementById('s4_panel_count')?.value, 0);
+    // ── 1. DC capacity ────────────────────────────────────────────────────
+    const panelCount   = safeNum(document.getElementById('s4_panel_count')?.value, 0);
     const panelWattage = safeNum(document.getElementById('s4_panel_wattage')?.value, 0);
-    const dcCapacity = dcPower(panelCount, panelWattage);
     const dcEl = document.getElementById('s4_dc_capacity');
-    if (dcEl) dcEl.value = dcCapacity.toFixed(0);
+    if (dcEl) dcEl.value = (panelCount * panelWattage).toFixed(0);
 
-    // 2. Length Calculation: L = (F * H) + R
-    const floors = safeNum(document.getElementById('s4_floors_disp')?.value, 1);
-    const floorH = safeNum(document.getElementById('s4_floor_height')?.value, 4.27);
-    const vert = floors * floorH;
-    const vertEl = document.getElementById('s4_vert_calc');
-    if (vertEl) vertEl.value = vert.toFixed(2);
-
-    const horiz = safeNum(document.getElementById('len_horizontal')?.value, 20);
-    const autoLen = vert + horiz;
-    const autoLenInput = document.getElementById('s4_len_auto');
-    if (autoLenInput) autoLenInput.value = autoLen.toFixed(2);
-
-    const autoLenChk = document.getElementById('s4_auto_len_chk');
+    // ── 2. Length: L = (floors × 4.27) + horizontal ───────────────────────
+    const floors  = safeNum(document.getElementById('s4_floors_disp')?.value, 0);
+    const horiz   = safeNum(document.getElementById('len_horizontal')?.value, 0);
+    const floorH  = 4.27; // Fixed floor height
+    const totalLen = floors * floorH + horiz;
+    
     const lenTotalEl = document.getElementById('s4_len_total');
-    let totalLen = safeNum(lenTotalEl?.value, autoLen);
+    const lenTotalDispEl = document.getElementById('s4_len_total_disp');
+    if (lenTotalEl) lenTotalEl.value = totalLen.toFixed(2);
+    if (lenTotalDispEl) lenTotalDispEl.textContent = totalLen.toFixed(2);
 
-    if (autoLenChk?.checked) {
-        totalLen = autoLen;
-        if (lenTotalEl) {
-            lenTotalEl.value = totalLen.toFixed(2);
-            lenTotalEl.readOnly = true;
-        }
-    } else if (lenTotalEl) {
-        lenTotalEl.readOnly = false;
-        if (!lenTotalEl.value) lenTotalEl.value = autoLen.toFixed(2);
-        totalLen = safeNum(lenTotalEl.value, autoLen);
+    // ── 3. Shared derating factors ────────────────────────────────────────
+    const phase   = normalizePhase(document.getElementById('s4_phase')?.value);
+    const voltage = safeNum(document.getElementById('s4_voltage')?.value, phase === '1-Phase' ? 230 : 415);
+    const pf      = safeNum(document.getElementById('s4_pf')?.value, 0.99);
+    const tf      = safeNum(document.getElementById('s4_temp_factor')?.value, 1);
+    const gf      = safeNum(document.getElementById('s4_group_factor')?.value, 1);
+
+    // ── 4. Build per-circuit rows from Stage 3 topology ───────────────────
+    const groups = getS3MergingGroups();
+    let rows = buildCircuitRows(groups, { voltage, pf, phase, totalLen, tf, gf });
+
+    // ── 5. Resolve selected cable + MCB from the global selectors ─────────
+    let selectedCableItem = null;
+    const cableSel = document.getElementById('sel_ac_cable_s4');
+    if (cableSel?.value) {
+        try { selectedCableItem = JSON.parse(cableSel.value); } catch {}
+    }
+    let selectedMcbItem = null;
+    const mcbSel = document.getElementById('sel_ac_mcb_s4');
+    if (mcbSel?.value) {
+        try { selectedMcbItem = JSON.parse(mcbSel.value); } catch {}
     }
 
-    // 3. Circuit Demand
-    const phase = normalizePhase(document.getElementById('s4_phase')?.value);
-    const voltage = safeNum(document.getElementById('s4_voltage')?.value, phase === '1-Phase' ? 230 : 415);
-    const pf = safeNum(document.getElementById('s4_pf')?.value, 0.99);
-    const totalPowerKw = safeNum(document.getElementById('s4_tot_power')?.value, 0);
+    // ── 6. Auto-coordination: find the best cable for the WORST row ───────
     
-    const iInfo = getSiteImax(totalPowerKw, voltage, pf, phase);
-    const ib = iInfo.iMax;
-    const invCurrentEl = document.getElementById('s4_inv_current');
-    if (invCurrentEl) invCurrentEl.value = ib.toFixed(2);
-    
-    const iFinal = requiredMcbCurrent(ib);
-    const safetyEl = document.getElementById('s4_safety_current');
-    if (safetyEl) safetyEl.value = iFinal.toFixed(2) + ' A';
+    const worstRow = rows.reduce((prev, cur) => cur.iFinal > prev.iFinal ? cur : prev, rows[0]);
+    if (autoCoord && !isManualChange && worstRow) {
+        const rec = getCoordinatedRecommendationForRow(worstRow);
+        s4LastRecommendation = rec;
+        if (rec) {
+            if (!s4SelectionLock) {
+                s4SelectionLock = true;
+                selectS4CableItem(rec.cableItem);
+                selectS4McbItem(rec.mcbItem);
+                syncStage4CableToStage3();
+                syncStage4McbToStage3();
+                s4SelectionLock = false;
+                // Refresh selectedCableItem / selectedMcbItem after auto-selection
+                try { selectedCableItem = JSON.parse(cableSel.value); } catch {}
+                try { selectedMcbItem   = JSON.parse(mcbSel.value);   } catch {}
+            }
+        }
+    }
 
+    // ── 7. Assign selected cable+MCB to every row, then calculate ─────────
+    rows = rows.map(row => {
+        row.cableItem = selectedCableItem;
+        row.mcbItem   = selectedMcbItem;
+        return calculateCircuitRow(row);
+    });
+
+    // ── 8. Render per-circuit cards ────────────────────────────────────────
+    renderS4Circuits(rows);
+
+    // ── 9. Aggregate summary (sidebar) — worst case across all rows ────────
+    const allValid      = rows.every(r => r.valid);
+    const worstVdrop    = rows.reduce((m, r) => Math.max(m, r.vDropPct ?? 0), 0);
+    const worstPloss    = rows.reduce((m, r) => Math.max(m, r.pLossPct ?? 0), 0);
+    const totalDesignA  = rows.reduce((s, r) => s + (r.iFinal || 0), 0);  // total for meter sizing
+    const anyCableSet   = rows.some(r => !!r.cableItem);
+    const anyMcbSet     = rows.some(r => !!r.mcbItem);
+
+    const safetyEl = document.getElementById('s4_safety_current');
+    if (safetyEl) safetyEl.value = totalDesignA.toFixed(2) + ' A';
+
+    const vdPctEl = document.getElementById('s4_vdrop_pct');
+    if (vdPctEl) vdPctEl.value = worstVdrop.toFixed(2) + ' %';
+
+    const pLossEl = document.getElementById('s4_ploss_pct');
+    if (pLossEl) pLossEl.value = worstPloss.toFixed(2) + ' %';
+
+    // Sidebar status pills (worst-case)
+    const setStat = (id, ok, okTxt, failTxt) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = ok ? okTxt : failTxt;
+        el.className = `status-pill ${ok ? 'status-ok' : 'status-fail'}`;
+    };
+    setStat('status_ploss', anyCableSet && rows.every(r => r.plossOk), 'PWR OK', 'PWR HI');
+    setStat('status_vdrop', anyCableSet && rows.every(r => r.vdropOk), 'V-DRP OK', 'V-DRP HI');
+    setStat('status_ccc',   anyCableSet && rows.every(r => r.cccOk),   'CCC OK',  'CCC LO');
+    setStat('status_mcb',   anyMcbSet   && rows.every(r => r.mcbOk),   'MCB OK',  'MCB ERR');
+
+    // Guide message
+    const msg    = document.getElementById('cable_guide_msg');
+    const fixIcon = document.getElementById('icon_cable_fix');
+    if (msg) {
+        if (allValid) {
+            msg.innerText = autoCoord ? `Auto-paired (${rows.length} circuit${rows.length > 1 ? 's' : ''})` : 'Manual selection compliant';
+            msg.style.color = '#15803d';
+        } else {
+            msg.innerText = anyCableSet ? 'Alert: one or more circuits non-compliant' : 'Select cable and MCB to validate';
+            msg.style.color = '#dc2626';
+        }
+        if (fixIcon) fixIcon.style.display = !allValid && anyCableSet ? 'inline-block' : 'none';
+    }
+
+    // ── 10. Persist to projectData ─────────────────────────────────────────
     if (!window.projectData) window.projectData = {};
     if (!window.projectData.stage4) window.projectData.stage4 = {};
+    window.projectData.stage4.totalLength    = totalLen.toFixed(2);
     window.projectData.stage4.autoCoordination = autoCoord;
-
-    // 4. Auto coordination loop
-    const recommendation = getCoordinatedRecommendation();
-    s4LastRecommendation = recommendation;
-    const sel = document.getElementById('sel_ac_cable_s4');
-    const mcbSel = document.getElementById('sel_ac_mcb_s4');
-    
-    if (autoCoord && recommendation && !s4SelectionLock && !isManualChange) {
-        let changed = false;
-        if (sel && recommendation.cableItem && selectS4CableItem(recommendation.cableItem)) {
-            changed = true;
-        }
-        if (mcbSel && recommendation.mcbItem && selectS4McbItem(recommendation.mcbItem)) {
-            changed = true;
-        }
-        if (changed) {
-            s4SelectionLock = true;
-            syncStage4CableToStage3();
-            syncStage4McbToStage3();
-            s4SelectionLock = false;
-        }
-    }
-
-    // 5. Final selected cable data
-    let rKm = 2.44;
-    let ccc = 70;
-    let cableItem = null;
-    const hasCableSelected = !!sel?.value;
-    if (sel?.value) {
-        try {
-            cableItem = JSON.parse(sel.value);
-            const props = getCableProps(cableItem);
-            rKm = props.rKm;
-            ccc = props.ccc;
-        } catch (e) {
-            console.error('Cable parse error', e);
-        }
-    }
-    syncStage4CableToStage3();
-    window.projectData.stage4.totalLength = totalLen.toFixed(2);
-    
-    const rEl = document.getElementById('s4_cable_r');
-    if (rEl) rEl.value = rKm;
-    const cccEl = document.getElementById('s4_cable_ccc');
-    if (cccEl) cccEl.value = ccc;
-
-    // 6. Ampacity (Thermal)
-    const tf = safeNum(document.getElementById('s4_temp_factor')?.value, 1);
-    const gf = safeNum(document.getElementById('s4_group_factor')?.value, 1);
-    const adf = tf * gf;
-    const deratedCCC = ccc * adf;
-    const reqIt = adf > 0 ? (ib / adf) : 0;
-    
-    const dcccEl = document.getElementById('s4_derated_ccc');
-    if (dcccEl) dcccEl.value = deratedCCC.toFixed(2);
-    const reqItEl = document.getElementById('s4_req_it');
-    if (reqItEl) reqItEl.value = reqIt.toFixed(2);
-    const adfEl = document.getElementById('s4_adf');
-    if (adfEl) adfEl.value = adf.toFixed(3);
-    const rMEl = document.getElementById('s4_cable_r_m');
-    if (rMEl) rMEl.value = (rKm / 1000).toFixed(6);
-
-    // 7. Voltage Drop
-    const phaseFactors = getPhaseFactors(phase);
-    const vdropFactor = phaseFactors.vdropFactor;
-    const vDropVolt = (vdropFactor * ib * totalLen * rKm) / 1000;
-    const vDropPct = voltage > 0 ? (vDropVolt / voltage) * 100 : 0;
-    
-    const vdVoltEl = document.getElementById('s4_vdrop_v');
-    if (vdVoltEl) vdVoltEl.value = vDropVolt.toFixed(2) + ' V';
-    const vdPctEl = document.getElementById('s4_vdrop_pct');
-    if (vdPctEl) vdPctEl.value = vDropPct.toFixed(2) + ' %';
-
-    // 8. Power loss
-    const rOhmPerM = rKm / 1000;
-    const invPowerW = totalPowerKw * 1000;
-    const pLossPct = invPowerW > 0 ? (((ib * ib) * rOhmPerM * totalLen) / invPowerW) * 100 : 0;
-    const pLossEl = document.getElementById('s4_ploss_pct');
-    if (pLossEl) pLossEl.value = pLossPct.toFixed(2) + ' %';
-
-    // 10. MCB Validation
-    let mcbItem = null;
-    const hasMcbSelected = !!mcbSel?.value;
-    if (mcbSel?.value) {
-        try { mcbItem = JSON.parse(mcbSel.value); } catch { mcbItem = null; }
-    }
-    const mcb = parseProtectionRating(mcbItem || document.getElementById('s4_mcb_rating')?.value);
-    const mcbRatingEl = document.getElementById('s4_mcb_rating');
-    if (mcbRatingEl) mcbRatingEl.value = mcb > 0 ? mcb : '';
-    syncStage4McbToStage3();
-
-    // --- REAL-TIME VALIDATIONS ---
-    const isVdropOk = hasCableSelected && vDropPct <= 3.0;
-    const isPowerOk = hasCableSelected && pLossPct < 2.0;
-    const isCccOk = hasCableSelected && deratedCCC > iFinal;
-    const isMcbSelectionOk = hasMcbSelected && mcb > 0 && mcb >= iFinal && mcb < ccc;
-    const isFinalProtectionOk = hasMcbSelected && mcb > 0 && mcb < deratedCCC;
-    const isMcbOk = isMcbSelectionOk && isFinalProtectionOk;
-
-    // Helper to set HUD status pills
-    const setStat = (id, condition, okText, failText) => {
-        const el = document.getElementById(id);
-        if (!el) return condition;
-        if (condition) {
-            el.innerText = okText;
-            el.className = 'status-pill status-ok';
-        } else {
-            el.innerText = failText;
-            el.className = 'status-pill status-fail';
-        }
-        return condition;
-    };
-
-    setStat('status_ploss', isPowerOk, 'PWR OK', 'PWR HI');
-    setStat('status_vdrop', isVdropOk, 'V-DRP OK', 'V-DRP HI');
-    setStat('status_ccc', isCccOk, 'CCC OK', 'CCC LO');
-    setStat('status_mcb', isMcbOk, 'MCB OK', 'MCB ERR');
-
-    // Input validation (store but don't block on compliance)
-    const inputAlerts = validateEngineeringInputs(totalPowerKw, totalLen, phase, voltage, pf);
-
+    window.projectData.stage4.circuits       = rows.map(r => ({
+        id:         r.id,
+        label:      r.label,
+        type:       r.type,
+        ib:         r.ib,
+        iFinal:     r.iFinal,
+        totalKw:    r.totalKw,
+        cableSelected: getCableSizeText(r.cableItem) || '',
+        mcbRating:  r.mcbRating || 0,
+        vDropPct:   r.vDropPct,
+        pLossPct:   r.pLossPct,
+        valid:      r.valid
+    }));
     window.projectData.stage4.validation = {
-        isCompliant: hasCableSelected && hasMcbSelected && isPowerOk && isCccOk && isMcbOk && isVdropOk,
-        hasCableSelected,
-        hasMcbSelected,
-        isPowerOk,
-        isCccOk,
-        isMcbOk,
-        isVdropOk,
-        inputAlerts,
-        vDropPct: Number(vDropPct.toFixed(2)),
-        pLossPct: Number(pLossPct.toFixed(2)),
-        deratedCCC: Number(deratedCCC.toFixed(2)),
-        safetyCurrent: Number(iFinal.toFixed(2)),
-        mcbRating: mcb,
-        cableCcc: Number(ccc.toFixed(2)),
-        mcbSelectionOk: isMcbSelectionOk,
-        finalProtectionOk: isFinalProtectionOk
+        isCompliant:      allValid,
+        hasCableSelected: anyCableSet,
+        hasMcbSelected:   anyMcbSet,
+        isPowerOk:        rows.every(r => r.plossOk),
+        isCccOk:          rows.every(r => r.cccOk),
+        isMcbOk:          rows.every(r => r.mcbOk),
+        isVdropOk:        rows.every(r => r.vdropOk),
+        vDropPct:         +worstVdrop.toFixed(2),
+        pLossPct:         +worstPloss.toFixed(2),
+        safetyCurrent:    +totalDesignA.toFixed(2)
     };
-    window.projectData.stage4.calculationFlow = [
-        'modules',
-        'dcCapacity',
-        'inverterCapacityAndCurrent',
-        'designCurrent',
-        'cableSelection',
-        'temperatureDerating',
-        'groupingDerating',
-        'deratedCableCurrentCarryingCapacity',
-        'cableCheck',
-        'mcbCoordination',
-        'voltageDropCheck',
-        'powerLossCheck'
-    ];
-
-    // --- VISUAL RED HIGHLIGHTER ---
-    const cableSelect = document.getElementById('sel_ac_cable_s4');
-    const cableContainer = document.getElementById('box_cable_select');
-    const fixIcon = document.getElementById('icon_cable_fix');
-    const msg = document.getElementById('cable_guide_msg');
-
-    if (cableSelect) {
-        cableSelect.classList.remove('input-error');
-        cableSelect.style.border = '2px solid #fbbf24';
-        if(cableContainer) cableContainer.style.backgroundColor = 'transparent';
-
-        if (!(isPowerOk && isCccOk && isMcbOk && isVdropOk)) {
-            cableSelect.style.border = '2px solid #dc2626';
-            cableSelect.style.backgroundColor = '#fef2f2';
-
-            if (fixIcon) fixIcon.style.display = 'inline-block';
-            if (msg) {
-                if (autoCoord && !recommendation) {
-                    msg.innerText = 'No compliant pair found for this length!';
-                } else {
-                    msg.innerText = `Alert: Current selection is unsafe.`;
-                }
-                msg.style.color = '#dc2626';
-                msg.style.fontWeight = 'bold';
-            }
-            cableSelect.classList.add('input-error');
-        } else {
-            cableSelect.style.border = '2px solid #22c55e';
-            cableSelect.style.backgroundColor = '#f0fdf4';
-            if (fixIcon) fixIcon.style.display = 'none';
-            if (msg) {
-                if (autoCoord && recommendation) {
-                    msg.innerText = `Auto paired: ${recommendation.cableName}`;
-                } else {
-                    msg.innerText = 'Manual selection is fully compliant.';
-                }
-                msg.style.color = '#15803d';
-                msg.style.fontWeight = 'bold';
-            }
-        }
-    }
 };
-
 
 // ==================================================
 //  PART B: CIVIL & ADHESIVE CALCULATOR
@@ -1292,69 +1471,499 @@ window.saveStage4 = function() {
         alert('Complete Stage 4 inputs before proceeding.');
         return;
     }
+
     if (typeof calculateEngineering === 'function') calculateEngineering();
+
     if (window.projectData?.stage4?.validation?.isCompliant === false && s4LastRecommendation) {
         if (applyS4Recommendation(s4LastRecommendation) && typeof calculateEngineering === 'function') {
             calculateEngineering();
         }
     }
-    
-    // Final validation check - only block on actual electrical failures
+
+    // ── Validation gate — must be BEFORE the data write ──────────────────
     const validation = window.projectData?.stage4?.validation;
     if (validation?.isCompliant === false) {
-        let failureReason = [];
+        const failureReason = [];
         if (!validation?.hasCableSelected) failureReason.push('Cable not selected');
-        if (!validation?.hasMcbSelected) failureReason.push('MCB not selected');
-        if (!validation?.isPowerOk) failureReason.push('Power loss exceeds 2%');
-        if (!validation?.isVdropOk) failureReason.push('Voltage drop exceeds 3%');
-        if (!validation?.isCccOk) failureReason.push('Cable ampacity insufficient');
-        if (!validation?.isMcbOk) failureReason.push('MCB coordination failed');
-        
+        if (!validation?.hasMcbSelected)   failureReason.push('MCB not selected');
+        if (!validation?.isPowerOk)        failureReason.push('Power loss exceeds 2%');
+        if (!validation?.isVdropOk)        failureReason.push('Voltage drop exceeds 3%');
+        if (!validation?.isCccOk)          failureReason.push('Cable ampacity insufficient');
+        if (!validation?.isMcbOk)          failureReason.push('MCB coordination failed');
         alert('Stage 4 is not compliant:\n\n' + failureReason.join('\n') + '\n\nApply the suggested pair or correct the highlighted warnings before proceeding.');
         return;
     }
 
+    // ── Data write — only reached if validation passed ────────────────────
     const existingStage4 = window.projectData.stage4 || {};
+    const circuits = window.projectData?.stage4?.circuits || [];
+
     window.projectData.stage4 = {
         ...existingStage4,
-        powerLossPct: getValue('s4_ploss_pct', '0.00 %'),
+        powerLossPct:  getValue('s4_ploss_pct', '0.00 %'),
         voltageDropPct: getValue('s4_vdrop_pct', '0.00 %'),
-        voltageDropV: getValue('s4_vdrop_v', '0.00 V'),
-        requiredIt: getValue('s4_req_it', '0.00'),
-        totalLength: getValue('s4_len_total', '0'),
+        voltageDropV:  getValue('s4_vdrop_v', '0.00 V'),
+        requiredIt:    getValue('s4_req_it', '0.00'),
+        totalLength:   getValue('s4_len_total', '0'),
         cableSelected: cableName,
-        cableSize: cableDetails.size || '',
-        cableRate: cableDetails.rate || 0,
-        mcbSelected: mcbName,
-        mcbRating: mcbRating,
-        mcbRate: mcbRate,
+        cableSize:     cableDetails.size || '',
+        cableRate:     cableDetails.rate || 0,
+        mcbSelected:   mcbName,
+        mcbRating:     mcbRating,
+        mcbRate:       mcbRate,
+        circuits,
         civil: {
-            blocks: civilBlocks,
-            adhesive: civilAdh,
+            blocks:    civilBlocks,
+            adhesive:  civilAdh,
             totalCost: civilTotal
         }
     };
+
     if (!window.projectData.stage3) window.projectData.stage3 = {};
     if (!window.projectData.stage3.ac) window.projectData.stage3.ac = {};
     if (!window.projectData.stage3.ac.cable) window.projectData.stage3.ac.cable = {};
     window.projectData.stage3.ac.cable.item = cableName;
     if (!window.projectData.stage3.ac.mcb) window.projectData.stage3.ac.mcb = {};
     window.projectData.stage3.ac.mcb.item = mcbName;
-    if (typeof setStageCompletion === 'function') {
-        setStageCompletion(4, true);
-    }
+
+    if (typeof setStageCompletion === 'function') setStageCompletion(4, true);
     if (typeof switchStage === 'function') switchStage(3);
 };
 
+// ==================================================================
+//  stage4_cable.js — PATCH: Per-circuit / Global mode toggle
+//  Drop these functions in AFTER the existing code (or replace
+//  the three functions: setS4CircuitMode, renderS4Circuits,
+//  calculateEngineering, and add buildPerCircuitSelectors)
+// ==================================================================
 
+// ── State ──────────────────────────────────────────────────────────
+// 'global' = one cable+MCB for all | 'per' = each row is independent
+let s4CircuitMode = 'global';
 
+// Per-circuit selections keyed by group id: { cableItem, mcbItem }
+let s4PerCircuitSelections = {};
 
+// ── Mode toggle ────────────────────────────────────────────────────
+window.setS4CircuitMode = function(mode) {
+    s4CircuitMode = mode;
 
+    const btnGlobal  = document.getElementById('btn_mode_global');
+    const btnPer     = document.getElementById('btn_mode_per');
+    const globalWrap = document.getElementById('s4_global_selector_wrap');
+    const perHint    = document.getElementById('s4_per_hint');
 
+    if (btnGlobal) btnGlobal.classList.toggle('active', mode === 'global');
+    if (btnPer)    btnPer.classList.toggle('active', mode === 'per');
 
+    if (globalWrap) {
+        // In per-circuit mode, visually dim the global selectors
+        globalWrap.style.opacity  = mode === 'global' ? '1'    : '0.4';
+        globalWrap.style.pointerEvents = mode === 'global' ? 'auto' : 'none';
+    }
+    if (perHint) perHint.style.display = mode === 'per' ? 'flex' : 'none';
 
+    // Uncheck auto-coord when switching to per-circuit (makes no sense there)
+    if (mode === 'per') {
+        const autoChk = document.getElementById('s4_auto_coord_chk');
+        if (autoChk) autoChk.checked = false;
+    }
 
+    calculateEngineering();
+};
 
+// ── Build per-circuit cable + MCB dropdown HTML ────────────────────
+// Returns an HTML string for injection inside each circuit card.
+function buildPerCircuitSelectors(rowId, currentCableItem, currentMcbItem) {
+    const cableName = currentCableItem ? getCableSizeText(currentCableItem) : '';
+    const mcbRating = currentMcbItem   ? parseProtectionRating(currentMcbItem) + ' A' : '';
 
+    // Build cable options
+    const cableMakes = Array.from(new Set((s4CableCatalog || []).map(getCableMake).filter(Boolean))).sort();
+    const makeOpts   = cableMakes.map(m =>
+        `<option value="${m}">${m}</option>`
+    ).join('');
 
+    // Determine selected make from currentCableItem
+    const selMake = currentCableItem ? getCableMake(currentCableItem) : (cableMakes[0] || '');
 
+    const cablesForMake  = (s4CableCatalog || []).filter(c => getCableMake(c) === selMake);
+    const cableSizeOpts = ['<option value="">-- Size --</option>',
+        ...cablesForMake.map(c => {
+            const val  = JSON.stringify(c).replace(/"/g, '&quot;');
+            const txt  = getCableSizeText(c);
+            const sel  = (currentCableItem && normalizeCableName(c.name) === normalizeCableName(currentCableItem.name)) ? ' selected' : '';
+            return `<option value="${val}"${sel}>${txt}</option>`;
+        })
+    ].join('');
+
+    // MCB options
+    const mcbOpts = ['<option value="">-- MCB --</option>',
+        ...S4_STANDARD_MCB_RATINGS.map(r => {
+            const fromMaterials = (s4ProtectionCatalog || []).find(i => parseProtectionRating(i) === r);
+            const item = fromMaterials || { name: `MCB ${r}A`, category: 'Protection', subcategory: 'AC MCB', rate: 0, specifications: { rating_amp: r } };
+            const val  = JSON.stringify(item).replace(/"/g, '&quot;');
+            const sel  = currentMcbItem && parseProtectionRating(currentMcbItem) === r ? ' selected' : '';
+            const txt  = fromMaterials ? `${item.name} (${r}A)` : `${r}A`;
+            return `<option value="${val}"${sel}>${txt}</option>`;
+        })
+    ].join('');
+
+    return `
+    <div class="s4-per-selectors" data-row-id="${rowId}">
+      <div class="s4-per-selectors-grid">
+        <div class="s4f">
+          <label>Cable make</label>
+          <select class="s4-per-make" data-row="${rowId}"
+                  onchange="handlePerCircuitMakeChange('${rowId}', this)">
+            <option value="">-- Make --</option>
+            ${makeOpts}
+          </select>
+        </div>
+        <div class="s4f">
+          <label>Cable size</label>
+          <select class="s4-per-cable" data-row="${rowId}"
+                  onchange="handlePerCircuitCableChange('${rowId}', this)">
+            ${cableSizeOpts}
+          </select>
+        </div>
+        <div class="s4f">
+          <label>MCB / MCCB</label>
+          <select class="s4-per-mcb" data-row="${rowId}"
+                  onchange="handlePerCircuitMcbChange('${rowId}', this)">
+            ${mcbOpts}
+          </select>
+        </div>
+      </div>
+      <div class="s4-per-auto-row">
+        <label class="s4-toggle" style="padding-top:0;border-top:none;margin-top:0;">
+          <input type="checkbox" class="s4-per-auto-chk" data-row="${rowId}"
+                 onchange="handlePerCircuitAutoCoord('${rowId}', this)">
+          Auto-select best cable for this circuit
+        </label>
+      </div>
+    </div>`;
+}
+
+// ── Per-circuit event handlers ──────────────────────────────────────
+window.handlePerCircuitMakeChange = function(rowId, sel) {
+    const make = sel.value;
+    // Rebuild size dropdown for this row
+    const sizeEl = document.querySelector(`.s4-per-cable[data-row="${rowId}"]`);
+    if (!sizeEl) return;
+    const cables = (s4CableCatalog || []).filter(c => getCableMake(c) === make);
+    cables.sort((a, b) => parseSqmm(a?.name) - parseSqmm(b?.name));
+    sizeEl.innerHTML = '<option value="">-- Size --</option>' + cables.map(c => {
+        const val = JSON.stringify(c).replace(/"/g, '&quot;');
+        return `<option value="${val}">${getCableSizeText(c)}</option>`;
+    }).join('');
+    // Clear stored cable for this row
+    if (s4PerCircuitSelections[rowId]) s4PerCircuitSelections[rowId].cableItem = null;
+    calculateEngineering();
+};
+
+window.handlePerCircuitCableChange = function(rowId, sel) {
+    let item = null;
+    try { item = sel.value ? JSON.parse(sel.value) : null; } catch {}
+    if (!s4PerCircuitSelections[rowId]) s4PerCircuitSelections[rowId] = {};
+    s4PerCircuitSelections[rowId].cableItem = item;
+    // Uncheck auto for this row
+    const autoChk = document.querySelector(`.s4-per-auto-chk[data-row="${rowId}"]`);
+    if (autoChk) autoChk.checked = false;
+    calculateEngineering();
+};
+
+window.handlePerCircuitMcbChange = function(rowId, sel) {
+    let item = null;
+    try { item = sel.value ? JSON.parse(sel.value) : null; } catch {}
+    if (!s4PerCircuitSelections[rowId]) s4PerCircuitSelections[rowId] = {};
+    s4PerCircuitSelections[rowId].mcbItem = item;
+    calculateEngineering();
+};
+
+window.handlePerCircuitAutoCoord = function(rowId, chk) {
+    // Run auto-coord just for this row's Ib
+    if (!chk.checked) return;
+    calculateEngineering(); // full recalc picks up the per-row auto flag
+};
+
+// ── Updated renderS4Circuits ────────────────────────────────────────
+function renderS4Circuits(rows) {
+    const container = document.getElementById('s4_inverter_list');
+    if (!container) return;
+
+    if (!rows || rows.length === 0) {
+        container.innerHTML = `<div class="s4-empty">No circuit topology loaded from previous stages.</div>`;
+        return;
+    }
+
+    // Topology notice
+    const banner     = document.getElementById('s4_topo_notice');
+    const bannerText = document.getElementById('s4_topo_notice_text');
+    if (banner && bannerText) {
+        const mergedCount = rows.filter(r => r.type === 'merged').length;
+        if (rows.length > 1 || mergedCount > 0) {
+            bannerText.textContent = rows.length === 1
+                ? `All inverters are merged onto a single AC bus — one cable run to meter.`
+                : `${rows.length} circuits detected from Stage 3 grouping. Each row below is one cable run.`;
+            banner.style.display = 'flex';
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    const countLbl = document.getElementById('s4_ckt_count_lbl');
+    if (countLbl) countLbl.textContent = `${rows.length} circuit${rows.length !== 1 ? 's' : ''}`;
+
+    // Show per-circuit toggle only when there's more than 1 circuit
+    const toggleWrap = document.getElementById('s4_mode_toggle_wrap');
+    if (toggleWrap) toggleWrap.style.display = rows.length > 1 ? 'flex' : 'none';
+
+    const isPerMode = s4CircuitMode === 'per';
+
+    container.innerHTML = rows.map((row, i) => {
+        const badgeClass = row.type === 'merged' ? 'merged' : 'single';
+        const badgeLabel = row.type === 'merged'
+            ? `Merged (${row.inverters.length} inv)`
+            : row.type === 'independent' ? 'Independent' : 'Single';
+
+        const invLines = (row.inverters || []).map(inv =>
+            `<span>${inv.label}: ${inv.name}${inv.qty > 1 ? ` ×${inv.qty}` : ''} — ${(inv.acKw * (inv.qty || 1)).toFixed(2)} kW</span>`
+        ).join('<br>');
+
+        // Validation pills
+        const pill = (ok, okTxt, failTxt) =>
+            `<span class="status-pill ${ok === null ? 'status-warn' : ok ? 'status-ok' : 'status-fail'}">${ok === null ? '—' : ok ? okTxt : failTxt}</span>`;
+
+        const pillsHtml = row.cableItem
+            ? `${pill(row.cccOk,   'CCC OK',   'CCC LO')}
+               ${pill(row.vdropOk, 'V-DRP OK', 'V-DRP HI')}
+               ${pill(row.plossOk, 'PWR OK',   'PWR HI')}
+               ${pill(row.mcbOk,   'MCB OK',   'MCB ERR')}`
+            : pill(null, '', 'No cable');
+
+        const vdropDisplay = row.vDropPct !== null ? `${row.vDropPct.toFixed(2)} %` : '—';
+        const vdropColor   = row.vDropPct === null ? '#94a3b8'
+            : row.vDropPct > 3 ? '#991b1b'
+            : row.vDropPct > 2 ? '#92400e'
+            : '#065f46';
+
+        // In global mode show read-only display; in per-circuit mode show dropdowns
+        const cableDisplay = row.cableItem ? getCableSizeText(row.cableItem) : 'Not selected';
+        const mcbDisplay   = row.mcbItem ? (parseProtectionRating(row.mcbItem) + ' A') : '—';
+
+        const selectionSection = isPerMode
+            ? buildPerCircuitSelectors(row.id, row.cableItem, row.mcbItem)
+            : `<div class="s4g3" style="margin-bottom:8px;">
+                <div class="s4f">
+                  <label>Cable</label>
+                  <input readonly value="${cableDisplay}" style="background:#f1f5f9;color:#334155;">
+                </div>
+                <div class="s4f">
+                  <label>MCB</label>
+                  <input readonly value="${mcbDisplay}" style="background:#f1f5f9;color:#334155;">
+                </div>
+                <div class="s4f">
+                  <label>V-drop</label>
+                  <input readonly value="${vdropDisplay}" style="background:#f1f5f9;color:${vdropColor};">
+                </div>
+               </div>`;
+
+        // In per-circuit mode always show v-drop separately below
+        const vdropRow = isPerMode ? `
+            <div class="s4-per-vdrop-row">
+              <span class="s4-per-vdrop-label">V-drop</span>
+              <span class="s4-per-vdrop-val" style="color:${vdropColor};">${vdropDisplay}</span>
+            </div>` : '';
+
+        return `
+<div class="s4-ckt${isPerMode ? ' s4-ckt-per' : ''}" id="ckt_row_${i}" data-row="${i}">
+  <div class="s4-ckt-hd">
+    <span class="s4-badge ${badgeClass}">${badgeLabel}</span>
+    <div class="s4-ckt-meta">
+      <strong>${row.label}</strong><br>
+      ${invLines}
+    </div>
+    <span class="s4-ckt-amps">
+      I<sub>b</sub> = ${row.ib.toFixed(1)} A<br>
+      <small style="font-weight:400;font-size:11px;">Design: ${row.iFinal.toFixed(1)} A</small>
+    </span>
+  </div>
+  <div class="s4-ckt-body">
+    ${selectionSection}
+    ${vdropRow}
+    <div class="s4-ckt-checks">${pillsHtml}</div>
+  </div>
+</div>`;
+    }).join('');
+}
+
+// ── Updated calculateEngineering ────────────────────────────────────
+// Replace the existing window.calculateEngineering with this version.
+// Only the cable/MCB resolution block (step 5-7) changes; all other
+// logic is identical to the original.
+window.calculateEngineering = function(isManualChange = false) {
+    const autoChk  = document.getElementById('s4_auto_coord_chk');
+    if (isManualChange && autoChk?.checked) autoChk.checked = false;
+    const autoCoord = autoChk?.checked !== false;
+
+    // 1. DC capacity
+    const panelCount   = safeNum(document.getElementById('s4_panel_count')?.value, 0);
+    const panelWattage = safeNum(document.getElementById('s4_panel_wattage')?.value, 0);
+    const dcEl = document.getElementById('s4_dc_capacity');
+    if (dcEl) dcEl.value = (panelCount * panelWattage).toFixed(0);
+
+    // 2. Length: total = (floors x 4.27 m) + horizontal run
+    const floors  = safeNum(document.getElementById('s4_floors_disp')?.value, 0);
+    const horiz   = safeNum(document.getElementById('len_horizontal')?.value, 0);
+    const totalLen = floors * 4.27 + horiz;
+    const lenTotalEl = document.getElementById('s4_len_total');
+    const lenTotalDispEl = document.getElementById('s4_len_total_disp');
+    if (lenTotalEl) lenTotalEl.value = totalLen.toFixed(2);
+    if (lenTotalDispEl) lenTotalDispEl.textContent = totalLen.toFixed(2);
+
+    // 3. Derating factors
+    const phase   = normalizePhase(document.getElementById('s4_phase')?.value);
+    const voltage = safeNum(document.getElementById('s4_voltage')?.value, phase === '1-Phase' ? 230 : 415);
+    const pf      = safeNum(document.getElementById('s4_pf')?.value, 0.99);
+    const tf      = safeNum(document.getElementById('s4_temp_factor')?.value, 1);
+    const gf      = safeNum(document.getElementById('s4_group_factor')?.value, 1);
+
+    // 4. Build circuit rows from Stage 3 topology
+    const groups = getS3MergingGroups();
+    let rows = buildCircuitRows(groups, { voltage, pf, phase, totalLen, tf, gf });
+
+    // 5. Resolve cable + MCB — GLOBAL vs PER-CIRCUIT ──────────────────
+    const isPerMode = s4CircuitMode === 'per';
+
+    // Global selections (used in global mode or as fallback)
+    let globalCableItem = null;
+    const cableSel = document.getElementById('sel_ac_cable_s4');
+    if (cableSel?.value) { try { globalCableItem = JSON.parse(cableSel.value); } catch {} }
+    let globalMcbItem = null;
+    const mcbSel = document.getElementById('sel_ac_mcb_s4');
+    if (mcbSel?.value) { try { globalMcbItem = JSON.parse(mcbSel.value); } catch {} }
+
+    // 6. Auto-coordination (global mode only, against worst-case row)
+    if (!isPerMode && autoCoord && !isManualChange) {
+        const worstRow = rows.reduce((prev, cur) => cur.iFinal > prev.iFinal ? cur : prev, rows[0]);
+        if (worstRow) {
+            const rec = getCoordinatedRecommendationForRow(worstRow);
+            s4LastRecommendation = rec;
+            if (rec && !s4SelectionLock) {
+                s4SelectionLock = true;
+                selectS4CableItem(rec.cableItem);
+                selectS4McbItem(rec.mcbItem);
+                syncStage4CableToStage3();
+                syncStage4McbToStage3();
+                s4SelectionLock = false;
+                try { globalCableItem = JSON.parse(cableSel.value); } catch {}
+                try { globalMcbItem   = JSON.parse(mcbSel.value);   } catch {}
+            }
+        }
+    }
+
+    // Per-circuit auto-coord: run independently for each row that has the checkbox ticked
+    if (isPerMode) {
+        rows.forEach(row => {
+            const autoChkRow = document.querySelector(`.s4-per-auto-chk[data-row="${row.id}"]`);
+            if (autoChkRow?.checked) {
+                const rec = getCoordinatedRecommendationForRow(row);
+                if (rec) {
+                    if (!s4PerCircuitSelections[row.id]) s4PerCircuitSelections[row.id] = {};
+                    s4PerCircuitSelections[row.id].cableItem = rec.cableItem;
+                    s4PerCircuitSelections[row.id].mcbItem   = rec.mcbItem;
+                }
+            }
+        });
+    }
+
+    // 7. Assign cable + MCB to each row then validate
+    rows = rows.map(row => {
+        if (isPerMode) {
+            const perSel = s4PerCircuitSelections[row.id] || {};
+            row.cableItem = perSel.cableItem || null;
+            row.mcbItem   = perSel.mcbItem   || null;
+        } else {
+            row.cableItem = globalCableItem;
+            row.mcbItem   = globalMcbItem;
+        }
+        return calculateCircuitRow(row);
+    });
+
+    // 8. Render per-circuit cards
+    renderS4Circuits(rows);
+
+    // 9. Sidebar summary (worst-case across all rows)
+    const allValid      = rows.every(r => r.valid);
+    const worstVdrop    = rows.reduce((m, r) => Math.max(m, r.vDropPct ?? 0), 0);
+    const worstPloss    = rows.reduce((m, r) => Math.max(m, r.pLossPct ?? 0), 0);
+    const totalDesignA  = rows.reduce((s, r) => s + (r.iFinal || 0), 0);
+    const anyCableSet   = rows.some(r => !!r.cableItem);
+    const anyMcbSet     = rows.some(r => !!r.mcbItem);
+
+    const safetyEl = document.getElementById('s4_safety_current');
+    if (safetyEl) safetyEl.value = totalDesignA.toFixed(2) + ' A';
+    const vdPctEl = document.getElementById('s4_vdrop_pct');
+    if (vdPctEl) vdPctEl.value = worstVdrop.toFixed(2) + ' %';
+    const pLossEl = document.getElementById('s4_ploss_pct');
+    if (pLossEl) pLossEl.value = worstPloss.toFixed(2) + ' %';
+
+    const setStat = (id, ok, okTxt, failTxt) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = ok ? okTxt : failTxt;
+        el.className = `status-pill ${ok ? 'status-ok' : 'status-fail'}`;
+    };
+    setStat('status_ploss', anyCableSet && rows.every(r => r.plossOk), 'PWR OK',   'PWR HI');
+    setStat('status_vdrop', anyCableSet && rows.every(r => r.vdropOk), 'V-DRP OK', 'V-DRP HI');
+    setStat('status_ccc',   anyCableSet && rows.every(r => r.cccOk),   'CCC OK',   'CCC LO');
+    setStat('status_mcb',   anyMcbSet   && rows.every(r => r.mcbOk),   'MCB OK',   'MCB ERR');
+
+    // Mode label in guide message
+    const modeTag = isPerMode ? 'Per-circuit' : (autoCoord ? 'Auto-paired' : 'Manual');
+    const msg     = document.getElementById('cable_guide_msg');
+    const fixIcon = document.getElementById('icon_cable_fix');
+    if (msg) {
+        if (allValid) {
+            msg.innerText = `${modeTag} (${rows.length} circuit${rows.length > 1 ? 's' : ''})`;
+            msg.style.color = '#15803d';
+        } else {
+            msg.innerText = anyCableSet ? 'Alert: one or more circuits non-compliant' : 'Select cable and MCB to validate';
+            msg.style.color = '#dc2626';
+        }
+        if (fixIcon) fixIcon.style.display = !allValid && anyCableSet ? 'inline-block' : 'none';
+    }
+
+    // 10. Persist to projectData
+    if (!window.projectData) window.projectData = {};
+    if (!window.projectData.stage4) window.projectData.stage4 = {};
+    window.projectData.stage4.totalLength       = totalLen.toFixed(2);
+    window.projectData.stage4.autoCoordination  = autoCoord;
+    window.projectData.stage4.circuitMode       = s4CircuitMode;
+    window.projectData.stage4.circuits          = rows.map(r => ({
+        id:            r.id,
+        label:         r.label,
+        type:          r.type,
+        ib:            r.ib,
+        iFinal:        r.iFinal,
+        totalKw:       r.totalKw,
+        cableSelected: getCableSizeText(r.cableItem) || '',
+        mcbRating:     r.mcbRating || 0,
+        vDropPct:      r.vDropPct,
+        pLossPct:      r.pLossPct,
+        valid:         r.valid
+    }));
+    window.projectData.stage4.validation = {
+        isCompliant:      allValid,
+        hasCableSelected: anyCableSet,
+        hasMcbSelected:   anyMcbSet,
+        isPowerOk:        rows.every(r => r.plossOk),
+        isCccOk:          rows.every(r => r.cccOk),
+        isMcbOk:          rows.every(r => r.mcbOk),
+        isVdropOk:        rows.every(r => r.vdropOk),
+        vDropPct:         +worstVdrop.toFixed(2),
+        pLossPct:         +worstPloss.toFixed(2),
+        safetyCurrent:    +totalDesignA.toFixed(2)
+    };
+};
