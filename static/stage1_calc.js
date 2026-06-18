@@ -14,6 +14,7 @@ window.calculatedPanelCount = 0;
 window.headerUpdateTimer = null;
 window.headerUpdateScheduled = false;
 window.isProjectLoading = false;
+window.isAPIResolving = false;
 
 function scheduleHeaderUpdate() {
   if (window.headerUpdateTimer) {
@@ -22,7 +23,7 @@ function scheduleHeaderUpdate() {
   window.headerUpdateScheduled = true;
   window.headerUpdateTimer = setTimeout(() => {
     window.headerUpdateScheduled = false;
-    updateLiveHeader();
+    if (!window.isAPIResolving) updateLiveHeader();
   }, 150);
 }
 
@@ -135,6 +136,7 @@ async function fetchSolarDataOnly() {
   btn.disabled = true;
   btn.className = "btn btn-primary btn-block btn-sm";
   msgContainer.style.display = "none";
+  window.isAPIResolving = true;
 
   try {
     const data = await getSolarData(lat, lon, tilt);
@@ -168,6 +170,8 @@ async function fetchSolarDataOnly() {
     btn.innerHTML = '<i class="fas fa-satellite-dish"></i> Fetch Solar Data';
     btn.className = "btn btn-primary btn-block btn-sm";
     btn.disabled = false;
+  } finally {
+    window.isAPIResolving = false;
   }
 }
 window.fetchAndPreviewSolarData = fetchSolarDataOnly;
@@ -197,6 +201,11 @@ window.handleHeaderPanelChange = handleHeaderPanelChange;
 // ==================================================================
 
 function updateLiveHeader() {
+  const headerPanelInput = document.getElementById("header-panel-input");
+  if (window.isAPIResolving && document.activeElement === headerPanelInput) {
+    return;
+  }
+
   function safeSetText(id, text) {
     const el = document.getElementById(id);
     if (el) el.innerText = text;
@@ -237,8 +246,6 @@ function updateLiveHeader() {
     }
 
     // --- ANTI-GLITCH PROTECTION BLOCK ---
-    const headerPanelInput = document.getElementById("header-panel-input");
-    
     // Safety check: If the user is currently focused or typing in the nav input, 
     // DO NOT let the background script alter its value or recalculate older targets.
     if (headerPanelInput && document.activeElement === headerPanelInput) {
@@ -256,7 +263,8 @@ function updateLiveHeader() {
 setInterval(() => {
   const headerPanelInput = document.getElementById("header-panel-input");
   // Only auto-update if user isn't typing AND project isn't loading AND bills exist
-  if (!window.isProjectLoading && 
+  if (!window.isProjectLoading &&
+      !window.isAPIResolving &&
       document.activeElement !== headerPanelInput && 
       window.bills && window.bills.length > 0 &&
       !window.headerUpdateScheduled) {

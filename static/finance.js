@@ -25,7 +25,9 @@ function calculateFinancials(techData, totalAnnualUnits, bills) {
   // Weighted Average Tariff
   let avgTariff = 0;
   if (totalBillUnits > 0) avgTariff = totalCurrentBillAmount / totalBillUnits;
-  if (!avgTariff || avgTariff === Infinity) avgTariff = 10; // Default safety
+  if (!Number.isFinite(avgTariff) || avgTariff <= 0) {
+    throw new Error("Average tariff cannot be calculated. Enter real electricity bill units and bill amount before running financial analysis.");
+  }
 
   const actualAnnualCost = totalAnnualUnits * avgTariff;
 
@@ -38,6 +40,9 @@ function calculateFinancials(techData, totalAnnualUnits, bills) {
   let detailedCost = null; // Object to store breakdown if available
 
   const pData = window.projectData || {};
+  if (pData.stage3?.totalCost && !pData.stage5?.grandTotal) {
+    throw new Error("Stage 3 contains engineering BoQ only. Complete Stage 5 real pricing before financial analysis.");
+  }
 
   // PRIORITY 1: STAGE 5 (Final Commercials)
   if (pData.stage5 && pData.stage5.grandTotal) {
@@ -61,13 +66,12 @@ function calculateFinancials(techData, totalAnnualUnits, bills) {
       const electricalCost = parseFloat(pData.stage3.totalCost.replace(/,/g, '')) || 0;
       
       // Estimate other components based on System Size (Stage 1)
-      const sysSize = techData.systemSizeKwp || 0;
       const estimatedPanelCost = sysSize * 1000 * 22; // Approx ₹22/Wp
       const estimatedInvCost = sysSize * 1000 * 6;    // Approx ₹6/Wp
       const estimatedStructCost = sysSize * 1000 * 4; // Approx ₹4/Wp
       const estimatedInstall = sysSize * 1000 * 3;    // Approx ₹3/Wp
       
-      grossCapex = electricalCost + estimatedPanelCost + estimatedInvCost + estimatedStructCost + estimatedInstall;
+      throw new Error("Stage 3 contains engineering BoQ only. Complete Stage 5 real pricing before financial analysis.");
       
       // Apply Subsidy Logic (Rough)
       const subsidyInput = parseFloat(document.getElementById("subsidy_amount")?.value) || 0;
@@ -80,7 +84,10 @@ function calculateFinancials(techData, totalAnnualUnits, bills) {
   
   // PRIORITY 3: STAGE 1 (Rough Estimate)
   else {
-      const capexPerKW = parseFloat(document.getElementById("capex_per_kw").value) || 40000;
+      const capexPerKW = parseFloat(document.getElementById("capex_per_kw")?.value);
+      if (!Number.isFinite(capexPerKW) || capexPerKW <= 0) {
+        throw new Error("CAPEX per kW is missing. Enter a real user-provided CAPEX value or complete Stage 5 pricing.");
+      }
       grossCapex = techData.systemSizeKwp * capexPerKW;
       
       const subsidyInput = parseFloat(document.getElementById("subsidy_amount")?.value) || 0;
@@ -145,7 +152,8 @@ function calculateFinancials(techData, totalAnnualUnits, bills) {
     subsidyAmount,
     netCapex,
     annualSavings: year1Savings,
-    totalLifetimeSavings: cumulativeSavings,
+    totalAchievedValue: cumulativeSavings,
+    achievedLifetimeOutput: cumulativeSavings,
     postSolarCost,
     payback: paybackFound ? paybackYears : 25,
     roi
@@ -235,12 +243,12 @@ function renderFinalReport(data) {
     <h3 style="color: var(--primary-dark); margin-top: 2rem; margin-bottom: 1rem;"><i class="fas fa-chart-line"></i> Financial Returns</h3>
     <table class="output-table">
       <tr><td>Current Tariff</td><td>₹${data.avgTariff.toFixed(2)} / kWh</td></tr>
-      <tr><td>Year 1 Savings</td><td>${fmtMoney(data.annualSavings)}</td></tr>
+      <tr><td>Year 1 Achieved Value</td><td>${fmtMoney(data.annualSavings)}</td></tr>
       <tr><td>Payback Period</td><td>${data.payback.toFixed(1)} years</td></tr>
       <tr><td>25-Year ROI</td><td>${data.roi.toFixed(1)}%</td></tr>
       <tr class="financial-highlight">
-        <td><strong>Total Lifetime Savings</strong></td>
-        <td><strong>${fmtMoney(data.totalLifetimeSavings)}</strong></td>
+        <td><strong>Total Achieved Value</strong></td>
+        <td><strong>${fmtMoney(data.totalAchievedValue)}</strong></td>
       </tr>
     </table>
 

@@ -107,6 +107,16 @@ specFieldsMap["Civil Material"].push(
 // Global Store
 window.materialsDB = window.materialsDB || []; 
 
+function validateMaterialRate(item, context = "calculation") {
+    const rate = parseFloat(item?.rate);
+    if (!Number.isFinite(rate) || rate <= 0) {
+        const name = item?.name || "Selected material";
+        throw new Error(`${name} has no real procurement rate. Fetch live pricing or enter a manual rate before using it in ${context}.`);
+    }
+    return rate;
+}
+window.validateMaterialRate = validateMaterialRate;
+
 document.addEventListener('DOMContentLoaded', () => {
     loadInventory();
     setupFormSubmission();

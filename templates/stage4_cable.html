@@ -136,15 +136,76 @@
              border:1px dashed #e2e8f0;border-radius:8px;font-size:12px; }
 .s4-div { height:0.5px;background:#f1f5f9;margin:10px 0; }
 
-/* ── Buttons ── */
-.s4-btn {
-  display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;
-  border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;
-  border:0.5px solid #cbd5e1;background:#f8fafc;color:#475569;transition:background .15s;
+/* ── Buttons — Premium Style from Stage 2 ── */
+.btn {
+  padding: 13px 28px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
 }
-.s4-btn:hover { background:#f1f5f9; }
-.s4-btn-primary { background:#1e293b;color:#f8fafc;border-color:#1e293b; }
-.s4-btn-primary:hover { background:#334155; }
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #0ea5e9;
+  color: #0ea5e9;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.4);
+}
+
+.btn i {
+  font-size: 1rem;
+}
 #cable_guide_msg { font-size:11px;font-style:italic;margin-left:auto; }
 
 /* ── Circuit grid: 2 per row ── */
@@ -527,19 +588,11 @@
      FIXED FOOTER — always visible at bottom
 ════════════════════════════════════════════════════ -->
 <div class="s4-fixed-footer">
-  <button class="s4-btn" onclick="switchStage(1); showS1Page(4, true);">
-    <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;
-                stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-    Back
+  <button class="btn btn-secondary" onclick="switchStage(1); showS1Page(4, true);" style="min-width:120px;">
+    <i class="fas fa-arrow-left"></i> Back
   </button>
-  <button class="s4-btn s4-btn-primary" onclick="saveStage4()">
-    Save &amp; next — switchgear
-    <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;
-                stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24">
-      <polyline points="9 18 15 12 9 6"/>
-    </svg>
+  <button class="btn btn-success" id="btn-next-stage5" onclick="saveStage4()" style="min-width:180px;">
+    Save &amp; next — switchgear <i class="fas fa-arrow-right"></i>
   </button>
 </div>
 

@@ -17,13 +17,16 @@ function syncLegacyFinalReportData(data) {
   }
 }
 
-function toNum(v, fallback = 0) {
+function toNum(v, fieldName = "numeric value") {
   const n = parseFloat(v);
-  return Number.isFinite(n) ? n : fallback;
+  if (!Number.isFinite(n)) {
+    throw new Error(`Missing or invalid ${fieldName}. Export aborted.`);
+  }
+  return n;
 }
 
 function fmtMoney(num) {
-  return "INR " + toNum(num, 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  return "INR " + toNum(num, "currency amount").toLocaleString("en-IN", { maximumFractionDigits: 0 });
 }
 
 function getPreferredSiteName(d) {
@@ -49,22 +52,22 @@ function safeSiteName(d) {
 }
 
 function getFinancialMetrics(d) {
-  const grossCapex = toNum(d.grossCapex ?? d.capex, 0);
-  const subsidyAmount = toNum(d.subsidyAmount, 0);
-  const netCapex = toNum(d.netCapex ?? d.capex, grossCapex);
-  const annualSavings = toNum(d.annualSavings, 0);
-  const totalLifetimeSavings = toNum(d.totalLifetimeSavings, annualSavings * 25);
-  const payback = toNum(d.payback, 0);
-  const roi = toNum(d.roi, 0);
-  const avgTariff = toNum(d.avgTariff, 0);
-  const actualAnnualCost = toNum(d.actualAnnualCost, 0);
-  const postSolarCost = Math.max(0, toNum(d.postSolarCost, 0));
+  const grossCapex = toNum(d.grossCapex ?? d.capex, "gross CAPEX");
+  const subsidyAmount = toNum(d.subsidyAmount ?? 0, "subsidy amount");
+  const netCapex = toNum(d.netCapex ?? d.capex, "net CAPEX");
+  const annualSavings = toNum(d.annualSavings, "year 1 achieved value");
+  const totalAchievedValue = toNum(d.totalAchievedValue ?? d.achievedLifetimeOutput, "total achieved value");
+  const payback = toNum(d.payback, "payback period");
+  const roi = toNum(d.roi, "ROI");
+  const avgTariff = toNum(d.avgTariff, "average tariff");
+  const actualAnnualCost = toNum(d.actualAnnualCost, "current annual bill");
+  const postSolarCost = Math.max(0, toNum(d.postSolarCost, "post-solar annual bill"));
   return {
     grossCapex,
     subsidyAmount,
     netCapex,
     annualSavings,
-    totalLifetimeSavings,
+    totalAchievedValue,
     payback,
     roi,
     avgTariff,
@@ -78,23 +81,23 @@ function collectStage5BoqRows() {
   return rows.map((row) => {
     const desc = row.querySelector(".col-desc")?.innerText?.trim() || "-";
     const spec = row.querySelector(".col-spec")?.innerText?.trim().replace(/\s+/g, " ") || "-";
-    const qty = toNum(row.querySelector(".col-qty span")?.innerText, 0);
+    const qty = toNum(row.querySelector(".col-qty span")?.innerText, "BoQ quantity");
     const rateInput = row.querySelector(".col-rate input");
-    const rate = toNum(rateInput?.value, 0);
+    const rate = toNum(rateInput?.value, "BoQ rate");
     const amountTxt = row.querySelector(".col-total")?.innerText || "0";
-    const amount = toNum(String(amountTxt).replace(/,/g, ""), qty * rate);
+    const amount = toNum(String(amountTxt).replace(/,/g, ""), "BoQ amount");
     return { desc, spec, qty, rate, amount };
   });
 }
 
 function getStage5Summary() {
   const s5 = window.projectData?.stage5 || {};
-  const subsidy = toNum(window.stage5Subsidy, 0);
+  const subsidy = window.stage5Subsidy === undefined ? 0 : toNum(window.stage5Subsidy, "Stage 5 subsidy");
   const subsidyApplied = document.getElementById("apply_subsidy")?.checked === true;
   return {
-    subTotal: toNum(s5.subTotal, 0),
-    gstAmount: toNum(s5.gstAmount, 0),
-    grandTotal: toNum(s5.grandTotal, 0),
+    subTotal: toNum(s5.subTotal, "Stage 5 subtotal"),
+    gstAmount: toNum(s5.gstAmount, "Stage 5 GST"),
+    grandTotal: toNum(s5.grandTotal, "Stage 5 grand total"),
     subsidy,
     subsidyApplied,
   };
@@ -106,8 +109,19 @@ function ensureExportableData() {
     alert("Generate the final proposal before export.");
     return null;
   }
-  if (!Array.isArray(d.monthlyTable) || d.monthlyTable.length === 0) {
-    alert("Complete Stage 1 calculations first.");
+  if (!Array.isArray(d.monthlyTable) || d.monthlyTable.length !== 12) {
+    alert("Complete Stage 1 calculations first. Export requires 12 months of real generation data.");
+    return null;
+  }
+  const requiredMonthly = ["days", "ghi", "ambientTemp", "cellTemp", "tempDF", "shadowDF", "otherDF", "totalDF", "energyYield", "specificYield", "plf"];
+  const missing = [];
+  d.monthlyTable.forEach((m, idx) => {
+    requiredMonthly.forEach((key) => {
+      if (!Number.isFinite(parseFloat(m?.[key]))) missing.push(`${m?.month || `Month ${idx + 1}`} ${key}`);
+    });
+  });
+  if (missing.length > 0) {
+    alert(`Export aborted. Missing real monthly generation data:\n\n${missing.slice(0, 8).join("\n")}${missing.length > 8 ? "\n..." : ""}`);
     return null;
   }
   return d;
@@ -138,7 +152,7 @@ function exportReport() {
       ["Site Name", getPreferredSiteName(d)],
       ["Site Coordinates", `${toNum(d.latitude, 0).toFixed(4)}, ${toNum(d.longitude, 0).toFixed(4)}`],
       ["Total Annual Load", `${toNum(d.totalAnnualUnits, 0).toLocaleString("en-IN")} kWh`],
-      ["Desired Savings Target", `${toNum(d.savingsTargetPercent, 0).toFixed(0)}%`],
+      ["Achieved Output", `${toNum(d.achievedSavingsPercent, 0).toFixed(1)}%`],
     ],
     theme: "striped",
     headStyles: { fillColor: [102, 126, 234] },
@@ -169,11 +183,11 @@ function exportReport() {
       ["Gross CAPEX", fmtMoney(f.grossCapex)],
       ["Subsidy", fmtMoney(f.subsidyAmount)],
       ["Net CAPEX", fmtMoney(f.netCapex)],
-      ["Year 1 Savings", fmtMoney(f.annualSavings)],
+      ["Year 1 Achieved Value", fmtMoney(f.annualSavings)],
       ["Post-Solar Annual Bill", fmtMoney(f.postSolarCost)],
       ["Payback Period", `${f.payback.toFixed(1)} years`],
       ["Return on Investment (ROI)", `${f.roi.toFixed(1)}% per year`],
-      ["Total Lifetime Savings", fmtMoney(f.totalLifetimeSavings)],
+      ["Total Achieved Value", fmtMoney(f.totalAchievedValue)],
     ],
     theme: "striped",
     headStyles: { fillColor: [245, 158, 11] },
@@ -289,7 +303,7 @@ function exportExcelReport() {
     ["Site and Load Summary", ""],
     ["Site Coordinates", `${toNum(d.latitude, 0).toFixed(4)}, ${toNum(d.longitude, 0).toFixed(4)}`],
     ["Total Annual Load", `${toNum(d.totalAnnualUnits, 0).toLocaleString("en-IN")} kWh`],
-    ["Desired Savings Target", `${toNum(d.savingsTargetPercent, 0).toFixed(0)}%`],
+    ["Achieved Output", `${toNum(d.achievedSavingsPercent, 0).toFixed(1)}%`],
     [],
     ["Generation Summary", ""],
     ["Panel Count", `${toNum(d.panelCount, 0)} x ${toNum(d.panelWattage, 0)}Wp`],
@@ -311,11 +325,11 @@ function exportExcelReport() {
     ["Gross CAPEX", f.grossCapex],
     ["Subsidy", f.subsidyAmount],
     ["Net CAPEX", f.netCapex],
-    ["Year 1 Savings", f.annualSavings],
+    ["Year 1 Achieved Value", f.annualSavings],
     ["Post-Solar Annual Bill", f.postSolarCost],
     ["Payback (years)", f.payback],
     ["ROI (% per year)", f.roi],
-    ["Total Lifetime Savings", f.totalLifetimeSavings],
+    ["Total Achieved Value", f.totalAchievedValue],
     [],
     ["Stage 5 Commercials", "Value"],
     ["Subtotal", s5Summary.subTotal],

@@ -57,6 +57,7 @@ let s4CableCatalog = [];
 const S4_STANDARD_MCB_RATINGS = [16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250];
 let s4SelectionLock = false;
 let s4LastRecommendation = null;
+let isAutoCoordinating = false;
 
 function safeNum(value, fallback = 0) {
     const n = parseFloat(value);
@@ -165,10 +166,23 @@ function getSelectedS4CableDetails() {
     return { name, size, rate };
 }
 
+function requireS4MaterialRate(item, context) {
+    if (!item) return;
+    if (typeof window.validateMaterialRate === 'function') {
+        window.validateMaterialRate(item, context);
+        return;
+    }
+    const rate = safeNum(item?.rate, 0);
+    if (rate <= 0) {
+        throw new Error(`${item?.name || 'Selected material'} has no real procurement rate. Fetch live pricing or enter a manual rate before using it in ${context}.`);
+    }
+}
+
 function selectS4CableItem(cableItem) {
     const makeSel = document.getElementById('sel_ac_cable_make_s4');
     const cableSel = document.getElementById('sel_ac_cable_s4');
     if (!cableItem || !cableSel) return false;
+    requireS4MaterialRate(cableItem, 'Stage 4 cable sizing');
 
     const cableName = cableItem?.name || '';
     const make = getCableMake(cableItem);
@@ -186,6 +200,7 @@ function selectS4CableItem(cableItem) {
 function selectS4McbItem(mcbItem) {
     const mcbSel = document.getElementById('sel_ac_mcb_s4');
     if (!mcbItem || !mcbSel) return false;
+    requireS4MaterialRate(mcbItem, 'Stage 4 protection sizing');
 
     const idx = findProtectionOptionIndex(mcbSel, mcbItem?.name || '');
     if (idx <= 0) return false;
@@ -195,13 +210,14 @@ function selectS4McbItem(mcbItem) {
 
 function applyS4Recommendation(recommendation) {
     if (!recommendation) return false;
-    const cableOk = selectS4CableItem(recommendation.cableItem);
-    const mcbOk = selectS4McbItem(recommendation.mcbItem);
-    if (!cableOk || !mcbOk) return false;
-
-    syncStage4CableToStage3();
-    syncStage4McbToStage3();
-    return true;
+    isAutoCoordinating = true;
+    try {
+        const cableOk = selectS4CableItem(recommendation.cableItem);
+        const mcbOk = selectS4McbItem(recommendation.mcbItem);
+        return !!(cableOk && mcbOk);
+    } finally {
+        isAutoCoordinating = false;
+    }
 }
 
 function parseSqmm(name) {
@@ -937,6 +953,7 @@ function syncMcbDropdown(stage3Name) {
 }
 
 function syncStage4CableToStage3() {
+    if (isAutoCoordinating) return;
     const s4Sel = document.getElementById('sel_ac_cable_s4');
     const details = getSelectedS4CableDetails();
     const cableName = details.name;
@@ -1096,6 +1113,7 @@ function _multiToInverterList(multi) {
 }
 
 function syncStage4McbToStage3() {
+    if (isAutoCoordinating) return;
     const mcbSel = document.getElementById('sel_ac_mcb_s4');
     if (!mcbSel || !mcbSel.value) return;
 
@@ -1272,11 +1290,13 @@ window.calculateEngineering = function(isManualChange = false) {
     const cableSel = document.getElementById('sel_ac_cable_s4');
     if (cableSel?.value) {
         try { selectedCableItem = JSON.parse(cableSel.value); } catch {}
+        try { requireS4MaterialRate(selectedCableItem, 'Stage 4 cable sizing'); } catch (err) { alert(err.message); return; }
     }
     let selectedMcbItem = null;
     const mcbSel = document.getElementById('sel_ac_mcb_s4');
     if (mcbSel?.value) {
         try { selectedMcbItem = JSON.parse(mcbSel.value); } catch {}
+        try { requireS4MaterialRate(selectedMcbItem, 'Stage 4 protection sizing'); } catch (err) { alert(err.message); return; }
     }
 
     // ── 6. Auto-coordination: find the best cable for the WORST row ───────
@@ -1288,11 +1308,14 @@ window.calculateEngineering = function(isManualChange = false) {
         if (rec) {
             if (!s4SelectionLock) {
                 s4SelectionLock = true;
-                selectS4CableItem(rec.cableItem);
-                selectS4McbItem(rec.mcbItem);
-                syncStage4CableToStage3();
-                syncStage4McbToStage3();
-                s4SelectionLock = false;
+                isAutoCoordinating = true;
+                try {
+                    selectS4CableItem(rec.cableItem);
+                    selectS4McbItem(rec.mcbItem);
+                } finally {
+                    isAutoCoordinating = false;
+                    s4SelectionLock = false;
+                }
                 // Refresh selectedCableItem / selectedMcbItem after auto-selection
                 try { selectedCableItem = JSON.parse(cableSel.value); } catch {}
                 try { selectedMcbItem   = JSON.parse(mcbSel.value);   } catch {}

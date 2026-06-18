@@ -2,30 +2,41 @@
    STAGE 4: ADVANCED CABLE SIZING TOOL (PRO/ENGINEERING THEME)
    ================================================================== */
 :root {
-  --s4-ink: #0f172a;
-  --s4-muted: #64748b;
-  --s4-line: #cbd5e1;
-  --s4-blue: #0284c7;
-  --s4-amber: #d97706;
-  --s4-ok: #10b981;
-  --s4-bad: #ef4444;
-  --s4-panel-bg: #ffffff;
-  --s4-bg-app: #f8fafc;
+  /* Aligned with Stage 2 Premium Palette */
+  --s4-p: #0ea5e9;        /* Primary Blue */
+  --s4-p-d: #0284c7;      /* Primary Dark */
+  --s4-p-light: #e0f2fe;  /* Primary Light */
+  --s4-ok: #10b981;       /* Success Green */
+  --s4-ok-light: #dcfce7; /* Success Light */
+  --s4-amber: #f59e0b;    /* Warning Amber */
+  --s4-bad: #ef4444;      /* Danger Red */
+  
+  --s4-ink: #0f172a;      /* Main Text */
+  --s4-muted: #64748b;    /* Secondary Text */
+  --s4-line: #e2e8f0;     /* Soft Border Color (was #cbd5e1) */
+  --s4-panel-bg: #ffffff; /* Surface White */
+  --s4-bg-app: #f8fafc;   /* App Background */
+  
+  /* Stage 2 Shadows & Radius */
+  --s4-shd: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  --s4-shd-hover: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  --s4-rad: 16px;         /* Modern Card Radius */
+  --s4-rad-sm: 8px;       /* Input/Button Radius */
 }
-
 #stage-4 .dashboard-grid {
   grid-template-columns: 1fr !important;
   width: 100%;
   padding: 20px;
 }
 
-/* CAD/Blueprint Style Background for the Main Card */
+/* Stage 2 Premium Card Style */
 .s4-card {
+  background: var(--s4-panel-bg);
   border: 1px solid var(--s4-line);
-  background-color: var(--s4-bg-app);
-  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-  background-size: 20px 20px;
-  box-shadow: inset 0 0 40px rgba(255,255,255,0.8);
+  border-radius: var(--s4-rad); /* Applies the 16px radius */
+  padding: 20px;
+  box-shadow: var(--s4-shd); /* Applies the floating drop-shadow */
+  overflow: hidden;
 }
 
 /* Overall Application Layout */
@@ -65,7 +76,7 @@
   position: relative;
   background: var(--s4-panel-bg);
   border: 1px solid var(--s4-line);
-  border-radius: 6px;
+  border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -160,7 +171,7 @@
 .eng-input {
   width: 100%;
   border: 1px solid #94a3b8;
-  border-radius: 4px;
+  border-radius: var(--s4-rad-sm); /* <-- UPDATED to 8px */
   background: #ffffff;
   color: var(--s4-ink);
   font-family: "Consolas", "Courier New", monospace;
@@ -435,12 +446,90 @@
   background: #e2e8f0;
   color: #334155;
 }
+.s4-btn {
+  background: var(--s4-p); /* Updated to Stage 2 Primary */
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--s4-rad-sm); /* Updated to 8px */
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+}
 
+.s4-btn:hover {
+  background: var(--s4-p-d);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(14, 165, 233, 0.3);
+}
 .s4-mode-btn.active {
   background: #1e293b;
   color: #f8fafc;
 }
+/* ── NEW: Premium Circuit Rows/Cards ── */
+.s4-circuit-card {
+  background: var(--s4-panel-bg);
+  border: 1px solid var(--s4-line);
+  border-radius: 12px; /* Slightly smaller than main card */
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.s4f input, .s4f select {
+  width: 100%;
+  padding: 0 10px;
+  height: 36px;
+  border: 1px solid var(--s4-line);
+  border-radius: var(--s4-rad-sm); /* Updated to 8px */
+  font-size: 13px;
+  color: var(--s4-ink);
+  background: var(--s4-panel-bg);
+  transition: all 0.2s;
+  font-weight: 600;
+}
 
+.s4f input:focus, .s4f select:focus {
+  outline: none;
+  border-color: var(--s4-p);
+  box-shadow: 0 0 0 3px var(--s4-p-light);
+}
+
+.s4-circuit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--s4-shd-hover);
+  border-color: #bae6fd; /* Soft blue border on hover */
+}
+
+.s4-valid-yes {
+  background: var(--s4-ok-light); /* #dcfce7 */
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--s4-rad-sm);
+}
+
+.s4-valid-no {
+  background: #fee2e2; 
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: var(--s4-rad-sm);
+}
+
+/* Also update the Mode Hints to match */
+.s4-mode-hint-global {
+  color: #1e40af;
+  background: var(--s4-p-light);
+  border-color: #bfdbfe;
+  border-radius: var(--s4-rad-sm);
+}
 /* ── Mode hint strip ─────────────────────────────────────────────── */
 .s4-mode-hint {
   display: flex;

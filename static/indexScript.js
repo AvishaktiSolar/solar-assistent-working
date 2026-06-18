@@ -10,6 +10,32 @@ window.projectData = {};
 window.finalReportData = {};
 window.currentProjectNumber = null;
 window.stage1SaveTimer = null;
+window.currentDesignOptions = window.currentDesignOptions || [];
+window.dbConnectionAlertShown = false;
+
+async function validateBackendConnection() {
+  try {
+    const res = await fetch("/api/ping", { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok || data.db_connected === false) {
+      const msg = data.db_alert || data.db_error || "Database connection lost.";
+      if (!window.dbConnectionAlertShown) {
+        window.dbConnectionAlertShown = true;
+        alert(msg);
+      }
+      return false;
+    }
+    window.dbConnectionAlertShown = false;
+    return true;
+  } catch (err) {
+    if (!window.dbConnectionAlertShown) {
+      window.dbConnectionAlertShown = true;
+      alert(`Backend health check failed: ${err.message}`);
+    }
+    return false;
+  }
+}
+window.validateBackendConnection = validateBackendConnection;
 
 function getSelectedProjectNumber() {
   const selector = document.getElementById("project_number_selector");
@@ -1382,6 +1408,11 @@ function refreshCurrentActiveStage() {
         if (typeof refreshStage4UI === 'function') refreshStage4UI();
     }
 }
+window.refreshCurrentActiveStage = refreshCurrentActiveStage;
+
+if (typeof window.updateRow !== "function") {
+  window.updateRow = function () {};
+}
 
 // ==================================================================
 //  DEBUG HELPER
@@ -1410,6 +1441,8 @@ window.debugStages = function () {
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", function () {
   loadProjectNumbers();
+  validateBackendConnection();
+  setInterval(validateBackendConnection, 30000);
   setTimeout(() => {
     if (typeof window.handleProjectNumberSelection === "function") {
       window.handleProjectNumberSelection();

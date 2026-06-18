@@ -107,15 +107,37 @@ def index():
 # ============================================
 @app.route('/api/ping')
 def ping():
-    """Keep-alive endpoint to prevent session timeout"""
+    """Keep-alive endpoint with active MongoDB health validation."""
     from datetime import datetime
+    db_connected = False
+    db_error = app.config.get('DB_ERROR')
+    client = app.config.get('MONGO_CLIENT')
+
+    try:
+        if client is None:
+            init_mongo_connection(app)
+            client = app.config.get('MONGO_CLIENT')
+        if client is None:
+            raise RuntimeError(app.config.get('DB_ERROR') or "MongoDB client is not initialized")
+        client.admin.command('ping')
+        db_connected = True
+        db_error = None
+        app.config['DB_ERROR'] = None
+    except Exception as e:
+        db_connected = False
+        db_error = str(e)
+        app.config['DB'] = None
+        app.config['MONGO_CLIENT'] = None
+        app.config['DB_ERROR'] = db_error
+
     return jsonify({
-        'status': 'alive', 
+        'status': 'alive' if db_connected else 'degraded',
         'timestamp': datetime.now().isoformat(),
         'logged_in': session.get('logged_in', False),
-        'db_connected': app.config.get('DB') is not None,
-        'db_error': app.config.get('DB_ERROR')
-    })
+        'db_connected': db_connected,
+        'db_error': db_error,
+        'db_alert': None if db_connected else f"Database connection lost: {db_error}"
+    }), (200 if db_connected else 503)
 
 # --- Error Handling ---
 @app.errorhandler(400)

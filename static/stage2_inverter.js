@@ -1462,6 +1462,10 @@ function generateOptimizerOptions(panelCount, wattage, inverterOrSpecs, selected
       while (rmLen * panelPmax > maxStrPower && rmLen > opt1to1Min) {
         rmLen--;
       }
+      if (rmLen <= 0) {
+        warnings.push("1:1 fallback mapping stopped because string length could not progress.");
+        break;
+      }
 
       // If we have enough remaining panels for a valid string
       if (remaining >= rmLen) {
@@ -2811,170 +2815,6 @@ function generateInteractiveGrid(_r, _c) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// BUILD / REBUILD SVG
-// ══════════════════════════════════════════════════════════════════
-function _ec4BuildGridLegacy() {
-  const wrap = document.getElementById('ec4-grid-wrap');
-  if (!wrap) return;
-
-  const total  = interactiveCanvasState.totalPanels;
-  const wrapW  = Math.max(wrap.clientWidth || 0, 400);
-  const TARGET = 52;
-  let   cols   = Math.max(6, Math.min(20, total, Math.round(wrapW / TARGET)));
-  const CELL   = Math.floor(wrapW / cols);
-  const PAD    = 4;
-  const rows   = Math.ceil(total / cols);
-
-  interactiveCanvasState.cols = cols;
-  interactiveCanvasState.CELL = CELL;
-
-  const svgW = cols * CELL;
-  const svgH = rows * CELL;
-
-  // Build lookup: panelId → state
-  const pState  = new Array(total).fill('free');  // free|prog|done-1|done-2|ts|tl|op|ep
-  const pStrIdx = new Array(total).fill(-1);
-
-  interactiveCanvasState.completedStrings.forEach((str, si) => {
-    const st = _stateForStatus(str.status, str.ratio);
-    str.panels.forEach(pid => { pState[pid] = st; pStrIdx[pid] = si; });
-  });
-  interactiveCanvasState.currentString.forEach(p => { pState[p.panelId] = 'prog'; });
-
-  // In-progress health
-  const csLen = interactiveCanvasState.currentString.length;
-  const ratio  = interactiveCanvasState.activeRatio;
-  const h      = csLen > 0 ? _checkHealth(csLen, ratio) : null;
-  const progC  = h ? _SC[h.status] : _SC['idle'];
-
-  let parts = [];
-
-  // bg dots
-  parts.push(`<defs><pattern id="ec4bg" x="0" y="0" width="${CELL}" height="${CELL}" patternUnits="userSpaceOnUse">
-    <circle cx="1.5" cy="1.5" r="1.2" fill="rgba(148,163,184,.3)"/>
-  </pattern></defs>
-  <rect width="${svgW}" height="${svgH}" fill="url(#ec4bg)"/>`);
-
-  // --- Inside _ec4BuildGrid ---
-
-// 1. Render Completed Strings Connections
-interactiveCanvasState.completedStrings.forEach((str, si) => {
-  const col = palette[si % palette.length];
-  if (str.panels.length < 2) return;
-
-  if (str.ratio === 2) {
-    // 2:1 Ratio -> Draw Curved Arcs between pairs
-    for (let p = 0; p + 1 < str.panels.length; p += 2) {
-      const p1 = panelCentre(str.panels[p]);
-      const p2 = panelCentre(str.panels[p + 1]);
-      const midX = (p1.x + p2.x) / 2;
-      const midY = (p1.y + p2.y) / 2 - 15; // Arc height
-      
-      parts.push(`<path d="M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}" 
-        fill="none" stroke="${col}" stroke-width="2.5" opacity="0.6" stroke-linecap="round"/>`);
-    }
-    
-    // Connect the pairs to each other with a faint line
-    const pathPts = str.panels.map(pid => {
-      const ctr = panelCentre(pid);
-      return `${ctr.x.toFixed(1)},${ctr.y.toFixed(1)}`;
-    }).join(' ');
-    parts.push(`<polyline points="${pathPts}" fill="none" stroke="${col}" stroke-width="1" stroke-dasharray="2 2" opacity="0.2"/>`);
-
-  } else {
-    // 1:1 Ratio -> Draw Dotted Connectors
-    const pts = str.panels.map(pid => {
-      const ctr = panelCentre(pid);
-      return `${ctr.x.toFixed(1)},${ctr.y.toFixed(1)}`;
-    }).join(' ');
-    parts.push(`<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="3 4" stroke-linecap="round" opacity="0.7"/>`);
-  }
-});
-
-// 2. Render In-Progress String (Current)
-if (csLen >= 2) {
-  const pc = h ? _SC[h.status] : _SC['idle'];
-  const ratio = interactiveCanvasState.activeRatio;
-
-  if (ratio === 2) {
-    // Preview curves for in-progress 2:1
-    for (let p = 0; p + 1 < interactiveCanvasState.currentString.length; p += 2) {
-      const p1 = panelCentre(interactiveCanvasState.currentString[p].panelId);
-      const p2 = panelCentre(interactiveCanvasState.currentString[p + 1].panelId);
-      const midX = (p1.x + p2.x) / 2;
-      const midY = (p1.y + p2.y) / 2 - 15;
-      parts.push(`<path d="M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}" 
-        fill="none" stroke="${pc.stroke}" stroke-width="2.5" opacity="0.8"/>`);
-    }
-  } else {
-    // Preview dots for in-progress 1:1
-    const pts = interactiveCanvasState.currentString.map(p => {
-      const ctr = panelCentre(p.panelId);
-      return `${ctr.x.toFixed(1)},${ctr.y.toFixed(1)}`;
-    }).join(' ');
-    parts.push(`<polyline points="${pts}" fill="none" stroke="${pc.stroke}" stroke-width="2" stroke-dasharray="3 4" opacity="0.8"/>`);
-  }
-}
-
-  // Panels
-  for (let id = 0; id < total; id++) {
-    const c = id % cols, r = Math.floor(id / cols);
-    const x = c*CELL+PAD, y = r*CELL+PAD;
-    const w = CELL-2*PAD, hh = CELL-2*PAD;
-    const cx = x+w/2, cy = y+hh/2;
-    const si = pStrIdx[id];
-
-    let fill, stroke, sw = 1.5, lbl = '·', lblC = '#94a3b8';
-
-    const st = pState[id];
-    if (st === 'prog') {
-      fill = progC.fill; stroke = progC.stroke; sw = 2.5;
-      const pi = interactiveCanvasState.currentString.findIndex(p => p.panelId === id);
-      lbl = `P${pi+1}`; lblC = progC.stroke;
-    } else if (st === 'free') {
-      fill = '#f1f5f9'; stroke = '#cbd5e1'; sw = 1;
-    } else {
-      // completed
-      const strColor = si >= 0 ? _PAL[si % _PAL.length] : '#3b82f6';
-      const str = interactiveCanvasState.completedStrings[si];
-      const sc = _SC[str?.status || 'ok'];
-      fill   = `${strColor}1e`;
-      stroke = strColor; sw = 2;
-      lbl    = `S${si+1}`; lblC = strColor;
-      // overlay tint for too-short/long
-      if (str?.status === 'too-short')  { fill = '#fefce8'; stroke = '#ca8a04'; }
-      if (str?.status === 'too-long')   { fill = '#fef2f2'; stroke = '#dc2626'; }
-      if (str?.status === 'over-power') { fill = '#fef2f2'; stroke = '#dc2626'; }
-      if (str?.status === 'odd-pair')   { fill = '#fff7ed'; stroke = '#ea580c'; }
-    }
-
-    // Solar cell dividers
-    const divOp = st === 'free' ? '.15' : '.22';
-    const divs  = `
-      <line x1="${x+w*.33}" y1="${y+2}" x2="${x+w*.33}" y2="${y+hh-2}" stroke="${stroke}" stroke-width=".5" opacity="${divOp}" pointer-events="none"/>
-      <line x1="${x+w*.67}" y1="${y+2}" x2="${x+w*.67}" y2="${y+hh-2}" stroke="${stroke}" stroke-width=".5" opacity="${divOp}" pointer-events="none"/>
-      <line x1="${x+2}" y1="${y+hh/2}" x2="${x+w-2}" y2="${y+hh/2}" stroke="${stroke}" stroke-width=".5" opacity="${divOp}" pointer-events="none"/>
-    `;
-
-    parts.push(`<g data-id="${id}" style="cursor:crosshair;pointer-events:auto;">
-      <rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="4"
-        fill="${fill}" stroke="${stroke}" stroke-width="${sw}"
-        style="pointer-events:none;"/>
-      ${divs}
-      <text x="${cx}" y="${cy+4}" text-anchor="middle"
-        style="font-size:${lbl.length>2?'7.5':'9'}px;fill:${lblC};font-weight:700;pointer-events:none;user-select:none;">${lbl}</text>
-      <rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="4"
-        fill="transparent" stroke="none" style="pointer-events:all;"/>
-    </g>`);
-  }
-
-  wrap.innerHTML = `<svg viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}"
-    style="display:block;min-width:${svgW}px;" xmlns="http://www.w3.org/2000/svg">
-    ${parts.join('')}
-  </svg>`;
-}
-
-// ══════════════════════════════════════════════════════════════════
 // VIRTUAL GRID — maps a "cell index" (including spacers) to a real
 // panel id, or null for spacer cells.
 // Each inverter slice is row-aligned: it always starts at col 0.
@@ -3615,7 +3455,9 @@ function finishCurrentString() {
   _ec4Refresh();
 }
 
-window._ec4AutoCleanup1to1 = function (split) {
+function _ec4AutoCleanup1to1SecondaryRemoved(split) {
+  return;
+/*
   const total = interactiveCanvasState.totalPanels;
   const done  = interactiveCanvasState.completedStrings.reduce((s, st) => s + st.panelCount, 0);
   const rem   = total - done;
@@ -3686,7 +3528,8 @@ window._ec4AutoCleanup1to1 = function (split) {
   _ec4BuildGrid();
   _ec4UpdateHealthBar();
   _ec4Refresh();
-};
+*/
+}
 
 // ══════════════════════════════════════════════════════════════════
 function clearAllStrings() {
