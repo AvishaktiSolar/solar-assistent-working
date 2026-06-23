@@ -1,7 +1,3 @@
-// ==================================================================
-//  stage5_switchgear.js - Electrical BoQ (Cost Removed, Multi-System Added)
-// ==================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
     loadStage3Materials();
     initStage3OverrideTracking();
@@ -12,14 +8,6 @@ function safeNum(val, fallback = 0) {
     const n = parseFloat(val);
     return Number.isFinite(n) ? n : fallback;
 }
-
-const SWITCHGEAR_DIM = {
-    'NB1 DC': 73,
-    'DS50PV-1000/51': 54,
-    'DS440': 36,
-    'HP10M20': 11,
-    'AC MCB': 36
-};
 
 const JB_CATALOG = [
     { model: 'MI0100', length: 238 },
@@ -220,14 +208,11 @@ function autoPopulateStage3FromDesign() {
     const acMcbRating = d.iFinal;
     const useMccb = acMcbRating > 200;
 
-    // Trigger Multi-System DB scaling
     initStage3MultiSystems();
 
-    // DC Side - Cable and rating
     setAutoFieldValue('qty_dc_cable', d.stringsParallel * d.lPerString);
     setAutoFieldValue('size_dc_mcb', `${Math.ceil(dcMcbRating)}A min`);
 
-    // AC side
     setAutoFieldValue('qty_ac_mcb', d.nInverters);
     setAutoFieldValue('qty_ac_elcb', d.nInverters);
     setAutoFieldValue('qty_ac_spd', d.nInverters);
@@ -236,7 +221,6 @@ function autoPopulateStage3FromDesign() {
     if (d.cableSizeFromStage4) setAutoFieldValue('size_ac_cable', d.cableSizeFromStage4);
     if (d.acCableLengthFromStage4 > 0) setAutoFieldValue('qty_ac_cable', d.acCableLengthFromStage4);
 
-    // Disable fuse for single string as requested.
     const fuseQtyEl = document.getElementById('qty_dc_fuse');
     if (fuseQtyEl) {
         const disableFuse = d.stringsParallel <= 1;
@@ -244,7 +228,6 @@ function autoPopulateStage3FromDesign() {
         if (disableFuse && !isOverridden('qty_dc_fuse')) fuseQtyEl.value = 0;
     }
 
-    // Catalog-based minimum spec selection for AC MCB/ELCB.
     const mcbOpt = pickSmallestProtectionOption('sel_ac_mcb', acMcbRating);
     if (mcbOpt && !isOverridden('sel_ac_mcb')) {
         const mcbSel = document.getElementById('sel_ac_mcb');
@@ -285,7 +268,6 @@ function autoPopulateStage3FromDesign() {
     autoSizeDbPanels();
 }
 
-// --- NEW: Multi System / DCDB Logic ---
 function initStage3MultiSystems() {
     const sysCountInput = document.getElementById('s3_system_count');
     if (!sysCountInput) return;
@@ -310,7 +292,6 @@ window.syncMultiSystemDCDB = function() {
     const fieldsToUpdate = ['qty_dcdb', 'qty_dc_mcb', 'qty_dc_fuse', 'qty_dc_spd'];
     fieldsToUpdate.forEach(id => {
         const el = document.getElementById(id);
-        // Map quantity if the user hasn't manually overridden the field
         if (el && !isOverridden(id)) {
             el.value = sysCount;
         }
@@ -370,11 +351,30 @@ function getQty(rowId) {
     return safeNum(document.getElementById(`qty_${rowId}`)?.value, 0);
 }
 
+function getDynamicItemWidth(rowId, fallbackWidth) {
+    const sel = document.getElementById(`sel_${rowId}`);
+    if (sel && sel.value) {
+        try {
+            const item = JSON.parse(sel.value);
+            const poles = String(item?.specifications?.poles || '').toUpperCase();
+            
+            if (poles.includes('4P')) return 72;
+            if (poles.includes('3P')) return 54;
+            if (poles.includes('2P')) return 36;
+            if (poles.includes('1P')) return 18;
+            
+            if (item?.specifications?.width_mm) return safeNum(item.specifications.width_mm, fallbackWidth);
+        } catch(e) {
+            console.warn(`Could not parse dimensions for ${rowId}`);
+        }
+    }
+    return fallbackWidth;
+}
+
 function calculatePanelSize(components, jbCatalog) {
     let totalLength = 0;
     components.forEach(c => {
-        const width = safeNum(SWITCHGEAR_DIM[c.spec], 0);
-        totalLength += safeNum(c.qty, 0) * width;
+        totalLength += safeNum(c.qty, 0) * safeNum(c.width, 0); 
     });
 
     const finalLength = totalLength * 1.2;
@@ -389,7 +389,6 @@ function syncDbDropdownByModel(selectId, modelName, rowId, targetLen = 0) {
     const sel = document.getElementById(selectId);
     if (!sel || !modelName) return;
 
-    // Pass 1: direct model match in option text.
     for (let i = 1; i < sel.options.length; i++) {
         const optText = String(sel.options[i]?.text || '').toUpperCase();
         if (optText.includes(String(modelName).toUpperCase())) {
@@ -401,7 +400,6 @@ function syncDbDropdownByModel(selectId, modelName, rowId, targetLen = 0) {
         }
     }
 
-    // Pass 2: try matching from option JSON name/specs using length hint.
     if (targetLen > 0) {
         for (let i = 1; i < sel.options.length; i++) {
             const raw = sel.options[i]?.value || '';
@@ -425,17 +423,21 @@ function syncDbDropdownByModel(selectId, modelName, rowId, targetLen = 0) {
 function autoSizeDbPanels() {
     const dc = calculatePanelSize(
         [
-            { spec: 'NB1 DC', qty: getQty('dc_mcb') },
-            { spec: 'HP10M20', qty: getQty('dc_fuse') },
-            { spec: 'DS50PV-1000/51', qty: getQty('dc_spd') }
+            { width: 73, qty: getQty('dc_mcb') },
+            { width: 11, qty: getQty('dc_fuse') },
+            { width: 54, qty: getQty('dc_spd') }
         ],
         JB_CATALOG
     );
 
+    const acMcbWidth = getDynamicItemWidth('ac_mcb', 72); 
+    const acElcbWidth = getDynamicItemWidth('ac_elcb', 72); 
+    
     const ac = calculatePanelSize(
         [
-            { spec: 'AC MCB', qty: getQty('ac_mcb') },
-            { spec: 'DS440', qty: getQty('ac_spd') }
+            { width: acMcbWidth, qty: getQty('ac_mcb') },
+            { width: acElcbWidth, qty: getQty('ac_elcb') },
+            { width: 36, qty: getQty('ac_spd') }
         ],
         JB_CATALOG
     );
@@ -574,22 +576,18 @@ function syncStage3McbToStage4(mcbName) {
     if (typeof calculateEngineering === 'function') calculateEngineering();
 }
 
-// Called when tab is switched to Stage 3
 function refreshStage3UI() {
     const s1 = window.projectData?.stage1;
     const s2 = window.projectData?.strings;
 
     if (s1 && s2) {
-        // Update Context Header
         document.getElementById('s3_dc_cap').innerText = `${s1.systemSizeKwp.toFixed(2)} kWp`;
         const acCapKw = parseFloat(s2.acCapacity ?? s2.totalAcKw ?? 0) || 0;
         document.getElementById('s3_ac_cap').innerText = `${acCapKw.toFixed(1)} kW`;
 
-        // Approx Short Circuit Current (Placeholder or Calc)
         const isc = 13.5;
         document.getElementById('s3_isc').innerText = `${isc} A`;
 
-        // Set Default Cable Lengths if empty
         const dcCab = document.getElementById('qty_dc_cable');
         const acCab = document.getElementById('qty_ac_cable');
         if (dcCab && !dcCab.value) dcCab.value = 50;
@@ -597,13 +595,11 @@ function refreshStage3UI() {
 
         autoPopulateStage3FromDesign();
 
-        // If Stage 4 updated cable, reflect it back when revisiting Stage 3.
         syncStage3CableFromState();
         syncStage3McbFromState();
     }
 }
 
-// --- 1. DATA LOADING ---
 async function loadStage3Materials() {
     try {
         const res = await fetch('/procurement/api/get_stage3_materials');
@@ -672,20 +668,17 @@ function populateDropdown(elementId, items) {
     (Array.isArray(items) ? items : []).forEach(item => {
         const opt = document.createElement('option');
         opt.value = JSON.stringify(item);
-        // Cost hint removed completely
         opt.innerText = item.name;
         sel.appendChild(opt);
     });
 }
 
-// --- 2. ROW UPDATES (For Dropdowns) ---
 window.updateRow = function(rowId, defaultSize) {
     const sel = document.getElementById(`sel_${rowId}`);
     if (!sel || !sel.value) return;
 
     const item = JSON.parse(sel.value);
 
-    // Update Size (Priority: DB Spec > DB Name > Default)
     let size = defaultSize;
     if (item.specifications) {
         if (item.specifications.size) size = item.specifications.size;
@@ -697,7 +690,6 @@ window.updateRow = function(rowId, defaultSize) {
         if(sizeInput) sizeInput.value = size;
     }
 
-    // Keep AC cable in sync with Stage 4 and state.
     if (rowId === 'ac_cable') {
         const cableName = item?.name || sel.options[sel.selectedIndex]?.text || '';
         if (!window.projectData) window.projectData = {};
@@ -719,16 +711,13 @@ window.updateRow = function(rowId, defaultSize) {
     }
 };
 
-// Replaces the old calcRowTotal trigger. Ensures DB Panels still size correctly when quantities change.
 window.updateQuantities = function(rowId) {
     if (['dc_mcb', 'dc_fuse', 'dc_spd', 'ac_mcb', 'ac_spd'].includes(rowId)) {
         autoSizeDbPanels();
     }
 };
 
-// --- 3. SAVE DATA ---
 window.saveStage3 = function() {
-    // Helper to extract data without cost
     const getData = (id) => {
         const el = document.getElementById(`sel_${id}`);
         let itemText = '-';
@@ -767,7 +756,6 @@ window.saveStage3 = function() {
         computed: window.projectData?.stage3Computed || {}
     };
 
-    // Save to global state
     if(!window.projectData) window.projectData = {};
     window.projectData.stage3 = data;
 
@@ -775,6 +763,5 @@ window.saveStage3 = function() {
         setStageCompletion(3, true);
     }
 
-    // Proceed
     if (typeof switchStage === 'function') switchStage(5);
 };

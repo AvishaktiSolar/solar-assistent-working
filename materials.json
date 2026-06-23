@@ -18,7 +18,7 @@
             "pmax": 550
         },
         "unit": "undefined",
-        "rate": 0.0
+        "rate": 23.2
     },
     {
         "id": 102,
@@ -45,7 +45,7 @@
             "cell_type": "TOPCON",
             "cells": 144
         },
-        "rate": 0.0
+        "rate": 25.25
     },
     {
         "id": 103,
@@ -72,7 +72,7 @@
             "cell_type": "TOPCON",
             "cells": 132
         },
-        "rate": 0.0
+        "rate": 21.1
     },
     {
         "id": 104,
@@ -99,7 +99,7 @@
             "cell_type": "TOPCON",
             "cells": 144
         },
-        "rate": 0.0
+        "rate": 27.8
     },
     {
         "id": 105,
@@ -126,7 +126,7 @@
             "cell_type": "TOPCON",
             "cells": 144
         },
-        "rate": 0.0
+        "rate": 34.2
     },
     {
         "id": 106,
@@ -153,7 +153,7 @@
             "cell_type": "TOPCON",
             "cells": 144
         },
-        "rate": 0.0
+        "rate": 25.0
     },
     {
         "id": 107,
@@ -180,7 +180,7 @@
             "cell_type": "TOPCON",
             "cells": 132
         },
-        "rate": 0.0
+        "rate": 27.0
     },
     {
         "id": 108,
@@ -207,7 +207,7 @@
             "cell_type": "MONO",
             "cells": 72
         },
-        "rate": 0.0
+        "rate": 34.0
     },
     {
         "id": 109,
@@ -234,7 +234,7 @@
             "cell_type": "TOPCON",
             "cells": 144
         },
-        "rate": 0.0
+        "rate": 29.0
     },
     {
         "id": 110,
@@ -261,7 +261,7 @@
             "cell_type": "MONO_PERC",
             "cells": 120
         },
-        "rate": 0.0
+        "rate": 31.0
     },
     {
         "id": 111,
@@ -288,7 +288,7 @@
             "cell_type": "TOPCON",
             "cells": 132
         },
-        "rate": 0.0
+        "rate": 27.8
     },
     {
         "id": 112,
@@ -315,7 +315,7 @@
             "cell_type": "TOPCON",
             "cells": 132
         },
-        "rate": 0.0
+        "rate": 29.5
     },
     {
         "id": 113,
@@ -342,7 +342,7 @@
             "cell_type": "TOPCON",
             "cells": 132
         },
-        "rate": 0.0
+        "rate": 27.0
     },
     {
         "id": 201,

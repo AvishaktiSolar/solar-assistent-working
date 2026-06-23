@@ -151,34 +151,55 @@ async function refreshStage5UI() {
   if (civilMakeEl && !civilMakeEl.value) civilMakeEl.value = civil.blockType || "";
   if (adhesiveEl && !adhesiveEl.value) adhesiveEl.value = "MyBond MetLock";
 
-  if (typeof calcCivilBlocksNew === "function") calcCivilBlocksNew();
-  if (typeof calcWalkway === "function") calcWalkway();
-  if (typeof calcAnchor === "function") calcAnchor();
+  if (typeof calcCivilBlocksNew === "function") calcCivilBlocksNew(true);
+  if (typeof calcWalkway === "function") calcWalkway(true);
+  if (typeof calcAnchor === "function") calcAnchor(true);
 
   // ==========================================
   // A. MAJOR COMPONENTS
   // ==========================================
 
-  // 1. PANELS (Calculated Rate)
-  let panelRate = 13500;
-  const capexPerKw = parseFloat(s1.capexPerKw || document.getElementById("capex_per_kw")?.value || 0);
-  const watts = parseFloat(s1.panelWattage || 0);
-
-  if (capexPerKw > 0 && watts > 0) {
-    panelRate = (capexPerKw / 1000) * watts;
-  } else {
-    // Use rate from image if capex not available
-    panelRate = 25.2;
-  }
-
-  addBoQRow(
-    majorBody,
-    "panel",
-    "PV Modules (Solar Panels)",
-    `${s1.panelWattage || 550}Wp ${s1.panelType || "Mono/Bifacial"}`,
-    s1.panelCount || 162, // Use 162 from image as default
-    panelRate
+  // 1. PANELS (Strict Calculation from JSON Database)
+  // 🔥 THE FIX: Look inside window.selectedPanelSpecs FIRST (live dropdown selection)
+  const unitRatePerWatt = parseFloat(
+    window.selectedPanelSpecs?.rate ||
+    s1.rate || 
+    s1.capexPerKw || 
+    s1.panelRate || 
+    0
+  ); 
+  
+  // Pull wattage from selectedPanelSpecs.specifications.pmax first, then fallback
+  const panelWattage = parseFloat(
+    window.selectedPanelSpecs?.specifications?.pmax ||
+    window.selectedPanelSpecs?.pmax ||
+    s1.panelWattage || 
+    s1.pmax || 
+    0
   );
+  
+  // Dynamically pull the panel count calculated by the physics engine
+  const panelCount = parseFloat(s1.panelCount || 0);
+
+  // Calculate amount = panelWattage × unitRatePerWatt × panelCount
+  const panelAmount = panelWattage * unitRatePerWatt * panelCount;
+
+  // Add panel row manually to display: Qty = panel count, Rate = unitRatePerWatt from JSON, Amount = calculated
+  const tr = document.createElement("tr");
+  tr.className = "boq-row row-panel";
+  tr.innerHTML = `
+    <td class="col-use">
+      <input type="checkbox" class="boq-include" checked onchange="calcStage5()">
+    </td>
+    <td class="col-desc">PV Modules (Solar Panels)</td>
+    <td class="col-spec">${panelWattage}Wp ${window.selectedPanelSpecs?.name || s1.panelType || s1.panelName || "Solar Panel"}</td>
+    <td class="col-qty"><input type="number" class="cost-input qty-input" id="qty_panel" value="${panelCount}" step="0.01" min="0" onchange="calcStage5()" style="text-align:center;"></td>
+    <td class="col-rate">
+      <input type="number" class="cost-input item-rate" id="rate_panel" value="${unitRatePerWatt.toFixed(2)}" onchange="calcStage5()" step="0.01">
+    </td>
+    <td class="col-total" id="total_panel">₹ ${panelAmount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}</td>
+  `;
+  majorBody.appendChild(tr);
 
   // 2. INVERTER
   const inverterBreakdown = Array.isArray(s2.multiInverterDesign) && s2.multiInverterDesign.length > 0
@@ -249,9 +270,9 @@ async function refreshStage5UI() {
     dc_cable: 45,
     ac_cable: 280,
     dc_mcb: 450,
-    dc_fuse: 150,
-    dc_spd: 1200,
-    ac_spd: 1800,
+    dc_fuse: 180,
+    dc_spd:1500,
+    ac_spd: 1850,
   };
   stage3Entries.forEach((entry) => {
     const itemText = cleanItemText(entry.data?.item);
@@ -310,12 +331,14 @@ async function refreshStage5UI() {
   const sysSizeKw = s1.systemSizeKwp || 0;
 
   addBoQRow(servBody, "install", "Installation & Commissioning", "Civil & Elec Execution", sysSizeKw.toFixed(2), 3500);
-  addBoQRow(servBody, "transport", "Transportation & Logistics", "Site Delivery", 1, 20000);
+  addBoQRow(servBody, "transport", "Transportation & Logistics", "Site Delivery", 1, 15000);
   addBoQRow(servBody, "structure_consultant", "Structure Consultant", "As per requirement", 1, 15000);
-  addBoQRow(servBody, "meter_charges", "Meter Charges", "Govt Fees", 1, 60000);
-  addBoQRow(servBody, "net_meter", "NetMetering", "Documentation & Govt Fees", 1, 51840);
-  addBoQRow(servBody, "miscellaneous", "Miscellaneous", "Other services", 1, 99740);
-  addBoQRow(servBody, "inc", "InC", "As per requirement", 1, 187200);
+  addBoQRow(servBody, "meter_charges", "Meter Charges", "Govt Fees", 1,12000);
+  addBoQRow(servBody, "O&M", "O&M", "As per requirement", 1, 20000);
+  addBoQRow(servBody, "net_meter", "NetMetering", "Documentation & Govt Fees", 1, 33408);
+  addBoQRow(servBody, "miscellaneous", "Miscellaneous", "Other services", 1, 22000);
+  addBoQRow(servBody, "PMC", "PMC", "As per requirement", 1, 429050 );
+
 
   // ==========================================
   // D. SUBSIDY LOGIC
@@ -548,6 +571,28 @@ window.calcStage5 = function () {
     // Skip fixed civil rows (already synced above)
     if (row.id === "row_blocks" || row.id === "row_adhesive" || row.id === "row_walkway" || row.id === "row_anchor") return;
 
+    // SPECIAL HANDLING FOR PANEL ROW: Custom formula = panelWattage × unitRatePerWatt × panelCount
+    if (row.className.includes("row-panel")) {
+      const panelWattage = parseFloat(
+        window.selectedPanelSpecs?.specifications?.pmax ||
+        window.selectedPanelSpecs?.pmax ||
+        window.projectData?.stage1?.panelWattage || 0
+      );
+      const qtyInput = row.querySelector('input.qty-input');
+      const rateInput = row.querySelector('input.item-rate');
+      const panelCount = parseFloat(qtyInput?.value) || 0;
+      const unitRate = parseFloat(rateInput?.value) || 0;
+      
+      const lineTotal = panelWattage * unitRate * panelCount;
+      if (isRowIncluded(row)) subTotal += lineTotal;
+      
+      const totalCell = row.querySelector(".col-total");
+      if (totalCell) {
+        totalCell.innerText = `₹ ${lineTotal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+      }
+      return; // Skip default calculation for this row
+    }
+
     // Get Quantity (from input field or span)
     const qtyInput = row.querySelector('input.qty-input');
     const qtySpan = row.querySelector('span[id^="qty_"]');
@@ -578,11 +623,13 @@ window.calcStage5 = function () {
   document.getElementById("val_gst").innerText = gstAmt.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
   // 4. Grand Total & Subsidy
-  let grandTotal = subTotal + gstAmt;
+  const grandTotalBeforeSubsidy = subTotal + gstAmt;
+  let grandTotal = grandTotalBeforeSubsidy;
 
   const subsidyCheck = document.getElementById("apply_subsidy");
+  const subsidyDeducted = subsidyCheck && subsidyCheck.checked ? (window.stage5Subsidy || 0) : 0;
   if (subsidyCheck && subsidyCheck.checked) {
-    grandTotal -= window.stage5Subsidy || 0;
+    grandTotal -= subsidyDeducted;
   }
 
   if (grandTotal < 0) grandTotal = 0; // Safety
@@ -601,9 +648,11 @@ window.calcStage5 = function () {
 
   // 6. Save Global State
   window.projectData.stage5 = {
+    grandTotalBeforeSubsidy: grandTotalBeforeSubsidy,
     grandTotal: grandTotal,
     subTotal: subTotal,
     gstAmount: gstAmt,
+    subsidyDeducted: subsidyDeducted,
     itemized: {
       panels: getRowTotal("panel"),
       inverter: getRowTotal("inverter") + getRowTotalByPrefix("inverter_"),
@@ -654,7 +703,7 @@ function getRowTotalByPrefix(prefix) {
 // NEW CALCULATION FUNCTIONS FOR CIVIL ROWS
 // ==================================================================
 
-window.calcCivilBlocksNew = function() {
+window.calcCivilBlocksNew = function(skipStage5Calc = false) {
   const blockSel = document.getElementById("civil_make_s5");
   const qtyBlocksEl = document.getElementById("qty_blocks");
   const rateBlocksInput = document.getElementById("rate_blocks");
@@ -693,7 +742,7 @@ window.calcCivilBlocksNew = function() {
   const blockType = blockSel?.value || "";
   const adhesiveRow = document.getElementById("row_adhesive");
   if (adhesiveRow) {
-    adhesiveRow.style.display = (blockType && blockType !== "" && blockType !== "none") ? "table-row" : "table-row";
+    adhesiveRow.style.display = (blockType && blockType !== "" && blockType !== "none") ? "table-row" : "none";
   }
 
   // Save state
@@ -715,13 +764,13 @@ window.calcCivilBlocksNew = function() {
     totalCost: (blockCount * blockRate) + (adhQty * adhRate)
   };
 
-  if (typeof calcStage5 === "function") calcStage5();
+  if (!skipStage5Calc && typeof calcStage5 === "function") calcStage5();
 };
 
 // Alias function for backward compatibility
 window.calcCivilBlocks = window.calcCivilBlocksNew;
 
-window.calcWalkway = function() {
+window.calcWalkway = function(skipStage5Calc = false) {
   const qtyWalkwayEl = document.getElementById("qty_walkway");
   const rateInput = document.getElementById("rate_walkway");
   const totalCell = document.getElementById("total_walkway");
@@ -734,10 +783,10 @@ window.calcWalkway = function() {
     totalCell.innerText = `₹ ${walkwayCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   }
 
-  if (typeof calcStage5 === "function") calcStage5();
+  if (!skipStage5Calc && typeof calcStage5 === "function") calcStage5();
 };
 
-window.calcAnchor = function() {
+window.calcAnchor = function(skipStage5Calc = false) {
   const anchorQtyEl = document.getElementById("qty_anchor");
   const rateInput = document.getElementById("rate_anchor");
   const totalCell = document.getElementById("total_anchor");
@@ -750,6 +799,6 @@ window.calcAnchor = function() {
     totalCell.innerText = `₹ ${anchorCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   }
 
-  if (typeof calcStage5 === "function") calcStage5();
+  if (!skipStage5Calc && typeof calcStage5 === "function") calcStage5();
 };
 

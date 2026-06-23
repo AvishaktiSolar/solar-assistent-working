@@ -276,18 +276,24 @@ function updateSummary() {
     totalBillUnits > 0 ? totalBillAmounts / totalBillUnits : 0;
 
   // Update UI Elements locally
+  const formattedUnits = `${totalUnits.toLocaleString("en-IN", { maximumFractionDigits: 0 })} kWh`;
+  const formattedCost = `Rs ${totalAnnualCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+  const formattedAvgRate = `Rs ${avgCostPerUnit.toFixed(2)}`;
+
   const unitsElem = document.getElementById("total_annual_units");
-  if(unitsElem) unitsElem.textContent = `${totalUnits.toLocaleString("en-IN", { maximumFractionDigits: 0 })} kWh`;
+  if(unitsElem) unitsElem.textContent = formattedUnits;
   const unitsElemS1 = document.getElementById("s1_annual_units_display");
-  if(unitsElemS1) unitsElemS1.textContent = unitsElem ? unitsElem.textContent : "";
+  if(unitsElemS1) unitsElemS1.textContent = formattedUnits;
   
   const costElem = document.getElementById("total_annual_cost");
   if(costElem) costElem.textContent = `₹${totalAnnualCost.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const costElemS1 = document.getElementById("s1_annual_cost_display");
-  if(costElemS1) costElemS1.textContent = costElem ? costElem.textContent : "";
+  if(costElemS1) costElemS1.textContent = formattedCost;
   
   const countElem = document.getElementById("bill_count");
   if(countElem) countElem.textContent = window.bills.length;
+  const countElemS1 = document.getElementById("s1_bill_count_display");
+  if(countElemS1) countElemS1.textContent = window.bills.length;
 
   const avgCostElem = document.getElementById("avg_cost_per_unit");
   if (avgCostElem) {
@@ -295,6 +301,8 @@ function updateSummary() {
     const avgCostElemS1 = document.getElementById("s1_avg_rate_display");
     if (avgCostElemS1) avgCostElemS1.textContent = avgCostElem.textContent;
   }
+  const avgCostElemS1Direct = document.getElementById("s1_avg_rate_display");
+  if (avgCostElemS1Direct) avgCostElemS1Direct.textContent = formattedAvgRate;
 
   // --- NEW: CRITICAL REAL-TIME SYNC ---
   // Force the top nav bar and physics engine to recalculate instantly based on new bill data

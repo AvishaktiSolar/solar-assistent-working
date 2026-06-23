@@ -1,4 +1,4 @@
-{% macro render_row(id, label, placeholder) %}
+{% macro render_row(id, label, placeholder, def_size='') %}
 <div class="component-row">
     <div class="comp-label">{{ label }}</div>
     <div class="comp-cell">
@@ -60,7 +60,7 @@
                             <div class="table-head-cell">Qty</div>
                         </div>
 
-                        {{ render_row('dcdb', 'DCDB', 'Select Box...') }}
+                        {{ render_row('dcdb', 'DCDB', 'Select Box...', 'Auto sized') }}
                         
                         {{ render_fixed_row('dc_mcb', 'DC MCB', 'Chint', '4p 25A') }}
                         {{ render_fixed_row('dc_fuse', 'DC Fuse', 'Mersen', '25A') }}
@@ -77,13 +77,13 @@
                             <div class="table-head-cell">Qty</div>
                         </div>
 
-                        {{ render_row('acdb', 'ACDB', 'Select Box...') }}
-                        {{ render_row('ac_mcb', 'AC MCB', 'Select Brand...') }}
-                        {{ render_row('ac_elcb', 'AC ELCB', 'Select Brand...') }}
+                        {{ render_row('acdb', 'ACDB', 'Select Box...', 'Auto sized') }}
+                        {{ render_row('ac_mcb', 'AC MCB', 'Select Brand...', 'Auto sized') }}
+                        {{ render_row('ac_elcb', 'AC ELCB', 'Select Brand...', 'Auto sized') }}
                         
                         {{ render_fixed_row('ac_spd', 'AC SPD', 'Citel', 'DS440-320') }}
                         
-                        {{ render_row('ac_cable', 'AC Cable', 'Select Cable...') }}
+                        {{ render_row('ac_cable', 'AC Cable', 'Select Cable...', 'Auto sized') }}
                     </div>
 
                 </div>

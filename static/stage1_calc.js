@@ -67,6 +67,8 @@ function selectPanelModel() {
   const specs = p.specifications || {};
 
   window.selectedPanelSpecs = {
+    name: p.name || "Solar Panel",
+    rate: parseFloat(p.rate) || 0,
     voc: parseFloat(specs.voc) || 49.5,
     vmp: parseFloat(specs.vmp) || 41.5,
     isc: parseFloat(specs.isc) || 14.0,
@@ -74,6 +76,8 @@ function selectPanelModel() {
     tempCoeffVoc: parseFloat(specs.voc_coeff) || -0.25,
     tempCoeffVmp: parseFloat(specs.pmax_coeff) || -0.35,
     wattage: parseFloat(specs.pmax || specs.wattage) || 550,
+    pmax: parseFloat(specs.pmax || specs.wattage) || 550,
+    specifications: specs,
   };
 
   const wInput = document.getElementById("panel_wattage");
@@ -184,8 +188,8 @@ function handleHeaderPanelChange(val) {
   const count = parseInt(val);
   if (!isNaN(count) && count >= 0) {
     window.calculatedPanelCount = count;
-    updateLiveHeader();
     if (typeof calculateShadowTable === "function") calculateShadowTable();
+    updateLiveHeader();
     const input = document.getElementById("header-panel-input");
     if (input) {
       input.style.borderColor = "#4ade80";
@@ -228,6 +232,7 @@ function updateLiveHeader() {
 
   // 2. Solar Calculations
   if (window.fetchedSolarData) {
+    if (typeof calculateShadowTable === "function") calculateShadowTable();
     const calcData = calculateSolarPhysics(annualDemand, window.fetchedSolarData);
 
     // Update Top Bar Specs
@@ -259,18 +264,6 @@ function updateLiveHeader() {
   }
 }
 
-// Keep polling safe - respect project loading flag
-setInterval(() => {
-  const headerPanelInput = document.getElementById("header-panel-input");
-  // Only auto-update if user isn't typing AND project isn't loading AND bills exist
-  if (!window.isProjectLoading &&
-      !window.isAPIResolving &&
-      document.activeElement !== headerPanelInput && 
-      window.bills && window.bills.length > 0 &&
-      !window.headerUpdateScheduled) {
-    updateLiveHeader();
-  }
-}, 2000);
 // ==================================================================
 //  5. GENERATION MODAL
 // ==================================================================
@@ -415,13 +408,16 @@ function simulateEnergyYield(
     // Formula: Temp Derating = 1 - (Coeff * (T_cell - 25))
     const tempDerating = 1 - (Math.abs(coeffDecimal) * (tCell - 25));
 
-    // Use Stage 3 total site loss if available, else monthly shadow.
-    const stageSiteLoss = Number.isFinite(window.totalSiteLossPercent) ? window.totalSiteLossPercent : null;
-    const currentMonthShadowPercent = stageSiteLoss !== null ? stageSiteLoss : (monthlyShadowLosses[i] || 0);
+    const currentMonthShadowPercent = (
+      Array.isArray(window.shadowMonthlyAverage) && window.shadowMonthlyAverage.length === 12
+        ? window.shadowMonthlyAverage[i]
+        : (monthlyShadowLosses[i] || 0)
+    );
     const shadowDF = 1 - (currentMonthShadowPercent / 100);
+    const orientationDF = 1 - ((parseFloat(orientationLoss) || 0) / 100);
 
     // Total DF = Temp DF � Derating1(Shadow) � Derating2(System)
-    const totalDerating = tempDerating * shadowDF * otherFactor;
+    const totalDerating = tempDerating * shadowDF * orientationDF * otherFactor;
 
     // Monthly Yield = GHI * Days * Capacity * Total DF
     const yieldMonth = ghi * days[i] * systemSizeKwp * totalDerating;
@@ -437,6 +433,7 @@ function simulateEnergyYield(
       tempDF: tempDerating,
       shadowLossPercent: currentMonthShadowPercent,
       shadowDF: shadowDF,
+      orientationDF: orientationDF,
       otherDF: otherFactor,
       totalDF: totalDerating,
       energyYield: yieldMonth,
@@ -618,6 +615,7 @@ function getStage1Data() {
   const physicsResults = window.projectData.stage1_results || {};
 
   const globalData = {
+    ...techData,
     site: {
       name: getStr("site_name", ""),
       designer: getStr("designer_name", ""),
@@ -639,6 +637,13 @@ function getStage1Data() {
     performance: {
       monthlyTable: physicsResults.monthlyTable || [],
     },
+    panelCount: techData.panelCount || physicsResults.system?.panelCount || 0,
+    systemSizeKwp: techData.systemSizeKwp || physicsResults.system?.systemSizeKwp || 0,
+    totalAnnualEnergy: techData.totalAnnualEnergy || physicsResults.system?.totalAnnualEnergy || 0,
+    totalAnnualUnits: totalAnnualUnits,
+    monthlyTable: physicsResults.monthlyTable || techData.monthlyTable || [],
+    specificYieldAnnual: physicsResults.system?.specificYield || 0,
+    plfAnnual: physicsResults.system?.plf || 0,
   };
 
   window.projectData = { ...window.projectData, ...globalData };
@@ -1324,10 +1329,7 @@ document.addEventListener("input", function (e) {
       attachShadowInputValidation();
     }
     calculateShadowTable();
-    if (window.fetchedSolarData) {
-      calculateSolarPhysics(getAnnualUnitsFromBills(), window.fetchedSolarData);
-    }
-    updateLiveHeader();
+    if (typeof scheduleHeaderUpdate === "function") scheduleHeaderUpdate();
     const modal = document.getElementById("gen-analysis-modal");
     if (modal && modal.style.display === "flex") showGenerationModal();
   }

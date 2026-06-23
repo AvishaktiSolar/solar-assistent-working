@@ -6,7 +6,7 @@
 window.fetchedSolarData = null;
 window.siteData = {};
 window.bills = window.bills || [];
-window.projectData = {};
+window.projectData = window.projectData || {};
 window.finalReportData = {};
 window.currentProjectNumber = null;
 window.stage1SaveTimer = null;
@@ -408,10 +408,13 @@ function validatePage2() {
     // Check if bills have units (assuming bills are stored in window.bills array)
     if (window.bills && window.bills.length > 0) {
       window.bills.forEach((bill, index) => {
-        if (!bill.units || bill.units <= 0) {
+        if (!bill.total_annual_consumption || bill.total_annual_consumption <= 0) {
           hasInvalidBills = true;
         }
       });
+    }
+    if (hasInvalidBills) {
+      errors.push("Each bill must have total annual consumption greater than 0");
     }
   }
 
@@ -1398,21 +1401,22 @@ function refreshCurrentActiveStage() {
         }
     }
 
-    // STAGE 3 (Financials - if you have it)
+    // STAGE 3 (Switchgear)
     else if (currentStage === 3) {
         if (typeof refreshStage3UI === 'function') refreshStage3UI();
     }
 
-    // STAGE 4 (Proposal - if you have it)
+    // STAGE 4 (Cable)
     else if (currentStage === 4) {
         if (typeof refreshStage4UI === 'function') refreshStage4UI();
     }
+
+    // STAGE 5 (BOM)
+    else if (currentStage === 5) {
+        if (typeof refreshStage5UI === 'function') refreshStage5UI();
+    }
 }
 window.refreshCurrentActiveStage = refreshCurrentActiveStage;
-
-if (typeof window.updateRow !== "function") {
-  window.updateRow = function () {};
-}
 
 // ==================================================================
 //  DEBUG HELPER
